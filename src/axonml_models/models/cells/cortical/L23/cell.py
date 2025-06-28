@@ -14,11 +14,11 @@ _PACKAGE_DIR = Path(__file__).resolve().parent
 _MORPH_DIR   = _PACKAGE_DIR / "morphologies"
 
 
-def L23(ID, N):
+def L23(ID, N, integrator=None):
     gml_path = _MORPH_DIR / f"L23_{ID}.gml"
     g = nx.read_gml(gml_path, destringizer=int)
 
-    cell = ax.Tree.from_graph(g, N=N, v_init=-70.0)
+    cell = ax.Tree.from_graph(g, integrator=integrator, N=N, v_init=-70.0)
     for group in ['soma', 'apic', 'dend', 'axon', 'myelin', 'unmyelin', 'node']:
         cell[:, cell.find(group)].label(group)    
 
