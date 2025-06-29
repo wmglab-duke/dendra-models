@@ -6,7 +6,7 @@ import networkx as nx
 import axonml as ax
 from axonml.models.utils import distance
 from axonml.models.mod import pas
-from axonml.models.mechanisms import e_context
+from axonml.models.mechanisms import equilibria
 
 from ..mech import *
 
@@ -31,8 +31,8 @@ def L23(ID, N, integrator=None):
     d = distance(cell, cell.find('soma'), cell.find('apic'))
     gbar_ih = (-0.869600 + 2.087000*torch.exp((d)*0.003100))*0.000080
     cell.apic.insert(ih, alias='apical', gbar=gbar_ih[None, :])
-    cell.dend.insert(ih, alias='basal', gbar=0.00008)
-    cell.soma.insert(ih, alias='soma', gbar=0.00008)
+    cell.dend.insert(ih, alias='basal',  gbar=0.00008)
+    cell.soma.insert(ih, alias='soma',   gbar=0.00008)
 
     # im
     cell.apic.insert(im, alias='apical', gbar=0.00074)
@@ -42,11 +42,11 @@ def L23(ID, N, integrator=None):
     cell.soma.insert(nats2_t, alias='soma',   gbar=0.926705)
 
     # skv31
-    cell.apic.insert(skv3_1, alias='apical', gbar=0.000513)
-    cell.soma.insert(skv3_1, alias='soma', gbar=0.102517)
-    cell.axon.insert(skv3_1, alias='axon', gbar=0.094971)
-    cell.node.insert(skv3_1, alias='node', gbar=0.094971)
-    cell.unmyelin.insert(skv3_1, alias='unmyelin', gbar=0.094971)
+    cell.apic.insert(skv3_1,        alias='apical',     gbar=0.000513)
+    cell.soma.insert(skv3_1,        alias='soma',       gbar=0.102517)
+    cell.axon.insert(skv3_1,        alias='axon',       gbar=0.094971)
+    cell.node.insert(skv3_1,        alias='node',       gbar=0.094971)
+    cell.unmyelin.insert(skv3_1,    alias='unmyelin',   gbar=0.094971)
 
     # the following channels are inserted in the axon initial segment and soma
     # ca_hva
@@ -66,23 +66,23 @@ def L23(ID, N, integrator=None):
     cell.axon.insert(cadynamics, alias='axon', gamma=0.016713, decay=384.114655)
 
     # these are inserted in the axon initial segment, nodes, and unmyelinated segments
-    cell.axon.insert(nap_et2, alias='axon', gbar=0.009803)
-    cell.node.insert(nap_et2, alias='node', gbar=0.009803)
-    cell.unmyelin.insert(nap_et2, alias='unmyelin', gbar=0.009803)
+    cell.axon.insert(nap_et2,       alias='axon',       gbar=0.009803)
+    cell.node.insert(nap_et2,       alias='node',       gbar=0.009803)
+    cell.unmyelin.insert(nap_et2,   alias='unmyelin',   gbar=0.009803)
 
-    cell.axon.insert(k_t, alias='axon', gbar=0.001035)
-    cell.node.insert(k_t, alias='node', gbar=0.001035)
-    cell.unmyelin.insert(k_t, alias='unmyelin', gbar=0.001035)
+    cell.axon.insert(k_t,           alias='axon',       gbar=0.001035)
+    cell.node.insert(k_t,           alias='node',       gbar=0.001035)
+    cell.unmyelin.insert(k_t,       alias='unmyelin',   gbar=0.001035)
 
-    cell.axon.insert(k_p, alias='axon', gbar=0.959296)
-    cell.node.insert(k_p, alias='node', gbar=0.959296)
-    cell.unmyelin.insert(k_p, alias='unmyelin', gbar=0.959296)
+    cell.axon.insert(k_p,           alias='axon',       gbar=0.959296)
+    cell.node.insert(k_p,           alias='node',       gbar=0.959296)
+    cell.unmyelin.insert(k_p,       alias='unmyelin',   gbar=0.959296)
 
-    cell.axon.insert(nata_t, alias='axon', gbar=3.429725)
-    cell.node.insert(nata_t, alias='node', gbar=3.429725*2.0)
-    cell.unmyelin.insert(nata_t, alias='unmyelin', gbar=3.429725)
+    cell.axon.insert(nata_t,        alias='axon',       gbar=3.429725)
+    cell.node.insert(nata_t,        alias='node',       gbar=3.429725*2.0)
+    cell.unmyelin.insert(nata_t,    alias='unmyelin',   gbar=3.429725)
 
-    with e_context(ek=-85.0, ena=50.0):
+    with equilibria(ek=-85.0, ena=50.0):
         cell.build()
 
     return cell

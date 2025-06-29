@@ -12,7 +12,8 @@ class mh(S):
     S.ASSIGNED("minf", "taum", "hinf", "tauh")
 
     def breakpoint(self, v):
-        v = torch.where(v==-27.0, v+0.0001, v)
+        guard = torch.tensor(-27.0, device=v.device, dtype=v.dtype)
+        v = torch.where(torch.isin(v, guard), v + 0.0001, v)
         mAlpha = (0.055*(-27-v))/(exp((-27-v)/3.8) - 1)
         mBeta = (0.94*exp((-75-v)/17))
         mInf = mAlpha/(mAlpha + mBeta)

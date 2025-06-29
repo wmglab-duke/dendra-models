@@ -15,7 +15,8 @@ class m(S):
     def breakpoint(self, v):
         qt = self.q10()
         minf = 1.0/(1+exp((v- -52.6)/-4.6))
-        v = torch.where(v==-38.0, v+0.0001, v)
+        guard = torch.tensor(-38.0, device=v.device, dtype=v.dtype)
+        v = torch.where(torch.isin(v, guard), v + 0.0001, v)
         mAlpha = (0.182 * (v- -38))/(1-(exp(-(v- -38)/6)))
         mBeta  = (0.124 * (-v -38))/(1-(exp(-(-v -38)/6)))
         mTau = 6*(1/(mAlpha + mBeta))/qt
@@ -35,8 +36,8 @@ class h(S):
         return 2.3 ** ((self.celsius - 21.0) / 10.0)
 
     def breakpoint(self, v):
-        v = torch.where(v == -17.0, v + 0.0001, v)
-        v = torch.where(v == -64.4, v + 0.0001, v)
+        guard = torch.tensor([-17.0, -64.4], device=v.device, dtype=v.dtype)
+        v = torch.where(torch.isin(v, guard), v + 0.0001, v)
         qt = self.q10()
         hInf = 1.0/(1+exp((v- -48.8)/10))
         hAlpha = -2.88e-6 * (v + 17) / (1 - exp((v + 17)/4.63))

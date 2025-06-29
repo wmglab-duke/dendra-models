@@ -40,7 +40,7 @@ class m(S):
         )
 
     def breakpoint(self, v):
-        v = torch.where(v == self.mshift, v + 0.0001, v)
+        v = torch.where(torch.isin(v, self.mshift_default), v + 0.0001, v)
         a = self.alpha(v)
         b = self.beta(v)
         taum = 1 / (a + b)
@@ -88,7 +88,7 @@ class h(S):
         )
 
     def breakpoint(self, v):
-        v = torch.where(v == self.hshift, v + 0.0001, v)
+        v = torch.where(torch.isin(v, self.hshift_default), v + 0.0001, v)
         a = self.alpha(v)
         b = self.beta(v)
         tauh = 1 / (a + b)
