@@ -50,16 +50,16 @@ def L23(ID, N, integrator=None):
 
     # the following channels are inserted in the axon initial segment and soma
     # ca_hva
-    cell.soma.insert(ca_hva, alias='soma', gbar=0.000374)
-    cell.axon.insert(ca_hva, alias='axon', gbar=0.000306)
+    cell.soma.insert(ca_hva,        alias='soma', gbar=0.000374)
+    cell.axon.insert(ca_hva,        alias='axon', gbar=0.000306)
 
     # sk
-    cell.soma.insert(sk_e2, alias='soma', gbar=0.099433)
-    cell.axon.insert(sk_e2, alias='axon', gbar=0.008085)
+    cell.soma.insert(sk_e2,         alias='soma', gbar=0.099433)
+    cell.axon.insert(sk_e2,         alias='axon', gbar=0.008085)
 
     # ca_lva
-    cell.soma.insert(ca_lva, alias='soma', gbar=0.000778)
-    cell.axon.insert(ca_lva, alias='axon', gbar=0.000050)
+    cell.soma.insert(ca_lva,        alias='soma', gbar=0.000778)
+    cell.axon.insert(ca_lva,        alias='axon', gbar=0.000050)
 
     # cadynamics
     cell.soma.insert(cadynamics, alias='soma', gamma=0.000533, decay=342.544232)
