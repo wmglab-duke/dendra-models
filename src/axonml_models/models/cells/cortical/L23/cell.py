@@ -22,24 +22,29 @@ def L23(ID, N, integrator=None):
     for group in ['soma', 'apic', 'dend', 'axon', 'myelin', 'unmyelin', 'node']:
         cell[:, cell.find(group)].label(group)    
 
+
+    # insert mechanisms
+
     # pas
     g = 3e-5 * torch.ones(cell.nc)
     g[cell.find('myelin')] = 1 / 1.125e6
+
     cell.insert(pas, e=-75.0, g=g[None, :])
 
     # ih
     d = distance(cell, cell.find('soma'), cell.find('apic'))
     gbar_ih = (-0.869600 + 2.087000*torch.exp((d)*0.003100))*0.000080
-    cell.apic.insert(ih, alias='apical', gbar=gbar_ih[None, :])
-    cell.dend.insert(ih, alias='basal',  gbar=0.00008)
-    cell.soma.insert(ih, alias='soma',   gbar=0.00008)
+
+    cell.apic.insert(ih,            alias='apical',     gbar=gbar_ih[None, :])
+    cell.dend.insert(ih,            alias='basal',      gbar=0.00008)
+    cell.soma.insert(ih,            alias='soma',       gbar=0.00008)
 
     # im
-    cell.apic.insert(im, alias='apical', gbar=0.00074)
+    cell.apic.insert(im,            alias='apical',     gbar=0.00074)
 
     # nats2_t
-    cell.apic.insert(nats2_t, alias='apical', gbar=0.012009)
-    cell.soma.insert(nats2_t, alias='soma',   gbar=0.926705)
+    cell.apic.insert(nats2_t,       alias='apical',     gbar=0.012009)
+    cell.soma.insert(nats2_t,       alias='soma',       gbar=0.926705)
 
     # skv31
     cell.apic.insert(skv3_1,        alias='apical',     gbar=0.000513)
@@ -50,20 +55,20 @@ def L23(ID, N, integrator=None):
 
     # the following channels are inserted in the axon initial segment and soma
     # ca_hva
-    cell.soma.insert(ca_hva,        alias='soma', gbar=0.000374)
-    cell.axon.insert(ca_hva,        alias='axon', gbar=0.000306)
+    cell.soma.insert(ca_hva,        alias='soma',       gbar=0.000374)
+    cell.axon.insert(ca_hva,        alias='axon',       gbar=0.000306)
 
     # sk
-    cell.soma.insert(sk_e2,         alias='soma', gbar=0.099433)
-    cell.axon.insert(sk_e2,         alias='axon', gbar=0.008085)
+    cell.soma.insert(sk_e2,         alias='soma',       gbar=0.099433)
+    cell.axon.insert(sk_e2,         alias='axon',       gbar=0.008085)
 
     # ca_lva
-    cell.soma.insert(ca_lva,        alias='soma', gbar=0.000778)
-    cell.axon.insert(ca_lva,        alias='axon', gbar=0.000050)
+    cell.soma.insert(ca_lva,        alias='soma',       gbar=0.000778)
+    cell.axon.insert(ca_lva,        alias='axon',       gbar=0.000050)
 
     # cadynamics
-    cell.soma.insert(cadynamics, alias='soma', gamma=0.000533, decay=342.544232)
-    cell.axon.insert(cadynamics, alias='axon', gamma=0.016713, decay=384.114655)
+    cell.soma.insert(cadynamics,    alias='soma',       gamma=0.000533, decay=342.544232)
+    cell.axon.insert(cadynamics,    alias='axon',       gamma=0.016713, decay=384.114655)
 
     # these are inserted in the axon initial segment, nodes, and unmyelinated segments
     cell.axon.insert(nap_et2,       alias='axon',       gbar=0.009803)

@@ -1,7 +1,8 @@
 from axonml.models.core import Unmyelinated
 from axonml.models.mechanisms import concentrations
-from axonml.units import mm
 from axonml.models.integrators import bwd_euler_ub
+
+from axonml.units import mm
 
 
 from ..mech import (
@@ -100,7 +101,7 @@ class Tigerholm2014(Unmyelinated):
     ):
         if integrator is None:
             integrator = bwd_euler_ub()
-            
+
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
 
         self.register_pre_initialize_hook(pre_init)
