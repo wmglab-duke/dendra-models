@@ -14,6 +14,12 @@ _PACKAGE_DIR = Path(__file__).resolve().parent
 _MORPH_DIR   = _PACKAGE_DIR / "morphologies"
 
 
+def valid_ids():
+    all_morphs = _MORPH_DIR.glob("L23_*.gml")
+    ids = [morph.stem.split('_')[1] for morph in all_morphs]
+    return ids
+
+
 def L23(ID, N, integrator=None):
     gml_path = _MORPH_DIR / f"L23_{ID}.gml"
     g = nx.read_gml(gml_path, destringizer=int)

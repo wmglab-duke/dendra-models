@@ -1,1 +1,1 @@
-from .cell import L23
+from .cell import L23, valid_ids
