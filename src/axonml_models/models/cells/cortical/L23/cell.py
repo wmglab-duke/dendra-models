@@ -16,7 +16,7 @@ _MORPH_DIR   = _PACKAGE_DIR / "morphologies"
 
 def valid_ids():
     all_morphs = _MORPH_DIR.glob("L23_*.gml")
-    ids = [morph.stem.split('_')[1] for morph in all_morphs]
+    ids = [int(morph.stem.split('_')[1]) for morph in all_morphs]
     return ids
 
 
