@@ -1,6 +1,5 @@
 from axonml.models.core import Unmyelinated
 from axonml.models.mechanisms import equilibria as E, concentrations as C
-from axonml.models.integrators import bwd_euler_ub
 from axonml.units import mm
 
 
@@ -31,20 +30,20 @@ import math
 
 
 def pre_init(model):
-    model.mech.extrapump.pumpina.zero_()
-    model.mech.extrapump.pumpik.zero_()
-    model.mech.extrapump.pumpica.zero_()
+    model.mech.extrapump.pumpina_default.zero_()
+    model.mech.extrapump.pumpik_default.zero_()
+    model.mech.extrapump.pumpica_default.zero_()
 
 
 def balance(model):
-    model.mech.extrapump.pumpina.copy_(
-        -model.mech.na_ion.ina
+    model.mech.extrapump.pumpina_default.copy_(
+        -model.mech.na_ion.ina.flatten()[0]
     )
-    model.mech.extrapump.pumpik.copy_(
-        -model.mech.k_ion.ik
+    model.mech.extrapump.pumpik_default.copy_(
+        -model.mech.k_ion.ik.flatten()[0]
     )
-    model.mech.extrapump.pumpica.copy_(
-        -model.mech.ca_ion.ica
+    model.mech.extrapump.pumpica_default.copy_(
+        -model.mech.ca_ion.ica.flatten()[0]
     )
 
 
@@ -60,8 +59,6 @@ class ThioAutonomic2025(Unmyelinated):
         v_init=-58.5,
         integrator=None,
     ):
-        if integrator is None:
-            integrator = bwd_euler_ub()
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
         R = 8314        # molar gas constant
         F = 96485.3329  # Faraday's constant
@@ -122,8 +119,6 @@ class ThioCutaneous2025(Unmyelinated):
         v_init=-58.5,
         integrator=None,
     ):
-        if integrator is None:
-            integrator = bwd_euler_ub()
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
         R = 8314        # molar gas constant
         F = 96485.3329  # Faraday's constant

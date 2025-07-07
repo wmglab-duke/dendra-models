@@ -1,7 +1,6 @@
 from axonml.models.core import Unmyelinated
 from axonml.models.mechanisms import equilibria
 from axonml.units import mm
-from axonml.models.integrators import bwd_euler_ub
 
 from ..mech import rattay_aberham
 
@@ -18,8 +17,6 @@ class Rattay1993(Unmyelinated):
         v_init=-70.0,
         integrator=None,
     ):
-        if integrator is None:
-            integrator = bwd_euler_ub()
         super().__init__(diameters, L, dx, temp, v_init, integrator)
 
         self.insert(rattay_aberham)

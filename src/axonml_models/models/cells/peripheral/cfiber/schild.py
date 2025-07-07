@@ -1,6 +1,5 @@
 from axonml.models.core import Unmyelinated
 from axonml.models.mechanisms import equilibria as E, concentrations as C
-from axonml.models.integrators import bwd_euler_ub
 from axonml.units import mm
 
 from ..mech import (
@@ -37,8 +36,6 @@ class Schild1997(Unmyelinated):
         v_init=-68.5,
         integrator=None,
     ):
-        if integrator is None:
-            integrator = bwd_euler_ub()
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
         R = 8314   # molar gas constant
         F = 96500  # Faraday's constant
@@ -88,8 +85,6 @@ class Schild1994(Unmyelinated):
         v_init=-46.5,
         integrator=None,
     ):
-        if integrator is None:
-            integrator = bwd_euler_ub()
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
         R = 8314   # molar gas constant
         F = 96500  # Faraday's constant

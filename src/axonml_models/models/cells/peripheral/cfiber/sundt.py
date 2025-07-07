@@ -1,7 +1,6 @@
 from axonml.models.core import Unmyelinated
 from axonml.models.mechanisms import equilibria
 from axonml.units import mm
-from axonml.models.integrators import bwd_euler_ub
 from axonml.models.mod import pas
 
 from ..mech import kdr, nahh
@@ -74,9 +73,6 @@ class Sundt2015(Unmyelinated):
         v_init=-60.0,
         integrator=None,
     ):
-        if integrator is None:
-            integrator = bwd_euler_ub()
-
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
 
         self.insert(kdr, gkbar=0.04)

@@ -1,6 +1,5 @@
 from axonml.models.core import Unmyelinated
 from axonml.models.mechanisms import concentrations
-from axonml.models.integrators import bwd_euler_ub
 
 from axonml.units import mm
 
@@ -14,15 +13,15 @@ from ..mech import (
 
 
 def pre_init(model):
-    model.mech.leak.gkleak.data.zero_()
-    model.mech.leak.gnaleak.data.zero_()
+    model.mech.leak.gkleak_default.data.zero_()
+    model.mech.leak.gnaleak_default.data.zero_()
 
 
 def balance(model):
-    ek, ik = model.mech.k_ion.ek, model.mech.k_ion.ik
-    ena, ina = model.mech.na_ion.ena, model.mech.na_ion.ina
-    model.mech.leak.gkleak.data.copy_(-(ik / (model.v_init - ek)))
-    model.mech.leak.gnaleak.data.copy_(-(ina / (model.v_init - ena)))
+    ek, ik = model.mech.k_ion.ek.flatten()[0], model.mech.k_ion.ik.flatten()[0]
+    ena, ina = model.mech.na_ion.ena.flatten()[0], model.mech.na_ion.ina.flatten()[0]
+    model.mech.leak.gkleak_default.data.copy_(-(ik / (model.v_init - ek)))
+    model.mech.leak.gnaleak_default.data.copy_(-(ina / (model.v_init - ena)))
 
 
 class Tigerholm2014(Unmyelinated):
@@ -99,9 +98,6 @@ class Tigerholm2014(Unmyelinated):
         v_init=-55.0,
         integrator=None,
     ):
-        if integrator is None:
-            integrator = bwd_euler_ub()
-
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
 
         self.register_pre_initialize_hook(pre_init)

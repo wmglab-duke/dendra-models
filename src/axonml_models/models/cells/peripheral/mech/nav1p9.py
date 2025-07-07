@@ -9,7 +9,6 @@ from axonml.models.mechanisms.ops import *
 
 class m(S):
     has_q10 = True
-
     S.STATE("m")
     S.PARAMETER(
         aq10=2.5,
@@ -22,7 +21,6 @@ class m(S):
         B_bm=130.4,
         C_bm=22.9,
     )
-
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
@@ -50,7 +48,6 @@ class m(S):
 
 class h(S):
     has_q10 = True
-
     S.STATE("h")
     S.PARAMETER(
         aq10=2.5,
@@ -63,7 +60,6 @@ class h(S):
         B_bh=10.27853,
         C_bh=-9.09334,
     )
-
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
 
@@ -91,7 +87,7 @@ class h(S):
 
 class s(S):
     has_q10 = True
-
+    S.STATE("s")
     S.PARAMETER(
         aq10=2.5,
         bq10=21.0,
@@ -103,7 +99,6 @@ class s(S):
         B_bs=32.0,
         C_bs=23.0,
     )
-
     S.DERIVATIVE("s' = (sinf - s) / taus")
     S.ASSIGNED("sinf", "taus")
 
