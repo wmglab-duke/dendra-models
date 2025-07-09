@@ -93,7 +93,10 @@ class SMF(Myelinated):
            mammalian nerve fibers: influence of afterpotentials on the recovery cycle.
            Journal of Neurophysiology, 87(2), 995-1006.
     """
-
+    Myelinated.RANGE(
+        cm=9.352452121675014,
+        rhoa=69.99446868896484,
+    )
     Myelinated.PARAMETER(
         axon_d={
             "axond1": 0.0187623,
@@ -110,8 +113,6 @@ class SMF(Myelinated):
             "deltax2": 2.724201e02,
             "deltax3": -7.802411e02,
         },
-        cm=9.352452121675014,    # μF/cm²
-        rhoa=69.99446868896484,  # Ω·cm
     )
 
     def __init__(

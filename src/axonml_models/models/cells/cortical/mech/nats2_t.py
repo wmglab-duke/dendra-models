@@ -102,7 +102,7 @@ class h(S):
 class nats2_t(M):
     M.STATE(m, h)
     M.USEION("na", read=["ena"], write=["ina"])
-    M.PARAMETER(gbar=0.00001)
+    M.RANGE(gbar=0.00001)
 
     def ina(self, v):
         return self.gbar * self.m**3 * self.h * (v - self.ena)

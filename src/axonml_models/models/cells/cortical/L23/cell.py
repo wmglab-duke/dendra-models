@@ -28,7 +28,6 @@ def L23(ID, N, integrator=None):
     for group in ['soma', 'apic', 'dend', 'axon', 'myelin', 'unmyelin', 'node']:
         cell[:, cell.find(group)].label(group)    
 
-
     # insert mechanisms
 
     # pas

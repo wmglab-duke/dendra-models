@@ -19,7 +19,7 @@ class m(S):
 
 class skv3_1(M):
     M.STATE(m)
-    M.PARAMETER(gbar=0.0001)
+    M.RANGE(gbar=0.0001)
     M.USEION("k", read=["ek"], write=["ik"])
 
     def ik(self, v):

@@ -2,7 +2,7 @@ graph [
   directed 1
   node [
     id 0
-    label "129"
+    label "0"
     diam 23.874523162841797
     L 18.681507686589963
     Ra 100.0
@@ -15,7 +15,7 @@ graph [
   ]
   node [
     id 1
-    label "60"
+    label "1"
     diam 3.999928144965824
     L 25.280454529492644
     Ra 100.0
@@ -28,7 +28,7 @@ graph [
   ]
   node [
     id 2
-    label "0"
+    label "70"
     diam 1.3874257524082572
     L 43.13724767851465
     Ra 100.0
@@ -41,7 +41,7 @@ graph [
   ]
   node [
     id 3
-    label "1"
+    label "71"
     diam 2.8406769080220804
     L 14.326357936532602
     Ra 100.0
@@ -54,7 +54,7 @@ graph [
   ]
   node [
     id 4
-    label "2"
+    label "72"
     diam 4.417419910430908
     L 1.0002895368505764
     Ra 100.0
@@ -5501,7 +5501,7 @@ graph [
   ]
   node [
     id 423
-    label "3"
+    label "73"
     diam 1.6988970450288206
     L 30.76117980770753
     Ra 100.0
@@ -5514,7 +5514,7 @@ graph [
   ]
   node [
     id 424
-    label "4"
+    label "74"
     diam 1.226603263505053
     L 44.34246471088106
     Ra 100.0
@@ -5527,7 +5527,7 @@ graph [
   ]
   node [
     id 425
-    label "5"
+    label "75"
     diam 2.125509260892136
     L 20.14863117237574
     Ra 100.0
@@ -5540,7 +5540,7 @@ graph [
   ]
   node [
     id 426
-    label "6"
+    label "76"
     diam 1.5144436638635792
     L 33.52670191259941
     Ra 100.0
@@ -5553,7 +5553,7 @@ graph [
   ]
   node [
     id 427
-    label "7"
+    label "77"
     diam 1.230640557958344
     L 22.063328291853225
     Ra 100.0
@@ -5566,7 +5566,7 @@ graph [
   ]
   node [
     id 428
-    label "8"
+    label "78"
     diam 1.109220027923584
     L 27.441600251769565
     Ra 100.0
@@ -5579,7 +5579,7 @@ graph [
   ]
   node [
     id 429
-    label "9"
+    label "79"
     diam 0.999298533172789
     L 27.30902318656024
     Ra 100.0
@@ -5592,7 +5592,7 @@ graph [
   ]
   node [
     id 430
-    label "10"
+    label "80"
     diam 1.040600188506882
     L 27.30902318656024
     Ra 100.0
@@ -5605,7 +5605,7 @@ graph [
   ]
   node [
     id 431
-    label "11"
+    label "81"
     diam 1.109220027923584
     L 27.30902318656024
     Ra 100.0
@@ -5618,7 +5618,7 @@ graph [
   ]
   node [
     id 432
-    label "12"
+    label "82"
     diam 1.109220027923584
     L 27.441600251769565
     Ra 100.0
@@ -5631,7 +5631,7 @@ graph [
   ]
   node [
     id 433
-    label "13"
+    label "83"
     diam 1.1092200279235835
     L 27.441600251769565
     Ra 100.0
@@ -5644,7 +5644,7 @@ graph [
   ]
   node [
     id 434
-    label "14"
+    label "84"
     diam 1.1092200279235842
     L 27.441600251769565
     Ra 100.0
@@ -5657,7 +5657,7 @@ graph [
   ]
   node [
     id 435
-    label "15"
+    label "85"
     diam 1.1092200279235835
     L 27.441600251769565
     Ra 100.0
@@ -5670,7 +5670,7 @@ graph [
   ]
   node [
     id 436
-    label "16"
+    label "86"
     diam 0.9474222537064636
     L 33.217045500439255
     Ra 100.0
@@ -5683,7 +5683,7 @@ graph [
   ]
   node [
     id 437
-    label "17"
+    label "87"
     diam 1.3614752405018817
     L 19.864704273009455
     Ra 100.0
@@ -5696,7 +5696,7 @@ graph [
   ]
   node [
     id 438
-    label "18"
+    label "88"
     diam 0.8814105392130117
     L 37.21628185955038
     Ra 100.0
@@ -5709,7 +5709,7 @@ graph [
   ]
   node [
     id 439
-    label "19"
+    label "89"
     diam 0.9722568421918808
     L 31.725676910713236
     Ra 100.0
@@ -5722,7 +5722,7 @@ graph [
   ]
   node [
     id 440
-    label "20"
+    label "90"
     diam 0.8756999969482422
     L 2.411619349572826
     Ra 100.0
@@ -5735,7 +5735,7 @@ graph [
   ]
   node [
     id 441
-    label "21"
+    label "91"
     diam 0.8756999969482421
     L 20.573668713472376
     Ra 100.0
@@ -5748,7 +5748,7 @@ graph [
   ]
   node [
     id 442
-    label "22"
+    label "92"
     diam 0.8756999969482421
     L 20.573668713472376
     Ra 100.0
@@ -5761,7 +5761,7 @@ graph [
   ]
   node [
     id 443
-    label "23"
+    label "93"
     diam 0.8651569733278451
     L 20.573668713472376
     Ra 100.0
@@ -5774,7 +5774,7 @@ graph [
   ]
   node [
     id 444
-    label "24"
+    label "94"
     diam 0.8520174473420115
     L 20.573668713472376
     Ra 100.0
@@ -5787,7 +5787,7 @@ graph [
   ]
   node [
     id 445
-    label "25"
+    label "95"
     diam 0.767014868426834
     L 20.573668713472376
     Ra 100.0
@@ -5800,7 +5800,7 @@ graph [
   ]
   node [
     id 446
-    label "26"
+    label "96"
     diam 0.9092517428320953
     L 26.792018814841516
     Ra 100.0
@@ -5813,7 +5813,7 @@ graph [
   ]
   node [
     id 447
-    label "27"
+    label "97"
     diam 1.0573124264491227
     L 23.044830154909317
     Ra 100.0
@@ -5826,7 +5826,7 @@ graph [
   ]
   node [
     id 448
-    label "28"
+    label "98"
     diam 0.8756999969482421
     L 23.044830154909317
     Ra 100.0
@@ -5839,7 +5839,7 @@ graph [
   ]
   node [
     id 449
-    label "29"
+    label "99"
     diam 0.875699996948242
     L 23.044830154909317
     Ra 100.0
@@ -5852,7 +5852,7 @@ graph [
   ]
   node [
     id 450
-    label "30"
+    label "100"
     diam 0.8136659902260789
     L 23.044830154909317
     Ra 100.0
@@ -5865,7 +5865,7 @@ graph [
   ]
   node [
     id 451
-    label "31"
+    label "101"
     diam 0.8756999969482423
     L 23.044830154909317
     Ra 100.0
@@ -5878,7 +5878,7 @@ graph [
   ]
   node [
     id 452
-    label "32"
+    label "102"
     diam 0.8756999969482421
     L 26.792018814841516
     Ra 100.0
@@ -5891,7 +5891,7 @@ graph [
   ]
   node [
     id 453
-    label "33"
+    label "103"
     diam 0.769337132338675
     L 26.792018814841516
     Ra 100.0
@@ -5904,7 +5904,7 @@ graph [
   ]
   node [
     id 454
-    label "34"
+    label "104"
     diam 0.661639988422394
     L 26.792018814841516
     Ra 100.0
@@ -5917,7 +5917,7 @@ graph [
   ]
   node [
     id 455
-    label "35"
+    label "105"
     diam 0.6616399884223934
     L 26.792018814841516
     Ra 100.0
@@ -5930,7 +5930,7 @@ graph [
   ]
   node [
     id 456
-    label "36"
+    label "106"
     diam 1.2297775920197216
     L 30.76117980770753
     Ra 100.0
@@ -5943,7 +5943,7 @@ graph [
   ]
   node [
     id 457
-    label "37"
+    label "107"
     diam 0.9069755938207305
     L 30.76117980770753
     Ra 100.0
@@ -5956,7 +5956,7 @@ graph [
   ]
   node [
     id 458
-    label "38"
+    label "108"
     diam 1.216050434824171
     L 30.8839434809708
     Ra 100.0
@@ -5969,7 +5969,7 @@ graph [
   ]
   node [
     id 459
-    label "39"
+    label "109"
     diam 1.4362722188580745
     L 12.301582359351901
     Ra 100.0
@@ -5982,7 +5982,7 @@ graph [
   ]
   node [
     id 460
-    label "40"
+    label "110"
     diam 1.005286861462433
     L 27.291019806655584
     Ra 100.0
@@ -5995,7 +5995,7 @@ graph [
   ]
   node [
     id 461
-    label "41"
+    label "111"
     diam 0.9457428491102564
     L 19.790855633598277
     Ra 100.0
@@ -6008,7 +6008,7 @@ graph [
   ]
   node [
     id 462
-    label "42"
+    label "112"
     diam 1.109220027923584
     L 19.790855633598277
     Ra 100.0
@@ -6021,7 +6021,7 @@ graph [
   ]
   node [
     id 463
-    label "43"
+    label "113"
     diam 0.9949510128244636
     L 19.790855633598277
     Ra 100.0
@@ -6034,7 +6034,7 @@ graph [
   ]
   node [
     id 464
-    label "44"
+    label "114"
     diam 0.8756999969482417
     L 19.790855633598277
     Ra 100.0
@@ -6047,7 +6047,7 @@ graph [
   ]
   node [
     id 465
-    label "45"
+    label "115"
     diam 0.751434458282103
     L 19.790855633598277
     Ra 100.0
@@ -6060,7 +6060,7 @@ graph [
   ]
   node [
     id 466
-    label "46"
+    label "116"
     diam 0.7465855425779313
     L 15.694908575593576
     Ra 100.0
@@ -6073,7 +6073,7 @@ graph [
   ]
   node [
     id 467
-    label "47"
+    label "117"
     diam 0.8756999969482422
     L 27.291019806655584
     Ra 100.0
@@ -6086,7 +6086,7 @@ graph [
   ]
   node [
     id 468
-    label "48"
+    label "118"
     diam 0.8756999969482423
     L 27.291019806655584
     Ra 100.0
@@ -6099,7 +6099,7 @@ graph [
   ]
   node [
     id 469
-    label "49"
+    label "119"
     diam 0.9219188874899656
     L 27.291019806655584
     Ra 100.0
@@ -6112,7 +6112,7 @@ graph [
   ]
   node [
     id 470
-    label "50"
+    label "120"
     diam 0.8756999969482423
     L 27.291019806655584
     Ra 100.0
@@ -6125,7 +6125,7 @@ graph [
   ]
   node [
     id 471
-    label "51"
+    label "121"
     diam 0.8940466802401693
     L 18.637474827336877
     Ra 100.0
@@ -6138,7 +6138,7 @@ graph [
   ]
   node [
     id 472
-    label "52"
+    label "122"
     diam 0.9108642141574862
     L 28.155454399741288
     Ra 100.0
@@ -6151,7 +6151,7 @@ graph [
   ]
   node [
     id 473
-    label "53"
+    label "123"
     diam 0.8756999969482423
     L 28.155454399741288
     Ra 100.0
@@ -6164,7 +6164,7 @@ graph [
   ]
   node [
     id 474
-    label "54"
+    label "124"
     diam 0.8756999969482425
     L 28.155454399741288
     Ra 100.0
@@ -6177,7 +6177,7 @@ graph [
   ]
   node [
     id 475
-    label "55"
+    label "125"
     diam 0.8756999969482421
     L 18.637474827336877
     Ra 100.0
@@ -6190,7 +6190,7 @@ graph [
   ]
   node [
     id 476
-    label "56"
+    label "126"
     diam 0.7956003332040925
     L 18.637474827336877
     Ra 100.0
@@ -6203,7 +6203,7 @@ graph [
   ]
   node [
     id 477
-    label "57"
+    label "127"
     diam 1.2162500023841858
     L 7.808283855911121
     Ra 100.0
@@ -6216,7 +6216,7 @@ graph [
   ]
   node [
     id 478
-    label "58"
+    label "128"
     diam 0.8794788741811201
     L 29.494054397662975
     Ra 100.0
@@ -6229,7 +6229,7 @@ graph [
   ]
   node [
     id 479
-    label "59"
+    label "129"
     diam 1.0940614122159515
     L 26.268954741951305
     Ra 100.0
@@ -6242,7 +6242,7 @@ graph [
   ]
   node [
     id 480
-    label "61"
+    label "2"
     diam 2.5165737957816297
     L 15.65903717320745
     Ra 100.0
@@ -6255,7 +6255,7 @@ graph [
   ]
   node [
     id 481
-    label "62"
+    label "3"
     diam 1.2591371510827527
     L 29.18166856038107
     Ra 100.0
@@ -6268,7 +6268,7 @@ graph [
   ]
   node [
     id 482
-    label "63"
+    label "4"
     diam 0.960235105659169
     L 22.105610430052586
     Ra 100.0
@@ -6281,7 +6281,7 @@ graph [
   ]
   node [
     id 483
-    label "64"
+    label "5"
     diam 0.8559995541531401
     L 18.616221143257942
     Ra 100.0
@@ -6294,7 +6294,7 @@ graph [
   ]
   node [
     id 484
-    label "65"
+    label "6"
     diam 0.8441999554634094
     L 18.616221143257942
     Ra 100.0
@@ -6307,7 +6307,7 @@ graph [
   ]
   node [
     id 485
-    label "66"
+    label "7"
     diam 0.8441999554634095
     L 18.616221143257942
     Ra 100.0
@@ -6320,7 +6320,7 @@ graph [
   ]
   node [
     id 486
-    label "67"
+    label "8"
     diam 0.8441999554634093
     L 18.616221143257942
     Ra 100.0
@@ -6333,7 +6333,7 @@ graph [
   ]
   node [
     id 487
-    label "68"
+    label "9"
     diam 0.8441999554634095
     L 18.616221143257942
     Ra 100.0
@@ -6346,7 +6346,7 @@ graph [
   ]
   node [
     id 488
-    label "69"
+    label "10"
     diam 0.8441999554634095
     L 18.616221143257942
     Ra 100.0
@@ -6359,7 +6359,7 @@ graph [
   ]
   node [
     id 489
-    label "70"
+    label "11"
     diam 0.8441999554634089
     L 18.616221143257942
     Ra 100.0
@@ -6372,7 +6372,7 @@ graph [
   ]
   node [
     id 490
-    label "71"
+    label "12"
     diam 0.8441999554634083
     L 18.616221143257942
     Ra 100.0
@@ -6385,7 +6385,7 @@ graph [
   ]
   node [
     id 491
-    label "72"
+    label "13"
     diam 0.8441999554634096
     L 18.616221143257942
     Ra 100.0
@@ -6398,7 +6398,7 @@ graph [
   ]
   node [
     id 492
-    label "73"
+    label "14"
     diam 0.8441999554634095
     L 18.616221143257942
     Ra 100.0
@@ -6411,7 +6411,7 @@ graph [
   ]
   node [
     id 493
-    label "74"
+    label "15"
     diam 0.8441999554634098
     L 18.616221143257942
     Ra 100.0
@@ -6424,7 +6424,7 @@ graph [
   ]
   node [
     id 494
-    label "75"
+    label "16"
     diam 1.0693199634552002
     L 22.105610430052586
     Ra 100.0
@@ -6437,7 +6437,7 @@ graph [
   ]
   node [
     id 495
-    label "76"
+    label "17"
     diam 0.9255677301895175
     L 22.105610430052586
     Ra 100.0
@@ -6450,7 +6450,7 @@ graph [
   ]
   node [
     id 496
-    label "77"
+    label "18"
     diam 0.8441999554634091
     L 22.105610430052586
     Ra 100.0
@@ -6463,7 +6463,7 @@ graph [
   ]
   node [
     id 497
-    label "78"
+    label "19"
     diam 0.8441999554634098
     L 22.105610430052586
     Ra 100.0
@@ -6476,7 +6476,7 @@ graph [
   ]
   node [
     id 498
-    label "79"
+    label "20"
     diam 2.3450000286102295
     L 15.65903717320745
     Ra 100.0
@@ -6489,7 +6489,7 @@ graph [
   ]
   node [
     id 499
-    label "80"
+    label "21"
     diam 2.3450000286102295
     L 15.65903717320745
     Ra 100.0
@@ -6502,7 +6502,7 @@ graph [
   ]
   node [
     id 500
-    label "81"
+    label "22"
     diam 1.7416882936546376
     L 25.78626102093373
     Ra 100.0
@@ -6515,7 +6515,7 @@ graph [
   ]
   node [
     id 501
-    label "82"
+    label "23"
     diam 1.7826288334538298
     L 5.882266714312445
     Ra 100.0
@@ -6528,7 +6528,7 @@ graph [
   ]
   node [
     id 502
-    label "83"
+    label "24"
     diam 0.8850632893678537
     L 28.52548293046532
     Ra 100.0
@@ -6541,7 +6541,7 @@ graph [
   ]
   node [
     id 503
-    label "84"
+    label "25"
     diam 1.0947350425862845
     L 24.101570676916044
     Ra 100.0
@@ -6554,7 +6554,7 @@ graph [
   ]
   node [
     id 504
-    label "85"
+    label "26"
     diam 1.0693199634552002
     L 24.101570676916044
     Ra 100.0
@@ -6567,7 +6567,7 @@ graph [
   ]
   node [
     id 505
-    label "86"
+    label "27"
     diam 1.0693199634552004
     L 24.101570676916044
     Ra 100.0
@@ -6580,7 +6580,7 @@ graph [
   ]
   node [
     id 506
-    label "87"
+    label "28"
     diam 0.8739908030822283
     L 25.798579110737442
     Ra 100.0
@@ -6593,7 +6593,7 @@ graph [
   ]
   node [
     id 507
-    label "88"
+    label "29"
     diam 1.0693199634552004
     L 23.016120952821687
     Ra 100.0
@@ -6606,7 +6606,7 @@ graph [
   ]
   node [
     id 508
-    label "89"
+    label "30"
     diam 0.9849305169319218
     L 23.016120952821687
     Ra 100.0
@@ -6619,7 +6619,7 @@ graph [
   ]
   node [
     id 509
-    label "90"
+    label "31"
     diam 1.145049467839469
     L 23.016120952821687
     Ra 100.0
@@ -6632,7 +6632,7 @@ graph [
   ]
   node [
     id 510
-    label "91"
+    label "32"
     diam 1.2756800651550289
     L 23.016120952821687
     Ra 100.0
@@ -6645,7 +6645,7 @@ graph [
   ]
   node [
     id 511
-    label "92"
+    label "33"
     diam 1.2756800651550297
     L 23.016120952821687
     Ra 100.0
@@ -6658,7 +6658,7 @@ graph [
   ]
   node [
     id 512
-    label "93"
+    label "34"
     diam 0.7989756716632617
     L 23.477509758750447
     Ra 100.0
@@ -6671,7 +6671,7 @@ graph [
   ]
   node [
     id 513
-    label "94"
+    label "35"
     diam 0.6284213536950459
     L 21.900546199789236
     Ra 100.0
@@ -6684,7 +6684,7 @@ graph [
   ]
   node [
     id 514
-    label "95"
+    label "36"
     diam 0.6378400325775145
     L 21.900546199789236
     Ra 100.0
@@ -6697,7 +6697,7 @@ graph [
   ]
   node [
     id 515
-    label "96"
+    label "37"
     diam 0.6378400325775148
     L 21.900546199789236
     Ra 100.0
@@ -6710,7 +6710,7 @@ graph [
   ]
   node [
     id 516
-    label "97"
+    label "38"
     diam 0.8441999554634095
     L 23.477509758750447
     Ra 100.0
@@ -6723,7 +6723,7 @@ graph [
   ]
   node [
     id 517
-    label "98"
+    label "39"
     diam 0.8742217302148143
     L 23.477509758750447
     Ra 100.0
@@ -6736,7 +6736,7 @@ graph [
   ]
   node [
     id 518
-    label "99"
+    label "40"
     diam 1.0342127941148285
     L 35.215135056802986
     Ra 100.0
@@ -6749,7 +6749,7 @@ graph [
   ]
   node [
     id 519
-    label "100"
+    label "41"
     diam 1.2330421537495533
     L 34.955431284149626
     Ra 100.0
@@ -6762,7 +6762,7 @@ graph [
   ]
   node [
     id 520
-    label "101"
+    label "42"
     diam 1.5509842731732906
     L 21.81972229251801
     Ra 100.0
@@ -6775,7 +6775,7 @@ graph [
   ]
   node [
     id 521
-    label "102"
+    label "43"
     diam 1.1552093850152951
     L 23.039702895523803
     Ra 100.0
@@ -6788,7 +6788,7 @@ graph [
   ]
   node [
     id 522
-    label "103"
+    label "44"
     diam 1.707159996032715
     L 21.81972229251801
     Ra 100.0
@@ -6801,7 +6801,7 @@ graph [
   ]
   node [
     id 523
-    label "104"
+    label "45"
     diam 1.8011839620661447
     L 21.81972229251801
     Ra 100.0
@@ -6814,7 +6814,7 @@ graph [
   ]
   node [
     id 524
-    label "105"
+    label "46"
     diam 1.550391412120893
     L 21.81972229251801
     Ra 100.0
@@ -6827,7 +6827,7 @@ graph [
   ]
   node [
     id 525
-    label "106"
+    label "47"
     diam 1.2756800651550293
     L 21.81972229251801
     Ra 100.0
@@ -6840,7 +6840,7 @@ graph [
   ]
   node [
     id 526
-    label "107"
+    label "48"
     diam 1.3759878154971958
     L 21.81972229251801
     Ra 100.0
@@ -6853,7 +6853,7 @@ graph [
   ]
   node [
     id 527
-    label "108"
+    label "49"
     diam 1.2917304542849406
     L 21.81972229251801
     Ra 100.0
@@ -6866,7 +6866,7 @@ graph [
   ]
   node [
     id 528
-    label "109"
+    label "50"
     diam 0.8924003621563289
     L 27.97076227042603
     Ra 100.0
@@ -6879,7 +6879,7 @@ graph [
   ]
   node [
     id 529
-    label "110"
+    label "51"
     diam 1.0913734438345828
     L 37.277121753440916
     Ra 100.0
@@ -6892,7 +6892,7 @@ graph [
   ]
   node [
     id 530
-    label "111"
+    label "52"
     diam 0.6549276498600263
     L 22.816542225060683
     Ra 100.0
@@ -6905,7 +6905,7 @@ graph [
   ]
   node [
     id 531
-    label "112"
+    label "53"
     diam 0.8188190447364534
     L 26.222146206428988
     Ra 100.0
@@ -6918,7 +6918,7 @@ graph [
   ]
   node [
     id 532
-    label "113"
+    label "54"
     diam 0.6378400325775148
     L 26.222146206428988
     Ra 100.0
@@ -6931,7 +6931,7 @@ graph [
   ]
   node [
     id 533
-    label "114"
+    label "55"
     diam 0.6378400325775148
     L 26.222146206428988
     Ra 100.0
@@ -6944,7 +6944,7 @@ graph [
   ]
   node [
     id 534
-    label "115"
+    label "56"
     diam 0.6378400325775146
     L 22.816542225060683
     Ra 100.0
@@ -6957,7 +6957,7 @@ graph [
   ]
   node [
     id 535
-    label "116"
+    label "57"
     diam 0.6378400325775146
     L 22.816542225060683
     Ra 100.0
@@ -6970,7 +6970,7 @@ graph [
   ]
   node [
     id 536
-    label "117"
+    label "58"
     diam 0.717873195362117
     L 20.683436220425893
     Ra 100.0
@@ -6983,7 +6983,7 @@ graph [
   ]
   node [
     id 537
-    label "118"
+    label "59"
     diam 0.8441999554634093
     L 19.638320669572895
     Ra 100.0
@@ -6996,7 +6996,7 @@ graph [
   ]
   node [
     id 538
-    label "119"
+    label "60"
     diam 0.8441999554634093
     L 19.638320669572895
     Ra 100.0
@@ -7009,7 +7009,7 @@ graph [
   ]
   node [
     id 539
-    label "120"
+    label "61"
     diam 0.8441999554634093
     L 19.638320669572895
     Ra 100.0
@@ -7022,7 +7022,7 @@ graph [
   ]
   node [
     id 540
-    label "121"
+    label "62"
     diam 0.8441999554634095
     L 19.638320669572895
     Ra 100.0
@@ -7035,7 +7035,7 @@ graph [
   ]
   node [
     id 541
-    label "122"
+    label "63"
     diam 0.8441999554634093
     L 19.638320669572895
     Ra 100.0
@@ -7048,7 +7048,7 @@ graph [
   ]
   node [
     id 542
-    label "123"
+    label "64"
     diam 0.8441999554634093
     L 19.638320669572895
     Ra 100.0
@@ -7061,7 +7061,7 @@ graph [
   ]
   node [
     id 543
-    label "124"
+    label "65"
     diam 0.683474277473961
     L 19.638320669572895
     Ra 100.0
@@ -7074,7 +7074,7 @@ graph [
   ]
   node [
     id 544
-    label "125"
+    label "66"
     diam 0.6378400325775146
     L 20.683436220425893
     Ra 100.0
@@ -7087,7 +7087,7 @@ graph [
   ]
   node [
     id 545
-    label "126"
+    label "67"
     diam 0.7831800044743834
     L 20.683436220425893
     Ra 100.0
@@ -7100,7 +7100,7 @@ graph [
   ]
   node [
     id 546
-    label "127"
+    label "68"
     diam 0.8441999554634102
     L 20.683436220425893
     Ra 100.0
@@ -7113,7 +7113,7 @@ graph [
   ]
   node [
     id 547
-    label "128"
+    label "69"
     diam 0.8441999554634093
     L 20.683436220425893
     Ra 100.0
@@ -7131,7 +7131,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_0"
+    name "branchpoint.0.L23_PC_cADpyr_359.apic[0](1)"
     area 0.0
     x 0.610315811265942
     y -4.1615985377102405
@@ -7144,7 +7144,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_1"
+    name "branchpoint.1.L23_PC_cADpyr_359.dend[16](1)"
     area 0.0
     x 12.090102456026651
     y 0.05814582830857952
@@ -7157,7 +7157,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_2"
+    name "branchpoint.2.L23_PC_cADpyr_359.dend[0](1)"
     area 0.0
     x -7.117877006530762
     y -2.843779444694519
@@ -7170,7 +7170,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_3"
+    name "branchpoint.3.L23_PC_cADpyr_359.Node[1](1)"
     area 0.0
     x -2.4743741750717163
     y -27.025230407714844
@@ -7183,7 +7183,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_4"
+    name "branchpoint.4.L23_PC_cADpyr_359.Unmyelin[14](1)"
     area 0.0
     x -12.245664230774727
     y -24.786819955553106
@@ -7196,7 +7196,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_5"
+    name "branchpoint.5.L23_PC_cADpyr_359.Unmyelin[0](1)"
     area 0.0
     x -3.8418381596871294
     y -26.9875407569181
@@ -7209,7 +7209,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_6"
+    name "branchpoint.6.L23_PC_cADpyr_359.Unmyelin[5](1)"
     area 0.0
     x -5.062629411761565
     y -20.93081663320436
@@ -7222,7 +7222,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_7"
+    name "branchpoint.7.L23_PC_cADpyr_359.Unmyelin[1](1)"
     area 0.0
     x -6.392889976501465
     y -25.963899612426758
@@ -7235,7 +7235,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_8"
+    name "branchpoint.8.L23_PC_cADpyr_359.Unmyelin[3](1)"
     area 0.0
     x -8.442889928817749
     y -22.063899993896484
@@ -7248,7 +7248,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_9"
+    name "branchpoint.9.L23_PC_cADpyr_359.Unmyelin[4](1)"
     area 0.0
     x -12.150820661440324
     y -28.026135393654037
@@ -7261,7 +7261,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_10"
+    name "branchpoint.10.L23_PC_cADpyr_359.Unmyelin[12](1)"
     area 0.0
     x -3.2111917072930947
     y -8.165711123681154
@@ -7274,7 +7274,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_11"
+    name "branchpoint.11.L23_PC_cADpyr_359.Node[8](1)"
     area 0.0
     x -4.021165609359741
     y -16.63041877746582
@@ -7287,7 +7287,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_12"
+    name "branchpoint.12.L23_PC_cADpyr_359.Node[11](1)"
     area 0.0
     x -7.262207508087158
     y -37.114952087402344
@@ -7300,7 +7300,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_13"
+    name "branchpoint.13.L23_PC_cADpyr_359.Node[17](1)"
     area 0.0
     x -6.184777736663818
     y -32.789772033691406
@@ -7313,7 +7313,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_14"
+    name "branchpoint.14.L23_PC_cADpyr_359.Node[18](1)"
     area 0.0
     x -8.8530592918396
     y -34.82706069946289
@@ -7326,7 +7326,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_15"
+    name "branchpoint.15.L23_PC_cADpyr_359.Node[23](1)"
     area 0.0
     x -8.085412502288818
     y -44.08619689941406
@@ -7339,7 +7339,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_16"
+    name "branchpoint.16.L23_PC_cADpyr_359.Node[27](1)"
     area 0.0
     x -13.720229621305236
     y -47.913754025960955
@@ -7352,7 +7352,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_17"
+    name "branchpoint.17.L23_PC_cADpyr_359.Node[39](1)"
     area 0.0
     x -15.25899076461792
     y -49.99428749084473
@@ -7365,7 +7365,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_18"
+    name "branchpoint.18.L23_PC_cADpyr_359.Node[84](1)"
     area 0.0
     x 63.70155715942383
     y 3.15710186958313
@@ -7378,7 +7378,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_19"
+    name "branchpoint.19.L23_PC_cADpyr_359.Node[89](1)"
     area 0.0
     x 89.44296264648438
     y -1.3490659594535828
@@ -7391,7 +7391,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_20"
+    name "branchpoint.20.L23_PC_cADpyr_359.Node[95](1)"
     area 0.0
     x -29.470102310180664
     y -43.91773796081543
@@ -7404,7 +7404,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_21"
+    name "branchpoint.21.L23_PC_cADpyr_359.Node[98](1)"
     area 0.0
     x -128.65850830078125
     y -58.563114166259766
@@ -7417,7 +7417,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_22"
+    name "branchpoint.22.L23_PC_cADpyr_359.Node[103](1)"
     area 0.0
     x 8.973839282989502
     y 12.700790882110596
@@ -7430,7 +7430,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_23"
+    name "branchpoint.23.L23_PC_cADpyr_359.Node[105](1)"
     area 0.0
     x 18.907713890075684
     y -17.087443351745605
@@ -7443,7 +7443,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_24"
+    name "branchpoint.24.L23_PC_cADpyr_359.Node[107](1)"
     area 0.0
     x 4.488306045532227
     y -131.4107666015625
@@ -7456,7 +7456,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_25"
+    name "branchpoint.25.L23_PC_cADpyr_359.Unmyelin[6](1)"
     area 0.0
     x 3.9795199632644653
     y -134.99500274658203
@@ -7469,7 +7469,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_26"
+    name "branchpoint.26.L23_PC_cADpyr_359.Unmyelin[8](1)"
     area 0.0
     x -0.8638141256865639
     y -132.47746959122026
@@ -7482,7 +7482,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_27"
+    name "branchpoint.27.L23_PC_cADpyr_359.Node[108](1)"
     area 0.0
     x -31.864896774291992
     y -218.30664825439453
@@ -7495,7 +7495,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_28"
+    name "branchpoint.28.L23_PC_cADpyr_359.Node[111](1)"
     area 0.0
     x 91.90582656860352
     y 0.7250415682792664
@@ -7508,7 +7508,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_29"
+    name "branchpoint.29.L23_PC_cADpyr_359.Node[112](1)"
     area 0.0
     x 158.87998962402344
     y -32.53671646118164
@@ -7521,7 +7521,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_30"
+    name "branchpoint.30.L23_PC_cADpyr_359.Node[117](1)"
     area 0.0
     x 141.7562484741211
     y 12.0386381149292
@@ -7534,7 +7534,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_31"
+    name "branchpoint.31.L23_PC_cADpyr_359.Node[120](1)"
     area 0.0
     x 67.51516342163086
     y 34.9449348449707
@@ -7547,7 +7547,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 1.0
-    name "branchpoint_32"
+    name "branchpoint.32.L23_PC_cADpyr_359.Node[125](1)"
     area 0.0
     x 9.573450565338135
     y 48.916603088378906
@@ -7560,7 +7560,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_33"
+    name "branchpoint.33.L23_PC_cADpyr_359.dend[12](1)"
     area 0.0
     x -28.59857128221573
     y -3.987385731737652
@@ -7573,7 +7573,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_34"
+    name "branchpoint.34.L23_PC_cADpyr_359.dend[1](1)"
     area 0.0
     x -13.572508663612439
     y -4.814025361427072
@@ -7586,7 +7586,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_35"
+    name "branchpoint.35.L23_PC_cADpyr_359.dend[5](1)"
     area 0.0
     x -32.41819981210604
     y -14.808237815442745
@@ -7599,7 +7599,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_36"
+    name "branchpoint.36.L23_PC_cADpyr_359.dend[2](1)"
     area 0.0
     x -19.09101328996232
     y -2.143817653926689
@@ -7612,7 +7612,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_37"
+    name "branchpoint.37.L23_PC_cADpyr_359.dend[9](1)"
     area 0.0
     x -52.54743015432252
     y -21.561993498773724
@@ -7625,7 +7625,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_38"
+    name "branchpoint.38.L23_PC_cADpyr_359.dend[6](1)"
     area 0.0
     x -45.442010370324695
     y -29.72540684130486
@@ -7638,7 +7638,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_39"
+    name "branchpoint.39.L23_PC_cADpyr_359.dend[21](1)"
     area 0.0
     x 27.290912035941183
     y -10.642729072647212
@@ -7651,7 +7651,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_40"
+    name "branchpoint.40.L23_PC_cADpyr_359.dend[17](1)"
     area 0.0
     x 19.967704586417156
     y -0.26653758295220215
@@ -7664,7 +7664,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_41"
+    name "branchpoint.41.L23_PC_cADpyr_359.dend[25](1)"
     area 0.0
     x 12.230200290679932
     y -35.88824939727783
@@ -7677,7 +7677,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_42"
+    name "branchpoint.42.L23_PC_cADpyr_359.apic[1](1)"
     area 0.0
     x 11.114838659618632
     y -7.142449035674906
@@ -7690,7 +7690,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_43"
+    name "branchpoint.43.L23_PC_cADpyr_359.apic[4](1)"
     area 0.0
     x -3.393173006193856
     y -16.40386815522178
@@ -7703,7 +7703,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_44"
+    name "branchpoint.44.L23_PC_cADpyr_359.apic[16](1)"
     area 0.0
     x -0.18595858450142144
     y -22.93039858599215
@@ -7716,7 +7716,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_45"
+    name "branchpoint.45.L23_PC_cADpyr_359.apic[5](1)"
     area 0.0
     x -6.243102158832504
     y -17.19185276884848
@@ -7729,7 +7729,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_46"
+    name "branchpoint.46.L23_PC_cADpyr_359.apic[11](1)"
     area 0.0
     x 1.7816051323365927
     y -8.717650347978102
@@ -7742,7 +7742,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_47"
+    name "branchpoint.47.L23_PC_cADpyr_359.apic[6](1)"
     area 0.0
     x -48.91558826178377
     y -24.573465529700588
@@ -7755,7 +7755,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_48"
+    name "branchpoint.48.L23_PC_cADpyr_359.apic[8](1)"
     area 0.0
     x -68.48911780805233
     y -13.460437338843567
@@ -7768,7 +7768,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_49"
+    name "branchpoint.49.L23_PC_cADpyr_359.apic[12](1)"
     area 0.0
     x 29.00218492634756
     y 1.0843582584563165
@@ -7781,7 +7781,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_50"
+    name "branchpoint.50.L23_PC_cADpyr_359.apic[20](1)"
     area 0.0
     x 10.298851750524372
     y -29.376972031232782
@@ -7794,7 +7794,7 @@ graph [
     L 0.0
     Ra 100.0
     cm 2.0
-    name "branchpoint_51"
+    name "branchpoint.51.L23_PC_cADpyr_359.apic[17](1)"
     area 0.0
     x 6.561931605849466
     y -44.851448121066696

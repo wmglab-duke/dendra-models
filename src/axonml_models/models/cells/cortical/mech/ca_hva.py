@@ -39,7 +39,7 @@ class mh(S):
 
 class ca_hva(M):
     M.STATE(mh)
-    M.PARAMETER(gbar=0.0001)
+    M.RANGE(gbar=0.0001)
     M.USEION("ca", read=["eca"], write=["ica"])
 
     def ica(self, v):

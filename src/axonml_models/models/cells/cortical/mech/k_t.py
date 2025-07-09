@@ -44,7 +44,7 @@ class k_t(M):
     M.STATE(mh)
     M.USEION("k", read=["ek"], write=["ik"])
 
-    M.PARAMETER(gbar=0.00001)
+    M.RANGE(gbar=0.00001)
 
     def ik(self, v):
         return self.gbar * self.m**4 * self.h * (v - self.ek)

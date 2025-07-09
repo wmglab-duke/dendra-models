@@ -68,7 +68,7 @@ class s(S):
 
 class newnav8(M):
     M.STATE(m, h, s)
-    M.PARAMETER(gbar=0.0)
+    M.RANGE(gbar=0.0)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):
