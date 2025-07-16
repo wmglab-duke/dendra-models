@@ -8,9 +8,6 @@ import axonml as ax
 from axonml.units import nA, Hz, ms
 from axonml_models.models.cells.peripheral import SMF
 
-torch.set_default_dtype(torch.float32)
-
-
 
 torch.set_default_dtype(torch.float32)
 
@@ -98,13 +95,14 @@ tstop = 100
 dt = 0.001
 
 # fiber model
-mrg = SMF(input_diams, nodes).cuda().initialize()
+mrg = SMF(input_diams, nodes).cuda()
 
 # intracellular stim to generate activity
 intra = ax.mono_rect(amp=2.0*nA, pw=0.1*ms).repeat(100.0*Hz, delay=50.0*ms)
 mrg[:, 5].inject(intra)
 
 count.reset()
+mrg.initialize()
 mrg.longrun(
     tstop=tstop, 
     dt=dt, 
