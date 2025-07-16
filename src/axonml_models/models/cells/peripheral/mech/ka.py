@@ -7,7 +7,7 @@ class p(S):
     has_q10 = True
 
     S.STATE("p")
-    S.PARAMETER(
+    S.GLOBAL(
         shiftka=3.0,
         V0p5p=28.0,
         S0p5p=-28.0,
@@ -39,7 +39,7 @@ class p(S):
 class q(S):
     has_q10 = True
     S.STATE("q")
-    S.PARAMETER(
+    S.GLOBAL(
         shiftka=3.0,
         V0p5q=58.0,
         S0p5q=7.9,
@@ -71,7 +71,7 @@ class q(S):
 
 class ka(M):
     M.STATE(p, q)
-    M.PARAMETER(gbar=0.000141471)
+    M.GLOBAL(gbar=0.000141471)
     M.USEION("k", read=["ek"], write=["ik"])
 
     def ik(self, v):

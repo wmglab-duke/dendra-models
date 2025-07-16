@@ -2,7 +2,7 @@ from ..mechanisms import *
 
 
 class pas(Mechanism):
-    PARAMETER(g=0.001, e=-70.0)
+    GLOBAL(g=0.001, e=-70.0)
 
     NONSPECIFIC_CURRENT("i")
 

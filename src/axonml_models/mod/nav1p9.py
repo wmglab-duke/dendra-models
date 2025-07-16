@@ -9,7 +9,7 @@ from ..mechanisms.ops import *
 class m(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         aq10=2.5,
         bq10=21.0,
         cq10=10.0,
@@ -47,7 +47,7 @@ class m(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         aq10=2.5,
         bq10=21.0,
         cq10=10.0,
@@ -85,7 +85,7 @@ class h(State):
 class s(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         aq10=2.5,
         bq10=21.0,
         cq10=10.0,
@@ -123,7 +123,7 @@ class s(State):
 class nav1p9(Mechanism):
     STATE(m, h, s)
 
-    PARAMETER(gbar=0.0)
+    GLOBAL(gbar=0.0)
 
     USEION("na", read=["ena"], write=["ina"])
 

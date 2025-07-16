@@ -7,7 +7,7 @@ from ..mechanisms.ops import *
 
 
 class cao(State):
-    PARAMETER(
+    GLOBAL(
         lseg=1.0,
         txfer=4511.0,
         FARADAY=96500,

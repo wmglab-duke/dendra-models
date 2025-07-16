@@ -62,7 +62,7 @@ class Sundt2015(Unmyelinated):
            Journal of Neurophysiology, 114(6), 3140-3153. doi:10.1152/jn.00226.2015
     """
 
-    Unmyelinated.PARAMETER(cm=1.0, rhoa=100.0)
+    Unmyelinated.RANGE(cm=1.0, rhoa=100.0)
 
     def __init__(
         self,

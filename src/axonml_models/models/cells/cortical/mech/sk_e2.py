@@ -4,7 +4,7 @@ from axonml.models.mechanisms.ops import *
 
 
 class z(S):
-    S.PARAMETER(ztau=1.0)
+    S.GLOBAL(ztau=1.0)
     S.STATE("z")
     S.DERIVATIVE("z' = (zinf - z) / ztau")
     S.ASSIGNED("zinf")

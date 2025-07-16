@@ -7,3 +7,4 @@ from .fh import FHM, SENN
 from .fh import FHUM
 from .sweeney import Sweeney1987
 from .SMF import SMF
+from .MRG import bigMRG, smolMRG

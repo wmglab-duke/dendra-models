@@ -10,7 +10,7 @@ from axonml.models.mechanisms.ops import *
 class m(S):
     has_q10 = True
     S.STATE("m")
-    S.PARAMETER(
+    S.GLOBAL(
         aq10=2.5,
         bq10=21.0,
         cq10=10.0,
@@ -49,7 +49,7 @@ class m(S):
 class h(S):
     has_q10 = True
     S.STATE("h")
-    S.PARAMETER(
+    S.GLOBAL(
         aq10=2.5,
         bq10=21.0,
         cq10=10.0,
@@ -88,7 +88,7 @@ class h(S):
 class s(S):
     has_q10 = True
     S.STATE("s")
-    S.PARAMETER(
+    S.GLOBAL(
         aq10=2.5,
         bq10=21.0,
         cq10=10.0,
@@ -126,7 +126,7 @@ class s(S):
 
 class nav1p9(M):
     M.STATE(m, h, s)
-    M.PARAMETER(gbar=0.0)
+    M.GLOBAL(gbar=0.0)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):

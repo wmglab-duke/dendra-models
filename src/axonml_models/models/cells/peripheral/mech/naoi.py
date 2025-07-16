@@ -5,13 +5,13 @@ from axonml.models.mechanisms.ops import *
 
 class nai(S):
     S.STATE("nai")
-    S.PARAMETER(FARADAY=96520)
+    S.GLOBAL(FARADAY=96520)
     S.DERIVATIVE("nai' = -ina*4/FARADAY/diam*(1e4)")
 
 
 class nao(S):
     S.STATE("nao")
-    S.PARAMETER(FARADAY=96520, theta=30e-3, D=0.1e-6, naoinf=154.0)
+    S.GLOBAL(FARADAY=96520, theta=30e-3, D=0.1e-6, naoinf=154.0)
     S.DERIVATIVE("nao' = (ina/FARADAY - 0.1*D*(nao-naoinf)) / theta*(1e4)")
 
 

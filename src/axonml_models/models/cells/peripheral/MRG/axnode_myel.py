@@ -168,12 +168,16 @@ class axnode_myel(M):
         gl=0.007, ena=50.0, ek=-90.0, el=-90.0
     )
 
-    M.NONSPECIFIC_CURRENT("i")
+    M.NONSPECIFIC_CURRENT("inap", "ina", "ik", "il")
 
-    def i(self, v):
-        return (
-            self.gnabar * self.m**3 * self.h * (v - self.ena)
-            + self.gnapbar * self.p**3 * (v - self.ena)
-            + self.gkbar * self.s * (v - self.ek)
-            + self.gl * (v - self.el)
-        )
+    def ina(self, v):
+        return self.gnabar * self.m**3 * self.h * (v - self.ena)
+
+    def inap(self, v):
+        return self.gnapbar * self.p**3 * (v - self.ena)
+
+    def ik(self, v):
+        return self.gkbar * self.s * (v - self.ek)
+
+    def il(self, v):
+        return self.gl * (v - self.el)

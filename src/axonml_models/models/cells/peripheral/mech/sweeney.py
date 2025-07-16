@@ -10,7 +10,7 @@ from axonml.models.mechanisms.ops import *
 
 class m(S):
     S.STATE("m")
-    S.PARAMETER(amA=49, amB=126, amC=0.363, amD=5.3, bmA=56.2, bmB=4.17)
+    S.GLOBAL(amA=49, amB=126, amC=0.363, amD=5.3, bmA=56.2, bmB=4.17)
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
@@ -37,7 +37,7 @@ class m(S):
 
 class h(S):
     S.STATE("h")
-    S.PARAMETER(ahA=56, ahB=15.6, bhA=10, bhB=74.5, bhC=5.0)
+    S.GLOBAL(ahA=56, ahB=15.6, bhA=10, bhB=74.5, bhC=5.0)
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
 
@@ -64,7 +64,7 @@ class h(S):
 
 class sweeney(M):
     M.STATE(m, h)
-    M.PARAMETER(gnabar=1.445, gl=0.128, el=-80.01, ena=35.64)
+    M.GLOBAL(gnabar=1.445, gl=0.128, el=-80.01, ena=35.64)
 
     M.USEION("na", write=["ina"])
     M.NONSPECIFIC_CURRENT("il")

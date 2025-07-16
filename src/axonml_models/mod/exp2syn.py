@@ -4,7 +4,7 @@ from ..mechanisms.ops import *
 
 class A(State):
 
-    PARAMETER(tau1=0.1)
+    GLOBAL(tau1=0.1)
     DERIVATIVE("A' = -A / tau1")
 
     def inf(self, v):
@@ -12,7 +12,7 @@ class A(State):
     
 
 class B(State):
-    PARAMETER(tau2=10.0)
+    GLOBAL(tau2=10.0)
     DERIVATIVE("B' = -B / tau2")
 
     def inf(self, v):
@@ -21,7 +21,7 @@ class B(State):
 
 class exp2syn(Mechanism):
     STATE(A, B)
-    PARAMETER(e=0)
+    GLOBAL(e=0)
     ASSIGNED("factor")
 
     NONSPECIFIC_CURRENT("i")

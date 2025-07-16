@@ -7,7 +7,7 @@ from ..mechanisms.ops import *
 class m(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         Q10nafm=2.30,
         Q10TempA=22.85,
         Q10TempB=10,
@@ -39,7 +39,7 @@ class m(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         Q10nafh=1.50,
         Q10TempA=22.85,
         Q10TempB=10,
@@ -69,7 +69,7 @@ class h(State):
 
 
 class l(State):
-    PARAMETER(V0p5l=40.0, S0p5l=1.5, A_taul=25.0, B_taul=4.5, C_taul=0.01, Vpl=-20.0)
+    GLOBAL(V0p5l=40.0, S0p5l=1.5, A_taul=25.0, B_taul=4.5, C_taul=0.01, Vpl=-20.0)
 
     DERIVATIVE("l' = (linf - l) / taul")
     ASSIGNED("linf", "taul")
@@ -85,7 +85,7 @@ class l(State):
 class naf(Mechanism):
     STATE(m, h, l)
 
-    PARAMETER(gbar=0.068967142)
+    GLOBAL(gbar=0.068967142)
 
     USEION("na", read=["ena"], write=["ina"])
 

@@ -16,7 +16,7 @@ class s(S):
     has_q10 = True
 
     S.STATE("s")
-    S.PARAMETER(aq10=3.0, bq10=22.0, cq10=10.0)
+    S.GLOBAL(aq10=3.0, bq10=22.0, cq10=10.0)
     S.DERIVATIVE("s' = (sinf - s) / taus")
     S.ASSIGNED("sinf", "taus")
 
@@ -38,7 +38,7 @@ class f(S):
     has_q10 = True
 
     S.STATE("f")
-    S.PARAMETER(aq10=3.0, bq10=22.0, cq10=10.0)
+    S.GLOBAL(aq10=3.0, bq10=22.0, cq10=10.0)
     S.DERIVATIVE("f' = (finf - f) / tauf")
     S.ASSIGNED("finf", "tauf")
 
@@ -58,7 +58,7 @@ class f(S):
 
 class h(M):
     M.STATE(s, f)
-    M.PARAMETER(gbar=0.0001)
+    M.GLOBAL(gbar=0.0001)
     M.USEION("k", read=["ek"], write=["ik"])
     M.USEION("na", read=["ena"], write=["ina"])
     M.ASSIGNED("g")

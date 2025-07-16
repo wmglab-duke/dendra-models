@@ -8,7 +8,7 @@ from ..mechanisms.ops import *
 
 
 class m(State):
-    PARAMETER(amA=49, amB=126, amC=0.363, amD=5.3, bmA=56.2, bmB=4.17)
+    GLOBAL(amA=49, amB=126, amC=0.363, amD=5.3, bmA=56.2, bmB=4.17)
 
     DERIVATIVE("m' = (minf - m) / taum")
     ASSIGNED("minf", "taum")
@@ -36,7 +36,7 @@ class m(State):
 
 
 class h(State):
-    PARAMETER(ahA=56, ahB=15.6, bhA=10, bhB=74.5, bhC=5.0)
+    GLOBAL(ahA=56, ahB=15.6, bhA=10, bhB=74.5, bhC=5.0)
 
     DERIVATIVE("h' = (hinf - h) / tauh")
     ASSIGNED("hinf", "tauh")
@@ -66,7 +66,7 @@ class h(State):
 class sweeney(Mechanism):
     STATE(m, h)
 
-    PARAMETER(gnabar=1.445, gl=0.128, el=-80.01, ena=35.64)
+    GLOBAL(gnabar=1.445, gl=0.128, el=-80.01, ena=35.64)
 
     USEION("na", write=["ina"])
     NONSPECIFIC_CURRENT("il")

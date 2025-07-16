@@ -7,7 +7,7 @@ from ..mechanisms.ops import exprelr
 class p(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         ampA=0.01,
         ampB=27.0,
         ampC=10.2,
@@ -43,7 +43,7 @@ class p(State):
 class mrg_nap(Mechanism):
     STATE(p)
 
-    PARAMETER(gnapbar=0.01, ena=50.0)
+    GLOBAL(gnapbar=0.01, ena=50.0)
 
     NONSPECIFIC_CURRENT("i")
 

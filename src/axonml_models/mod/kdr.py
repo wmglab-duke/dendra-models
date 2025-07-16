@@ -7,7 +7,7 @@ from ..mechanisms.ops import exp
 class l(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         zetal=2.0,
         gml=1.0,
         vhalfl=-61.0,
@@ -56,7 +56,7 @@ class l(State):
 class n(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         zetan=-5.0,
         gmn=0.4,
         vhalfn=-32.0,
@@ -105,7 +105,7 @@ class n(State):
 class kdr(Mechanism):
     STATE(l, n)
 
-    PARAMETER(gkbar=0.003)
+    GLOBAL(gkbar=0.003)
 
     USEION("k", read=["ek"], write=["ik"])
 

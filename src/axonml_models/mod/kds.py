@@ -7,7 +7,7 @@ from ..mechanisms.ops import *
 class x(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         Q10kds=1.93,
         Q10TempA=22.85,
         Q10TempB=10,
@@ -40,7 +40,7 @@ class x(State):
 class y(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         Q10kds=1.93,
         Q10TempA=22.85,
         Q10TempB=10,
@@ -67,7 +67,7 @@ class y(State):
 class kds(Mechanism):
     STATE(x, y)
 
-    PARAMETER(gbar=0.000106103)
+    GLOBAL(gbar=0.000106103)
 
     USEION("k", read=["ek"], write=["ik"])
 

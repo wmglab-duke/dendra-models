@@ -6,7 +6,7 @@ from ..mechanisms.ops import exp
 
 
 class kna(Mechanism):
-    PARAMETER(gbar=0.0001, pmax=0.37, nH=3.5, ec50=38.7)
+    GLOBAL(gbar=0.0001, pmax=0.37, nH=3.5, ec50=38.7)
 
     USEION("na", read=["nai"])
     USEION("k", read=["ek"], write=["ik"])

@@ -11,7 +11,7 @@ from ..mechanisms.ops import *
 class m(State):
     USEQ10()
 
-    PARAMETER(aq10=2.3, bq10=21.0, cq10=10.0)
+    GLOBAL(aq10=2.3, bq10=21.0, cq10=10.0)
 
     DERIVATIVE("m' = (minf - m) / taum")
     ASSIGNED("minf", "taum")
@@ -33,7 +33,7 @@ class m(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(aq10=2.3, bq10=21.0, cq10=10.0)
+    GLOBAL(aq10=2.3, bq10=21.0, cq10=10.0)
 
     DERIVATIVE("h' = (hinf - h) / tauh")
     ASSIGNED("hinf", "tauh")
@@ -56,7 +56,7 @@ class k_tst(Mechanism):
     STATE(m, h)
     USEION("k", read=["ek"], write=["ik"])
 
-    PARAMETER(gbar=0.00001)
+    GLOBAL(gbar=0.00001)
 
     def ik(self, v):
         return self.gbar * self.m**4 * self.h * (v - self.ek)

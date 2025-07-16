@@ -5,7 +5,7 @@ from ..mechanisms.ops import *
 class m(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         aq10=2.3,
         bq10=21.0,
         cq10=10.0,
@@ -41,7 +41,7 @@ class m(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(aq10=2.3, bq10=21.0, cq10=10.0, ha2=4.63, hb2=2.63)
+    GLOBAL(aq10=2.3, bq10=21.0, cq10=10.0, ha2=4.63, hb2=2.63)
 
     DERIVATIVE("h' = (hinf - h) / tauh")
     ASSIGNED("hinf", "tauh")
@@ -64,7 +64,7 @@ class nap_et2(Mechanism):
 
     USEION("na", read=["ena"], write=["ina"])
 
-    PARAMETER(gbar=0.0001)
+    GLOBAL(gbar=0.0001)
 
     def ina(self, v):
         return self.gbar * self.m**3 * self.h * (v - self.ena)

@@ -48,7 +48,7 @@ def balance(model):
 
 
 class ThioAutonomic2025(Unmyelinated):
-    Unmyelinated.PARAMETER(cm=1.326291192, rhoa=23.117539, celsius=37.0)
+    Unmyelinated.RANGE(cm=1.326291192, rhoa=23.117539)
 
     def __init__(
         self,
@@ -108,7 +108,7 @@ class ThioAutonomic2025(Unmyelinated):
 
 
 class ThioCutaneous2025(Unmyelinated):
-    Unmyelinated.PARAMETER(cm=1.326291192, rhoa=27.513088, celsius=37.0)
+    Unmyelinated.RANGE(cm=1.326291192, rhoa=27.513088)
 
     def __init__(
         self,

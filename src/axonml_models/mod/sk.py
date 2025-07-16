@@ -8,7 +8,7 @@ class n(State):
     DERIVATIVE("n' = (ninf - n) / taun")
     ASSIGNED("ninf", "taun")
 
-    PARAMETER(aq10=3.0)
+    GLOBAL(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
@@ -25,7 +25,7 @@ class n(State):
 
 class sk(Mechanism):
     STATE(n)
-    PARAMETER(gbar=0.0001)
+    GLOBAL(gbar=0.0001)
 
     USEION("k", read=["ek"], write=["ik"])
     USEION("ca", read=["cai"])

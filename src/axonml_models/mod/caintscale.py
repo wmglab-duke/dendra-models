@@ -11,7 +11,7 @@ class oc_cai(State):
 
     STATE("oc", "cai")
 
-    PARAMETER(lseg=1e-3, ku=100, kr=0.238, nb=4.0, Bi=0.001, FARADAY=96500)
+    GLOBAL(lseg=1e-3, ku=100, kr=0.238, nb=4.0, Bi=0.001, FARADAY=96500)
 
     BUFFERS("SA", "Vol")
 

@@ -7,7 +7,7 @@ from ..mechanisms.ops import expit, exprelr
 class m(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         amA=1.86,
         amB=21.4,
         amC=10.3,
@@ -43,7 +43,7 @@ class m(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         ahA=0.062,
         ahB=114.0,
         ahC=11.0,
@@ -78,7 +78,7 @@ class h(State):
 class mrg_naf(Mechanism):
     STATE(m, h)
 
-    PARAMETER(gnabar=3.0, ena=50.0)
+    GLOBAL(gnabar=3.0, ena=50.0)
 
     NONSPECIFIC_CURRENT("i")
 

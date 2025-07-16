@@ -9,7 +9,7 @@ from ..mechanisms.ops import *
 class m(State):
     USEQ10()
 
-    PARAMETER(aq10=2.5, bq10=22.0, cq10=10.0)
+    GLOBAL(aq10=2.5, bq10=22.0, cq10=10.0)
 
     DERIVATIVE("m' = (minf - m) / taum")
     ASSIGNED("minf", "taum")
@@ -33,7 +33,7 @@ class m(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(aq10=2.5, bq10=22.0, cq10=10.0)
+    GLOBAL(aq10=2.5, bq10=22.0, cq10=10.0)
 
     DERIVATIVE("h' = (hinf - h) / tauh")
     ASSIGNED("hinf", "tauh")
@@ -52,7 +52,7 @@ class h(State):
 class s(State):
     USEQ10()
 
-    PARAMETER(aq10=2.5, bq10=22.0, cq10=10.0)
+    GLOBAL(aq10=2.5, bq10=22.0, cq10=10.0)
 
     DERIVATIVE("s' = (sinf - s) / taus")
     ASSIGNED("sinf", "taus")
@@ -79,7 +79,7 @@ class s(State):
 class u(State):
     USEQ10()
 
-    PARAMETER(aq10=2.5, bq10=22.0, cq10=10.0)
+    GLOBAL(aq10=2.5, bq10=22.0, cq10=10.0)
 
     DERIVATIVE("u' = (uinf - u) / tauu")
     ASSIGNED("uinf", "tauu")
@@ -106,7 +106,7 @@ class u(State):
 class nav1p8(Mechanism):
     STATE(m, h, s, u)
 
-    PARAMETER(gbar=0.0)
+    GLOBAL(gbar=0.0)
 
     USEION("na", read=["ena"], write=["ina"])
 

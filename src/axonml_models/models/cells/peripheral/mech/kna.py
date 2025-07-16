@@ -6,7 +6,7 @@ from axonml.models.mechanisms.ops import *
 
 
 class kna(M):
-    M.PARAMETER(gbar=0.0001, pmax=0.37, nH=3.5, ec50=38.7)
+    M.GLOBAL(gbar=0.0001, pmax=0.37, nH=3.5, ec50=38.7)
 
     M.USEION("na", read=["nai"])
     M.USEION("k", read=["ek"], write=["ik"])

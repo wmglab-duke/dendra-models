@@ -7,7 +7,7 @@ from ..mechanisms.ops import *
 class m(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         Q10nafm=2.30,
         Q10TempA=22,
         Q10TempB=10,
@@ -38,7 +38,7 @@ class m(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         Q10nafh=1.50,
         Q10TempA=22,
         Q10TempB=10,
@@ -69,7 +69,7 @@ class h(State):
 class naf97mean(Mechanism):
     STATE(m, h)
 
-    PARAMETER(gbar=0.068967142)
+    GLOBAL(gbar=0.068967142)
 
     USEION("na", read=["ena"], write=["ina"])
 

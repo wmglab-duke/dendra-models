@@ -5,7 +5,7 @@ from ..mechanisms.ops import expit, exprelr, exp
 class m(State):
     USEQ10()
 
-    PARAMETER(amA=1.0, aq10=2.24659524757)
+    GLOBAL(amA=1.0, aq10=2.24659524757)
 
     DERIVATIVE("m' = (minf - m) / mtau")
     ASSIGNED("minf", "mtau")
@@ -30,7 +30,7 @@ class m(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(aq10=2.24659524757)
+    GLOBAL(aq10=2.24659524757)
 
     DERIVATIVE("h' = (hinf - h) / htau")
     ASSIGNED("hinf", "htau")
@@ -55,7 +55,7 @@ class h(State):
 class n(State):
     USEQ10()
 
-    PARAMETER(anA=1.0, aq10=2.24659524757)
+    GLOBAL(anA=1.0, aq10=2.24659524757)
 
     DERIVATIVE("n' = (ninf - n) / ntau")
     ASSIGNED("ninf", "ntau")
@@ -80,7 +80,7 @@ class n(State):
 class rattay_aberham(Mechanism):
     STATE(m, h, n)
 
-    PARAMETER(gnabar=0.12, gkbar=0.036, gl=0.0003, el=-59.4)
+    GLOBAL(gnabar=0.12, gkbar=0.036, gl=0.0003, el=-59.4)
 
     USEION("na", read=["ena"], write=["ina"])
     USEION("k", read=["ek"], write=["ik"])

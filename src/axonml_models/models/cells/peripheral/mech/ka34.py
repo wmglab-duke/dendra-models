@@ -8,7 +8,7 @@ class m(S):
     S.STATE("m")
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
-    S.PARAMETER(aq10=3.0)
+    S.GLOBAL(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
@@ -28,7 +28,7 @@ class h(S):
     S.STATE("h")
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
-    S.PARAMETER(aq10=3.0)
+    S.GLOBAL(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
@@ -45,7 +45,7 @@ class h(S):
 
 class ka34(M):
     M.STATE(m, h)
-    M.PARAMETER(gbar=0.0001)
+    M.GLOBAL(gbar=0.0001)
 
     M.USEION("k", read=["ek"], write=["ik"])
 

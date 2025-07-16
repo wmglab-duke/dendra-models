@@ -8,7 +8,7 @@ from ..mechanisms.ops import exprelr, exp, expit
 class m(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         am1=0.32,
         am2=13.1,
         am3=4.0,
@@ -44,7 +44,7 @@ class m(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         ah1=0.128,
         ah2=17.0,
         ah3=18.0,
@@ -80,7 +80,7 @@ class h(State):
 class nahh(Mechanism):
     STATE(m, h)
 
-    PARAMETER(gnabar=0.3)
+    GLOBAL(gnabar=0.3)
 
     USEION("na", read=["ena"], write=["ina"])
 

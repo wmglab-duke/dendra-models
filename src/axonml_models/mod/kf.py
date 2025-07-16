@@ -9,7 +9,7 @@ from ..mechanisms.ops import *
 class h(State):
     USEQ10()
 
-    PARAMETER(aq10=3.3, bq10=23, cq10=10, vhh=-49.9, kh=4.6, shift=-15.0)
+    GLOBAL(aq10=3.3, bq10=23, cq10=10, vhh=-49.9, kh=4.6, shift=-15.0)
 
     DERIVATIVE("h' = (hinf - h) / tauh")
     ASSIGNED("hinf", "tauh")
@@ -29,7 +29,7 @@ class h(State):
 class m(State):
     USEQ10()
 
-    PARAMETER(aq10=3.3, bq10=23.0, cq10=10.0, vhm=-5.4, km=16.4, shift=-15.0)
+    GLOBAL(aq10=3.3, bq10=23.0, cq10=10.0, vhm=-5.4, km=16.4, shift=-15.0)
 
     DERIVATIVE("m' = (minf - m) / taum")
     ASSIGNED("minf", "taum")
@@ -48,7 +48,7 @@ class m(State):
 class kf(Mechanism):
     STATE(m, h)
 
-    PARAMETER(gbar=0.0001)
+    GLOBAL(gbar=0.0001)
 
     USEION("k", read=["ek"], write=["ik"])
 

@@ -23,7 +23,7 @@ class ih(M):
     M.STATE(m)
 
     M.RANGE(gbar=0.0001)
-    M.PARAMETER(ehcn=-45.0)
+    M.GLOBAL(ehcn=-45.0)
     M.NONSPECIFIC_CURRENT("ihcn")
 
     def ihcn(self, v):

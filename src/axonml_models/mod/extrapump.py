@@ -3,7 +3,7 @@ from ..mechanisms.ops import *
 
 
 class extrapump(Mechanism):
-    PARAMETER(pumpik=0.0, pumpina=0.0, pumpica=0.0)
+    GLOBAL(pumpik=0.0, pumpina=0.0, pumpica=0.0)
     USEION("k", write=["ik"])
     USEION("na", write=["ina"])
     USEION("ca", write=["ica"])

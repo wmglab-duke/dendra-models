@@ -12,7 +12,7 @@ from ..mechanisms.ops import *
 class s(State):
     USEQ10()
 
-    PARAMETER(aq10=3.3, bq10=21.0, cq10=10.0)
+    GLOBAL(aq10=3.3, bq10=21.0, cq10=10.0)
 
     DERIVATIVE("s' = (sinf - s) / taus")
     ASSIGNED("sinf", "taus")
@@ -31,7 +31,7 @@ class s(State):
 class f(State):
     USEQ10()
 
-    PARAMETER(aq10=3.3, bq10=21.0, cq10=10.0)
+    GLOBAL(aq10=3.3, bq10=21.0, cq10=10.0)
 
     DERIVATIVE("f' = (finf - f) / tauf")
     ASSIGNED("finf", "tauf")
@@ -58,7 +58,7 @@ class f(State):
 class ks(Mechanism):
     STATE(s, f)
 
-    PARAMETER(gbar=0.0001)
+    GLOBAL(gbar=0.0001)
 
     USEION("k", read=["ek"], write=["ik"])
 

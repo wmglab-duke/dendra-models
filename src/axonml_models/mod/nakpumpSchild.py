@@ -5,7 +5,7 @@ from ..mechanisms.ops import *
 
 
 class nakpumpSchild(Mechanism):
-    PARAMETER(
+    GLOBAL(
         INaKmax22=0.009726135,
         Kmnai=5.46,
         Kmko=0.621,

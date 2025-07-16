@@ -6,7 +6,7 @@ from axonml.models.mechanisms.ops import *
 
 
 class nakpumpSchild(M):
-    M.PARAMETER(
+    M.GLOBAL(
         INaKmax22=0.009726135,
         Kmnai=5.46,
         Kmko=0.621,

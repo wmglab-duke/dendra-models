@@ -4,7 +4,7 @@ from axonml.models.mechanisms.ops import *
 
 
 class leakSchild(M):
-    M.PARAMETER(
+    M.GLOBAL(
         gbna=1.85681e-05, gbca=3.00626e-06, R=8314, z=2, ecaoffset=78.7, F=96500
     )
     M.USEION("na", read=["ena"], write=["ina"])

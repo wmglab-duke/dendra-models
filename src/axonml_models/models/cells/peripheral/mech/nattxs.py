@@ -9,7 +9,7 @@ class m(S):
     has_q10 = True
 
     S.STATE("m")
-    S.PARAMETER(
+    S.GLOBAL(
         aq10=2.5,
         bq10=21,
         cq10=10,
@@ -50,7 +50,7 @@ class h(S):
     has_q10 = True
 
     S.STATE("h")
-    S.PARAMETER(
+    S.GLOBAL(
         aq10=2.5,
         bq10=21,
         cq10=10,
@@ -91,7 +91,7 @@ class s(S):
     has_q10 = True
 
     S.STATE("s")
-    S.PARAMETER(
+    S.GLOBAL(
         aq10=2.5,
         bq10=21,
         cq10=10,
@@ -130,7 +130,7 @@ class s(S):
 
 class nattxs(M):
     M.STATE(m, h, s)
-    M.PARAMETER(gbar=0.0)
+    M.GLOBAL(gbar=0.0)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):

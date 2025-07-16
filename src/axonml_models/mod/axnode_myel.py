@@ -7,7 +7,7 @@ from ..mechanisms.ops import expit, exprelr
 class m(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         amA=1.86,
         amB=21.4,
         amC=10.3,
@@ -43,7 +43,7 @@ class m(State):
 class p(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         ampA=0.01,
         ampB=27.0,
         ampC=10.2,
@@ -79,7 +79,7 @@ class p(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         ahA=0.062,
         ahB=114.0,
         ahC=11.0,
@@ -114,7 +114,7 @@ class h(State):
 class s(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         asA=0.3,
         asB=-27.0,
         asC=-5.0,
@@ -151,7 +151,7 @@ class s(State):
 class axnode_myel(Mechanism):
     STATE(m, p, h, s)
 
-    PARAMETER(
+    GLOBAL(
         gnabar=3.0, gnapbar=0.01, gkbar=0.08, gl=0.007, ena=50.0, ek=-90.0, el=-90.0
     )
 

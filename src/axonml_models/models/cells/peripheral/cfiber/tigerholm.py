@@ -87,7 +87,7 @@ class Tigerholm2014(Unmyelinated):
            1721-35. doi:10.1152/jn.00777.2012
     """
 
-    Unmyelinated.PARAMETER(cm=1.0, rhoa=35.5)
+    Unmyelinated.RANGE(cm=1.0, rhoa=35.5)
 
     def __init__(
         self,

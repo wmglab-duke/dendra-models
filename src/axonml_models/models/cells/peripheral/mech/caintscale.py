@@ -9,7 +9,7 @@ from axonml.models.mechanisms.ops import *
 
 class oc_cai(S):
     S.STATE("oc", "cai")
-    S.PARAMETER(lseg=1e-3, ku=100, kr=0.238, nb=4.0, Bi=0.001, FARADAY=96500)
+    S.GLOBAL(lseg=1e-3, ku=100, kr=0.238, nb=4.0, Bi=0.001, FARADAY=96500)
     S.BUFFER("SA", "Vol")
 
     S.DERIVATIVE(

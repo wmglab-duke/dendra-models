@@ -4,7 +4,7 @@ from ..mechanisms import *
 
 
 class fire_r(Mechanism):
-    PARAMETER(threshold=-50.0, rest=-65.0, refractory=5.0, dt=0.01)
+    GLOBAL(threshold=-50.0, rest=-65.0, refractory=5.0, dt=0.01)
     ASSIGNED("is_refractory", "time_refractory", "spiked")
 
     def initial(self, v):

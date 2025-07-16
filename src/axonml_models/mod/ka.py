@@ -4,7 +4,7 @@ from ..mechanisms.ops import *
 
 class p(State):
     USEQ10()
-    PARAMETER(
+    GLOBAL(
         shiftka=3.0,
         V0p5p=28.0,
         S0p5p=-28.0,
@@ -35,7 +35,7 @@ class p(State):
 
 class q(State):
     USEQ10()
-    PARAMETER(
+    GLOBAL(
         shiftka=3.0,
         V0p5q=58.0,
         S0p5q=7.9,
@@ -67,7 +67,7 @@ class q(State):
 class ka(Mechanism):
     STATE(p, q)
 
-    PARAMETER(gbar=0.000141471)
+    GLOBAL(gbar=0.000141471)
 
     USEION("k", read=["ek"], write=["ik"])
 

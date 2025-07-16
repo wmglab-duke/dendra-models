@@ -97,7 +97,7 @@ class SMF(Myelinated):
         cm=9.352452121675014,
         rhoa=69.99446868896484,
     )
-    Myelinated.PARAMETER(
+    Myelinated.GLOBAL(
         axon_d={
             "axond1": 0.0187623,
             "axond2": 4.787487e-01,

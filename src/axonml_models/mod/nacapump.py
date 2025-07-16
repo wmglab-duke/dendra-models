@@ -5,7 +5,7 @@ from ..mechanisms.ops import *
 
 
 class nacapump(Mechanism):
-    PARAMETER(
+    GLOBAL(
         KNaCa22=1.27324e-06,
         Q10NaCa=2.20,
         Q10TempA=22.85,

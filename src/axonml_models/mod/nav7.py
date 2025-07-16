@@ -8,7 +8,7 @@ class m(State):
     DERIVATIVE("m' = (minf - m) / taum")
     ASSIGNED("minf", "taum")
 
-    PARAMETER(aq10=3.0)
+    GLOBAL(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 21.0) / 10.0)
@@ -27,7 +27,7 @@ class h(State):
     DERIVATIVE("h' = (hinf - h) / tauh")
     ASSIGNED("hinf", "tauh")
 
-    PARAMETER(aq10=3.0)
+    GLOBAL(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 21.0) / 10.0)
@@ -42,7 +42,7 @@ class h(State):
 
 class nav7(Mechanism):
     STATE(m, h)
-    PARAMETER(gbar=0.12)
+    GLOBAL(gbar=0.12)
 
     USEION("na", read=["ena"], write=["ina"])
 

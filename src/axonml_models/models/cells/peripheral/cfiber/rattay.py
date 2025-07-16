@@ -6,7 +6,7 @@ from ..mech import rattay_aberham
 
 
 class Rattay1993(Unmyelinated):
-    Unmyelinated.PARAMETER(rhoa=100.0)
+    Unmyelinated.RANGE(rhoa=100.0)
 
     def __init__(
         self,

@@ -9,7 +9,7 @@ class m(S):
     has_q10 = True
 
     S.STATE("m")
-    S.PARAMETER(
+    S.GLOBAL(
         Q10nafm=2.30,
         Q10TempA=22.85,
         Q10TempB=10,
@@ -43,7 +43,7 @@ class h(S):
     has_q10 = True
 
     S.STATE("h")
-    S.PARAMETER(
+    S.GLOBAL(
         Q10nafh=1.50,
         Q10TempA=22.85,
         Q10TempB=10,
@@ -75,7 +75,7 @@ class h(S):
 
 class l(S):
     S.STATE("l")
-    S.PARAMETER(
+    S.GLOBAL(
         V0p5l=40.0, S0p5l=1.5, A_taul=25.0, B_taul=4.5, C_taul=0.01, Vpl=-20.0
     )
 
@@ -93,7 +93,7 @@ class l(S):
 
 class naf(M):
     M.STATE(m, h, l)
-    M.PARAMETER(gbar=0.068967142)
+    M.GLOBAL(gbar=0.068967142)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):

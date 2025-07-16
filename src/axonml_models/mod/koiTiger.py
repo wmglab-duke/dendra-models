@@ -3,12 +3,12 @@ from ..mechanisms.ops import *
 
 
 class ki(State):
-    PARAMETER(FARADAY=96520)
+    GLOBAL(FARADAY=96520)
     DERIVATIVE("ki' = -ik*4/FARADAY/diam*(1e4)")
 
 
 class ko(State):
-    PARAMETER(FARADAY=96520, theta=0.029, D=0.1e-6, koinf=5.6)
+    GLOBAL(FARADAY=96520, theta=0.029, D=0.1e-6, koinf=5.6)
     DERIVATIVE("ko' = (ik/FARADAY - 0.1*D*(ko-koinf)) / theta*(1e4)")
 
 

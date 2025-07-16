@@ -9,7 +9,7 @@ class m(S):
     has_q10 = True
 
     S.STATE("m")
-    S.PARAMETER(
+    S.GLOBAL(
         Q10nasm=2.30,
         Q10TempA=22,
         Q10TempB=10,
@@ -42,7 +42,7 @@ class h(S):
     has_q10 = True
 
     S.STATE("h")
-    S.PARAMETER(
+    S.GLOBAL(
         Q10nash=1.50,
         Q10TempA=22,
         Q10TempB=10,
@@ -73,7 +73,7 @@ class h(S):
 
 class nas97mean(M):
     M.STATE(m, h)
-    M.PARAMETER(gbar=0.001043349)
+    M.GLOBAL(gbar=0.001043349)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):

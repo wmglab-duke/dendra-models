@@ -4,7 +4,7 @@ from ..mechanisms import *
 
 
 class fire(Mechanism):
-    PARAMETER(threshold=-50.0, rest=-65.0)
+    GLOBAL(threshold=-50.0, rest=-65.0)
 
     def breakpoint(self, v):
         if v.dim() > 0:

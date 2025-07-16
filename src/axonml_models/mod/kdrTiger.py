@@ -7,7 +7,7 @@ from ..mechanisms.ops import *
 class n(State):
     USEQ10()
 
-    PARAMETER(aq10=3.3, bq10=22.0, cq10=10.0, k1=15.4, vh=35.0)
+    GLOBAL(aq10=3.3, bq10=22.0, cq10=10.0, k1=15.4, vh=35.0)
 
     DERIVATIVE("n' = (ninf - n) / ntau")
     ASSIGNED("ninf", "ntau")
@@ -30,7 +30,7 @@ class n(State):
 class kdrTiger(Mechanism):
     STATE(n)
 
-    PARAMETER(gbar=0.0001)
+    GLOBAL(gbar=0.0001)
 
     USEION("k", read=["ek"], write=["ik"])
 

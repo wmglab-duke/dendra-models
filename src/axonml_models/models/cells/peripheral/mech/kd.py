@@ -7,7 +7,7 @@ class n(S):
     has_q10 = True
 
     S.STATE("n")
-    S.PARAMETER(
+    S.GLOBAL(
         V0p5n=14.62,
         S0p5n=-18.38,
         A_alphan=0.001265,
@@ -48,7 +48,7 @@ class n(S):
 
 class kd(M):
     M.STATE(n)
-    M.PARAMETER(gbar=0.000180376)
+    M.GLOBAL(gbar=0.000180376)
     M.USEION("k", read=["ek"], write=["ik"])
 
     def ik(self, v):

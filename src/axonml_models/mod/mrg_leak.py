@@ -4,7 +4,7 @@ from ..mechanisms import *
 
 
 class mrg_leak(Mechanism):
-    PARAMETER(gl=0.007, el=-90.0)
+    GLOBAL(gl=0.007, el=-90.0)
 
     NONSPECIFIC_CURRENT("i")
 

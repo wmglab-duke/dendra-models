@@ -7,7 +7,7 @@ from ..mechanisms.ops import *
 
 
 class nakpump(Mechanism):
-    PARAMETER(smalla=0.0, b1=1.0)
+    GLOBAL(smalla=0.0, b1=1.0)
 
     ASSIGNED("pump")
     USEION("na", read=["nai"], write=["ina"])

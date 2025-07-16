@@ -10,7 +10,7 @@ class l(S):
 
     S.STATE("l")
 
-    S.PARAMETER(
+    S.GLOBAL(
         zetal=2.0,
         gml=1.0,
         vhalfl=-61.0,
@@ -62,7 +62,7 @@ class n(S):
 
     S.STATE("n")
 
-    S.PARAMETER(
+    S.GLOBAL(
         zetan=-5.0,
         gmn=0.4,
         vhalfn=-32.0,
@@ -112,7 +112,7 @@ class n(S):
 class kdr(M):
     M.STATE(l, n)
 
-    M.PARAMETER(gkbar=0.003)
+    M.GLOBAL(gkbar=0.003)
 
     M.USEION("k", read=["ek"], write=["ik"])
 

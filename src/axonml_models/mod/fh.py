@@ -8,7 +8,7 @@ from ..mechanisms.ops import *
 class m(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         aq10=3.0,
         bq10=20.0,
         cq10=10.0,
@@ -49,7 +49,7 @@ class m(State):
 class h(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         aq10=3.0,
         bq10=20.0,
         cq10=10.0,
@@ -90,7 +90,7 @@ class h(State):
 class n(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         aq10=3.0,
         bq10=20.0,
         cq10=10.0,
@@ -131,7 +131,7 @@ class n(State):
 class p(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         aq10=3.0,
         bq10=20.0,
         cq10=10.0,
@@ -172,7 +172,7 @@ class p(State):
 class fh(Mechanism):
     STATE(m, h, n, p)
 
-    PARAMETER(
+    GLOBAL(
         pnabar=8e-3,
         ppbar=0.54e-3,
         pkbar=1.2e-3,

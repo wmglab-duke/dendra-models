@@ -6,7 +6,7 @@ from axonml.models.mechanisms.ops import *
 class m(S):
     has_q10 = True
     S.STATE("m")
-    S.PARAMETER(
+    S.GLOBAL(
         aq10=2.3,
         bq10=21.0,
         cq10=10.0,
@@ -54,7 +54,7 @@ class m(S):
 class h(S):
     has_q10 = True
     S.STATE("h")
-    S.PARAMETER(
+    S.GLOBAL(
         aq10=2.3,
         bq10=21.0,
         cq10=10.0,

@@ -61,7 +61,7 @@ class Sweeney1987(Myelinated):
            Engineering, 34(8), 630-7. doi:10.1109/TBME.1987.325975
     """
 
-    Myelinated.PARAMETER(cm=2.5, rhoa=54.7)
+    Myelinated.RANGE(cm=2.5, rhoa=54.7)
 
     def __init__(
         self,

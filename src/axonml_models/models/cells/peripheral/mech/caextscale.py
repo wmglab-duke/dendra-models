@@ -9,7 +9,7 @@ from axonml.models.mechanisms.ops import *
 
 class cao(S):
     S.STATE("cao")
-    S.PARAMETER(
+    S.GLOBAL(
         lseg=1.0,
         txfer=4511.0,
         FARADAY=96500,

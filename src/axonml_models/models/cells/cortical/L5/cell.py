@@ -26,7 +26,7 @@ def L5(ID, N, integrator=None):
 
     cell = ax.Tree.from_graph(g, integrator=integrator, N=N, v_init=-70.0)
     for group in ['soma', 'apic', 'dend', 'axon', 'myelin', 'unmyelin', 'node']:
-        cell[:, cell.find(group)].label(group)    
+        cell.slice(group).label(group)    
 
     # insert mechanisms
 

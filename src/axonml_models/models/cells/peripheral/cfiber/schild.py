@@ -25,7 +25,7 @@ import math
 
 
 class Schild1997(Unmyelinated):
-    Unmyelinated.PARAMETER(cm=1.326291192, rhoa=100.0)
+    Unmyelinated.RANGE(cm=1.326291192, rhoa=100.0)
 
     def __init__(
         self,
@@ -74,7 +74,7 @@ class Schild1997(Unmyelinated):
 
 
 class Schild1994(Unmyelinated):
-    Unmyelinated.PARAMETER(cm=1.326291192, rhoa=100.0)
+    Unmyelinated.RANGE(cm=1.326291192, rhoa=100.0)
 
     def __init__(
         self,

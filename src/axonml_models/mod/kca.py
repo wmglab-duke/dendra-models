@@ -7,7 +7,7 @@ from ..mechanisms.ops import *
 class c(State):
     USEQ10()
 
-    PARAMETER(
+    GLOBAL(
         Q10kcac=2.30,
         Q10TempA=22.85,
         Q10TempB=10.0,
@@ -42,7 +42,7 @@ class c(State):
 class kca(Mechanism):
     STATE(c)
 
-    PARAMETER(gbar=0.000141471)
+    GLOBAL(gbar=0.000141471)
 
     USEION("k", read=["ek"], write=["ik"])
     USEION("ca", read=["cai"])

@@ -3,7 +3,7 @@ from ..mechanisms.ops import *
 
 
 class nacx(Mechanism):
-    PARAMETER(gbar=316.0, F=96500, R=8314, knaca=36e-9, dnaca=0.0036)
+    GLOBAL(gbar=316.0, F=96500, R=8314, knaca=36e-9, dnaca=0.0036)
     USEION("na", read=["nai", "nao"], write=["ina"])
     USEION("ca", read=["cai", "cao"], write=["ica"])
 

@@ -6,7 +6,7 @@ from .mech import fh
 
 
 class FHM(Myelinated):
-    Myelinated.PARAMETER(cm=2.0, rhoa=110.0)
+    Myelinated.RANGE(cm=2.0, rhoa=110.0)
 
     def __init__(
         self,
@@ -27,7 +27,7 @@ SENN = FHM
 
 
 class FHUM(Unmyelinated):
-    Unmyelinated.PARAMETER(cm=2.0, rhoa=110.0)
+    Unmyelinated.RANGE(cm=2.0, rhoa=110.0)
 
     def __init__(
         self,

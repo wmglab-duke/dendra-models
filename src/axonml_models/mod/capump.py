@@ -5,7 +5,7 @@ from ..mechanisms.ops import *
 
 
 class capump(Mechanism):
-    PARAMETER(
+    GLOBAL(
         ICaPmax22=0.000859437, KmCa=0.0005, Q10CaP=2.30, Q10TempA=22.0, Q10TempB=10.0
     )
 

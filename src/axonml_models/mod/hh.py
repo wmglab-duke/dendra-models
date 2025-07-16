@@ -73,7 +73,7 @@ class n(S):
 class hh(M):
 
     M.STATE(m, h, n)
-    M.PARAMETER(gnabar=.12, gkbar=.036, gl=.0003, ena=50.0, ek=-77.0, el=-54.3)
+    M.GLOBAL(gnabar=.12, gkbar=.036, gl=.0003, ena=50.0, ek=-77.0, el=-54.3)
 
     M.NONSPECIFIC_CURRENT("il", "ina", "ik")
 
