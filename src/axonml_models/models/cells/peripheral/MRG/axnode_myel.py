@@ -5,6 +5,10 @@ from axonml.models.mechanisms._state import State as S
 from axonml.models.mechanisms.ops import *
 
 
+def Exp(x):
+    return torch.where(x < -100.0, torch.tensor(0.0, dtype=x.dtype, device=x.device), torch.exp(x))
+
+
 class m(S):
     has_q10 = True
     S.STATE("m")
@@ -25,13 +29,31 @@ class m(S):
     def calc_q10(self):
         return self.aq10_1 ** ((self.celsius - self.bq10) / self.cq10)
 
+    def vtrap6(self, v):
+        cond = (v + self.amB) / self.amC
+        out = (self.amA * (v + self.amB)) / (1.0 - Exp(-cond))
+        out = torch.where(
+            torch.abs(cond) < 1e-6, self.amA * self.amC, out
+        )
+        guard = torch.tensor(0.15733, dtype=out.dtype, device=out.device)
+        out = torch.where(v < -150.0, guard, out)
+        return out
+
+    def vtrap7(self, v):
+        cond = (v + self.bmB) / self.bmC
+        out = (self.bmA * -(v + self.bmB)) / (1.0 - Exp(cond))
+        out = torch.where(
+            torch.abs(cond) < 1e-6, self.bmA * self.bmC, out
+        )
+        guard = torch.tensor(0.0057268, dtype=out.dtype, device=out.device)
+        out = torch.where(v > 150.0, guard, out)
+        return out
+
     def alpha(self, v):
-        x = -(v + self.amB)
-        return self.q10() * self.amA * exprelr(x, self.amC)
+        return self.q10() * self.vtrap6(v)
 
     def beta(self, v):
-        x = v + self.bmB
-        return self.q10() * self.bmA * exprelr(x, self.bmC)
+        return self.q10() * self.vtrap7(v)
 
     def breakpoint(self, v):
         am = self.alpha(v)
@@ -64,13 +86,31 @@ class p(S):
     def calc_q10(self):
         return self.pq10_1 ** ((self.celsius - self.bq10) / self.cq10)
 
+    def vtrap1(self, v):
+        cond = (v + self.ampB) / self.ampC
+        out = (self.ampA * (v + self.ampB)) / (1.0 - Exp(-cond))
+        out = torch.where(
+            torch.abs(cond) < 1e-6, self.ampA * self.ampC, out
+        )
+        guard = torch.tensor(0.00086725, dtype=out.dtype, device=out.device)
+        out = torch.where(v < -150.0, guard, out)
+        return out
+
+    def vtrap2(self, v):
+        cond = (v + self.bmpB) / self.bmpC
+        out = (self.bmpA * -(v + self.bmpB)) / (1.0 - Exp(cond))
+        out = torch.where(
+            torch.abs(cond) < 1e-6, self.bmpA * self.bmpC, out
+        )
+        guard = torch.tensor(1.5855e-05, dtype=out.dtype, device=out.device)
+        out = torch.where(v > 150.0, guard, out)
+        return out
+    
     def alpha(self, v):
-        x = -(v + self.ampB)
-        return self.q10() * self.ampA * exprelr(x, self.ampC)
+        return self.q10() * self.vtrap1(v)
 
     def beta(self, v):
-        x = v + self.bmpB
-        return self.q10() * self.bmpA * exprelr(x, self.bmpC)
+        return self.q10() * self.vtrap2(v)
 
     def breakpoint(self, v):
         amp = self.alpha(v)
@@ -103,12 +143,26 @@ class h(S):
     def calc_q10(self):
         return self.aq10_2 ** ((self.celsius - self.bq10) / self.cq10)
 
+    def vtrap8(self, v):
+        cond = (v + self.ahB) / self.ahC
+        out = (self.ahA * -(v + self.ahB)) / (1.0 - Exp(cond))
+        out = torch.where(
+            torch.abs(cond) < 1e-6, self.ahA * self.ahC, out
+        )
+        guard = torch.tensor(0.0032594, dtype=out.dtype, device=out.device)
+        out = torch.where(v > 150.0, guard, out)
+        return out
+
+    def vtrap9(self, v):
+        out = self.bhA / (1.0 + Exp(-(v + self.bhB) / self.bhC))
+        guard = torch.tensor(0.0014054, dtype=out.dtype, device=out.device)
+        return torch.where(v < -150.0, guard, out)
+
     def alpha(self, v):
-        x = v + self.ahB
-        return self.q10() * self.ahA * exprelr(x, self.ahC)
+        return self.q10() * self.vtrap8(v)
 
     def beta(self, v):
-        return self.q10() * self.bhA * expit((v + self.bhB) / self.bhC)
+        return self.q10() * self.vtrap9(v)
 
     def breakpoint(self, v):
         ah = self.alpha(v)
@@ -142,13 +196,21 @@ class s(S):
     def calc_q10(self):
         return self.aq10_3 ** ((self.celsius - self.bq10) / self.cq10)
 
+    def vtrap10(self, v):
+        guard = torch.tensor(3.3484e-05, dtype=v.dtype, device=v.device)
+        out = self.asA / (1.0 + Exp((v - self.vtraub + self.asB) / self.asC))
+        return torch.where(v < -150.0, guard, out)
+
+    def vtrap11(self, v):
+        guard = torch.tensor(3.3484e-06, dtype=v.dtype, device=v.device)
+        out = self.bsA / (1.0 + Exp((v - self.vtraub + self.bsB) / self.bsC))
+        return torch.where(v < -150.0, guard, out)
+    
     def alpha(self, v):
-        b = self.q10() * self.asA * expit((self.vtraub - v - self.asB) / self.asC)
-        return b
+        return self.q10() * self.vtrap10(v)
 
     def beta(self, v):
-        b = self.q10() * self.bsA * expit((self.vtraub - v - self.bsB) / self.bsC)
-        return b
+        return self.q10() * self.vtrap11(v)
 
     def breakpoint(self, v):
         as_ = self.alpha(v)

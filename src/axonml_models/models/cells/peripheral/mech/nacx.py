@@ -9,6 +9,7 @@ class nacx(M):
     M.USEION("ca", read=["cai", "cao"], write=["ica"])
 
     M.ASSIGNED("inaca", "q10", "FRT")
+    M.EXPLICIT("ina", "ica")
 
     def breakpoint(self, v):
         dfcain = self.nai**3*self.cao*exp(0.5*v*self.FRT)

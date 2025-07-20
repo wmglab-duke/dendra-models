@@ -22,6 +22,7 @@ class nacapump(M):
     M.USEION("na", read=["nai", "nao"], write=["ina"])
 
     M.ASSIGNED("inca", "KNaCa", "DFin", "DFout")
+    M.EXPLICIT("ina", "ica")
 
     def initial(self, v):
         self.KNaCa = self.KNaCa22 * self.Q10NaCa ** (

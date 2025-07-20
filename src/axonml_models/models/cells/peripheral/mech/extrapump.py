@@ -8,6 +8,7 @@ class extrapump(M):
     M.USEION("k", write=["ik"])
     M.USEION("na", write=["ina"])
     M.USEION("ca", write=["ica"])
+    M.EXPLICIT("ik", "ina", "ica")
 
     def ik(self, v):
         return self.pumpik

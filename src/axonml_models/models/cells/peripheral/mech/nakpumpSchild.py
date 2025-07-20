@@ -19,6 +19,7 @@ class nakpumpSchild(M):
     M.USEION("na", read=["nai"], write=["ina"])
 
     M.ASSIGNED("ink", "INaKmax")
+    M.EXPLICIT("ina", "ik")
 
     def initial(self, v):
         self.INaKmax = self.INaKmax22 * self.Q10NaK ** (

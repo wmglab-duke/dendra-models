@@ -12,6 +12,7 @@ class nakpump(M):
     M.ASSIGNED("pump")
     M.USEION("na", read=["nai"], write=["ina"])
     M.USEION("k", read=["ko"], write=["ik"])
+    M.EXPLICIT("ina", "ik")
 
     def initial(self, v):
         self.breakpoint(v)

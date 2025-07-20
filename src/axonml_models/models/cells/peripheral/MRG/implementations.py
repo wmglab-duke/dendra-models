@@ -66,12 +66,12 @@ class MRG(ExtCell):
         paralength1 = self.__class__.paralength1(fd)
         paralength2 = self.__class__.paralength2(fd)
 
-        interlength = (deltax - nodelength0 - 2 * paralength1 - 2 * paralength2) / 6
+        interlength = (deltax - nodelength0 - (2 * paralength1) - (2 * paralength2)) / 6
 
         rhoa     = 0.7e6
         space_p1 = 0.002
         space_p2 = 0.004
-        space_i  = 0.002
+        space_i  = 0.004
 
         rpn0 = (rhoa * 0.01) / (torch.pi * ((((nodeD / 2) + space_p1) ** 2) - ((nodeD / 2) ** 2)))
         rpn1 = (rhoa * 0.01) / (torch.pi * ((((nodeD / 2) + space_p1) ** 2) - ((nodeD / 2) ** 2)))
@@ -181,7 +181,7 @@ class smolMRG(MRG):
 
     nl = lambda fd: torch.clamp(torch.floor(17.4 * (0.553 * fd - 0.024) - 1.74), min=1)
     axonD = lambda fd: 0.553 * fd - 0.024
-    nodeD = lambda fd: 0.321 * (0.553 * fd - 0.024) + 0.37
+    nodeD = lambda fd: 0.321 * axonD(fd) + 0.37
     deltax = lambda fd: -3.22 * fd**2 + 148 * fd - 128
 
     nodelength0 = lambda fd: 1.0
@@ -190,7 +190,7 @@ class smolMRG(MRG):
 
     def __init__(
         self,
-        diameters=[8.0],
+        diameters=[2.0],
         n_node=101,
         celsius=37.0,
         v_init=-80.0,
