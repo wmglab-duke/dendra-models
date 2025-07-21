@@ -20,7 +20,7 @@ def valid_ids():
     return ids
 
 
-def L5(ID, N, integrator=None):
+def L5_PC(ID, N, integrator=None):
     gml_path = _MORPH_DIR / f"L5_{ID}.gml"
     g = nx.read_gml(gml_path, destringizer=int)
 

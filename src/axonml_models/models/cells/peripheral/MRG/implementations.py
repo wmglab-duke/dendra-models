@@ -181,7 +181,7 @@ class smolMRG(MRG):
 
     nl = lambda fd: torch.clamp(torch.floor(17.4 * (0.553 * fd - 0.024) - 1.74), min=1)
     axonD = lambda fd: 0.553 * fd - 0.024
-    nodeD = lambda fd: 0.321 * axonD(fd) + 0.37
+    nodeD = lambda fd: 0.321 * smolMRG.axonD(fd) + 0.37
     deltax = lambda fd: -3.22 * fd**2 + 148 * fd - 128
 
     nodelength0 = lambda fd: 1.0
