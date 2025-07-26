@@ -11,10 +11,10 @@ class m(S):
     def breakpoint(self, v):
         taum = 0.2 * 20.000 / (1 + exp(((v - (-46.560)) / (-44.140))))
         minf = 1 / (1 + exp(((v - (18.700)) / (-9.700))))
-        return {'taum': taum, 'minf': minf}
+        return {"taum": taum, "minf": minf}
 
     def inf(self, v):
-        return {'m': self.breakpoint(v)['minf']}
+        return {"m": self.breakpoint(v)["minf"]}
 
 
 class skv3_1(M):

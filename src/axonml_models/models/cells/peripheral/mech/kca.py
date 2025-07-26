@@ -40,7 +40,7 @@ class c(S):
         cinf = a * s
         tauc = self.q10() * 4.5 * s
         return {"tauc": tauc, "cinf": cinf}
-    
+
     def inf(self, v):
         return {"c": self.breakpoint(v)["cinf"]}
 

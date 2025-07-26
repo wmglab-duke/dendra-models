@@ -29,7 +29,7 @@ class m(S):
     def inf(self, v):
         a = 2.85 - 2.839 * sigmoid((1.159 - v) / 13.95)
         b = 7.6205 * sigmoid((-46.463 - v) / 8.8289)
-        return {'m': a / (a + b)}
+        return {"m": a / (a + b)}
 
 
 class h(S):
@@ -49,12 +49,12 @@ class h(S):
         return {"hinf": hinf, "tauh": tauh}
 
     def inf(self, v):
-        return {'h': sigmoid((-32.2 - v) / 4.0)}
+        return {"h": sigmoid((-32.2 - v) / 4.0)}
 
 
 class s(S):
     has_q10 = True
-    
+
     S.STATE("s")
     S.GLOBAL(aq10=2.5, bq10=22.0, cq10=10.0)
     S.DERIVATIVE("s' = (sinf - s) / taus")
@@ -77,7 +77,7 @@ class s(S):
         return {"sinf": sinf, "taus": taus}
 
     def inf(self, v):
-        return {'s': sigmoid((-45.0 - v) / 8.0)}
+        return {"s": sigmoid((-45.0 - v) / 8.0)}
 
 
 class u(S):
@@ -105,7 +105,7 @@ class u(S):
         return {"uinf": uinf, "tauu": tauu}
 
     def inf(self, v):
-        return {'u': sigmoid((-51.0 - v) / 8.0)}
+        return {"u": sigmoid((-51.0 - v) / 8.0)}
 
 
 class nav1p8(M):

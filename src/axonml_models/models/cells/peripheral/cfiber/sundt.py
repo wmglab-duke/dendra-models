@@ -67,7 +67,7 @@ class Sundt2015(Unmyelinated):
     def __init__(
         self,
         diameters=[1.0],
-        L=5.0*mm,
+        L=5.0 * mm,
         dx=10,
         celsius=37.0,
         v_init=-60.0,

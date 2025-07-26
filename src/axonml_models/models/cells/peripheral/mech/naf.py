@@ -75,9 +75,7 @@ class h(S):
 
 class l(S):
     S.STATE("l")
-    S.GLOBAL(
-        V0p5l=40.0, S0p5l=1.5, A_taul=25.0, B_taul=4.5, C_taul=0.01, Vpl=-20.0
-    )
+    S.GLOBAL(V0p5l=40.0, S0p5l=1.5, A_taul=25.0, B_taul=4.5, C_taul=0.01, Vpl=-20.0)
 
     S.DERIVATIVE("l' = (linf - l) / taul")
     S.ASSIGNED("linf", "taul")

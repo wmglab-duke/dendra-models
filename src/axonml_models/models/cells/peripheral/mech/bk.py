@@ -16,16 +16,23 @@ class m(S):
     def breakpoint(self, v):
         q10 = self.q10()
         pca = log10(self.cai) - 3
-        v12 = -50.0*pca-232.0
-        minf = 1/(1+exp(-1*(v - v12)/24))
-        taum = 1/(exp((v+(58*pca)+303)/(3.2*pca))+exp(-1*(v+(107*pca)+453)/(6.8*pca)))+0.4
+        v12 = -50.0 * pca - 232.0
+        minf = 1 / (1 + exp(-1 * (v - v12) / 24))
+        taum = (
+            1
+            / (
+                exp((v + (58 * pca) + 303) / (3.2 * pca))
+                + exp(-1 * (v + (107 * pca) + 453) / (6.8 * pca))
+            )
+            + 0.4
+        )
         taum = taum / q10
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
         pca = log10(self.cai) - 3
-        v12 = -50.0*pca-232.0
-        return {"m": 1/(1+exp(-1*(v - v12)/24))}
+        v12 = -50.0 * pca - 232.0
+        return {"m": 1 / (1 + exp(-1 * (v - v12) / 24))}
 
 
 class h(S):
@@ -41,16 +48,19 @@ class h(S):
     def breakpoint(self, v):
         q10 = self.q10()
         pca = log10(self.cai) - 3
-        vh12 =  -8*pca+35
-        hinf= 1/(1+exp((v - vh12)/47))
-        tauh = 1/(exp((v+(3*pca)+100)/(3*pca))+exp(-1*(v+(191*pca)+600)/(17*pca)))
+        vh12 = -8 * pca + 35
+        hinf = 1 / (1 + exp((v - vh12) / 47))
+        tauh = 1 / (
+            exp((v + (3 * pca) + 100) / (3 * pca))
+            + exp(-1 * (v + (191 * pca) + 600) / (17 * pca))
+        )
         tauh = tauh / q10
         return {"tauh": tauh, "hinf": hinf}
 
     def inf(self, v):
         pca = log10(self.cai) - 3
-        vh12 =  -8*pca+35
-        return {"h": 1/(1+exp((v - vh12)/47))}
+        vh12 = -8 * pca + 35
+        return {"h": 1 / (1 + exp((v - vh12) / 47))}
 
 
 class bk(M):

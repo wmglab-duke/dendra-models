@@ -36,15 +36,9 @@ def pre_init(model):
 
 
 def balance(model):
-    model.mech.extrapump.pumpina_default.copy_(
-        -model.mech.na_ion.ina.flatten()[0]
-    )
-    model.mech.extrapump.pumpik_default.copy_(
-        -model.mech.k_ion.ik.flatten()[0]
-    )
-    model.mech.extrapump.pumpica_default.copy_(
-        -model.mech.ca_ion.ica.flatten()[0]
-    )
+    model.mech.extrapump.pumpina_default.copy_(-model.mech.na_ion.ina.flatten()[0])
+    model.mech.extrapump.pumpik_default.copy_(-model.mech.k_ion.ik.flatten()[0])
+    model.mech.extrapump.pumpica_default.copy_(-model.mech.ca_ion.ica.flatten()[0])
 
 
 class ThioAutonomic2025(Unmyelinated):
@@ -53,14 +47,14 @@ class ThioAutonomic2025(Unmyelinated):
     def __init__(
         self,
         diameters=[1.0],
-        L=5.0*mm,
+        L=5.0 * mm,
         dx=10,
         celsius=37.0,
         v_init=-58.5,
         integrator=None,
     ):
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
-        R = 8314        # molar gas constant
+        R = 8314  # molar gas constant
         F = 96485.3329  # Faraday's constant
 
         ko = 5.4
@@ -87,7 +81,7 @@ class ThioAutonomic2025(Unmyelinated):
         self.insert(cav12, gbar=0.000004)
         self.insert(cav22, gbar=0.009546)
         self.insert(km, gbar=0.002864)
-        self.insert(caextscale, lseg=(1e-4) * dx, fhspace=.03)
+        self.insert(caextscale, lseg=(1e-4) * dx, fhspace=0.03)
         self.insert(caintscale, lseg=(1e-4) * dx)
         self.insert(hcn, gbar=0.002789)
         self.insert(kv21, gbar=0.005337)
@@ -102,7 +96,14 @@ class ThioAutonomic2025(Unmyelinated):
 
         with (
             E(ena=ena, ek=ek),
-            C(cao0=2.0, cai0=0.000117, ko0=ko_real, ki0=ki_real, nao0=nao, nai0=nai_real),
+            C(
+                cao0=2.0,
+                cai0=0.000117,
+                ko0=ko_real,
+                ki0=ki_real,
+                nao0=nao,
+                nai0=nai_real,
+            ),
         ):
             self.build()
 
@@ -113,14 +114,14 @@ class ThioCutaneous2025(Unmyelinated):
     def __init__(
         self,
         diameters=[1.0],
-        L=5.0*mm,
+        L=5.0 * mm,
         dx=10,
         celsius=37.0,
         v_init=-58.5,
         integrator=None,
     ):
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
-        R = 8314        # molar gas constant
+        R = 8314  # molar gas constant
         F = 96485.3329  # Faraday's constant
 
         ko = 5.4
@@ -147,7 +148,7 @@ class ThioCutaneous2025(Unmyelinated):
         self.insert(cav12, gbar=0.000188)
         self.insert(cav22, gbar=0.000361)
         self.insert(km, gbar=0.000003)
-        self.insert(caextscale, lseg=(1e-4) * dx, fhspace=.03)
+        self.insert(caextscale, lseg=(1e-4) * dx, fhspace=0.03)
         self.insert(caintscale, lseg=(1e-4) * dx)
         self.insert(hcn, gbar=0.000106)
         self.insert(kv21, gbar=0.327196)
@@ -162,6 +163,13 @@ class ThioCutaneous2025(Unmyelinated):
 
         with (
             E(ena=ena, ek=ek),
-            C(cao0=2.0, cai0=0.000117, ko0=ko_real, ki0=ki_real, nao0=nao, nai0=nai_real),
+            C(
+                cao0=2.0,
+                cai0=0.000117,
+                ko0=ko_real,
+                ki0=ki_real,
+                nao0=nao,
+                nai0=nai_real,
+            ),
         ):
             self.build()

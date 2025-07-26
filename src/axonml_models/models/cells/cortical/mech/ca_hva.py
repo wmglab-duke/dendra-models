@@ -14,21 +14,21 @@ class mh(S):
     def breakpoint(self, v):
         guard = torch.tensor(-27.0, device=v.device, dtype=v.dtype)
         v = torch.where(torch.isin(v, guard), v + 0.0001, v)
-        mAlpha = (0.055*(-27-v))/(exp((-27-v)/3.8) - 1)
-        mBeta = (0.94*exp((-75-v)/17))
-        mInf = mAlpha/(mAlpha + mBeta)
-        mTau = 1/(mAlpha + mBeta)
-        hAlpha = (0.000457*exp((-13-v)/50))
-        hBeta = (0.0065/(exp((-v-15)/28)+1))
-        hInf = hAlpha/(hAlpha + hBeta)
-        hTau = 1/(hAlpha + hBeta)
+        mAlpha = (0.055 * (-27 - v)) / (exp((-27 - v) / 3.8) - 1)
+        mBeta = 0.94 * exp((-75 - v) / 17)
+        mInf = mAlpha / (mAlpha + mBeta)
+        mTau = 1 / (mAlpha + mBeta)
+        hAlpha = 0.000457 * exp((-13 - v) / 50)
+        hBeta = 0.0065 / (exp((-v - 15) / 28) + 1)
+        hInf = hAlpha / (hAlpha + hBeta)
+        hTau = 1 / (hAlpha + hBeta)
         return {
             "taum": mTau,
             "minf": mInf,
             "tauh": hTau,
             "hinf": hInf,
         }
-    
+
     def inf(self, v):
         states = self.breakpoint(v)
         return {

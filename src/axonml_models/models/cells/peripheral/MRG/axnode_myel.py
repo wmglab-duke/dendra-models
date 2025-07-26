@@ -1,12 +1,16 @@
 # McIntyre, Richardson, Grill 2002
 
+import torch
+
 from axonml.models.mechanisms._mechanism import Mechanism as M
 from axonml.models.mechanisms._state import State as S
 from axonml.models.mechanisms.ops import *
 
 
 def Exp(x):
-    return torch.where(x < -100.0, torch.tensor(0.0, dtype=x.dtype, device=x.device), torch.exp(x))
+    return torch.where(
+        x < -100.0, torch.tensor(0.0, dtype=x.dtype, device=x.device), torch.exp(x)
+    )
 
 
 class m(S):
@@ -32,9 +36,7 @@ class m(S):
     def vtrap6(self, v):
         cond = (v + self.amB) / self.amC
         out = (self.amA * (v + self.amB)) / (1.0 - Exp(-cond))
-        out = torch.where(
-            torch.abs(cond) < 1e-6, self.amA * self.amC, out
-        )
+        out = torch.where(torch.abs(cond) < 1e-6, self.amA * self.amC, out)
         guard = torch.tensor(0.15733, dtype=out.dtype, device=out.device)
         out = torch.where(v < -150.0, guard, out)
         return out
@@ -42,9 +44,7 @@ class m(S):
     def vtrap7(self, v):
         cond = (v + self.bmB) / self.bmC
         out = (self.bmA * -(v + self.bmB)) / (1.0 - Exp(cond))
-        out = torch.where(
-            torch.abs(cond) < 1e-6, self.bmA * self.bmC, out
-        )
+        out = torch.where(torch.abs(cond) < 1e-6, self.bmA * self.bmC, out)
         guard = torch.tensor(0.0057268, dtype=out.dtype, device=out.device)
         out = torch.where(v > 150.0, guard, out)
         return out
@@ -61,7 +61,7 @@ class m(S):
         mtau = 1 / (am + bm)
         minf = am * mtau
         return {"mtau": mtau, "minf": minf}
-    
+
     def inf(self, v):
         return {"m": self.breakpoint(v)["minf"]}
 
@@ -89,9 +89,7 @@ class p(S):
     def vtrap1(self, v):
         cond = (v + self.ampB) / self.ampC
         out = (self.ampA * (v + self.ampB)) / (1.0 - Exp(-cond))
-        out = torch.where(
-            torch.abs(cond) < 1e-6, self.ampA * self.ampC, out
-        )
+        out = torch.where(torch.abs(cond) < 1e-6, self.ampA * self.ampC, out)
         guard = torch.tensor(0.00086725, dtype=out.dtype, device=out.device)
         out = torch.where(v < -150.0, guard, out)
         return out
@@ -99,13 +97,11 @@ class p(S):
     def vtrap2(self, v):
         cond = (v + self.bmpB) / self.bmpC
         out = (self.bmpA * -(v + self.bmpB)) / (1.0 - Exp(cond))
-        out = torch.where(
-            torch.abs(cond) < 1e-6, self.bmpA * self.bmpC, out
-        )
+        out = torch.where(torch.abs(cond) < 1e-6, self.bmpA * self.bmpC, out)
         guard = torch.tensor(1.5855e-05, dtype=out.dtype, device=out.device)
         out = torch.where(v > 150.0, guard, out)
         return out
-    
+
     def alpha(self, v):
         return self.q10() * self.vtrap1(v)
 
@@ -118,7 +114,7 @@ class p(S):
         ptau = 1 / (amp + bmp)
         pinf = amp * ptau
         return {"ptau": ptau, "pinf": pinf}
-    
+
     def inf(self, v):
         return {"p": self.breakpoint(v)["pinf"]}
 
@@ -146,9 +142,7 @@ class h(S):
     def vtrap8(self, v):
         cond = (v + self.ahB) / self.ahC
         out = (self.ahA * -(v + self.ahB)) / (1.0 - Exp(cond))
-        out = torch.where(
-            torch.abs(cond) < 1e-6, self.ahA * self.ahC, out
-        )
+        out = torch.where(torch.abs(cond) < 1e-6, self.ahA * self.ahC, out)
         guard = torch.tensor(0.0032594, dtype=out.dtype, device=out.device)
         out = torch.where(v > 150.0, guard, out)
         return out
@@ -170,7 +164,7 @@ class h(S):
         htau = 1 / (ah + bh)
         hinf = ah * htau
         return {"htau": htau, "hinf": hinf}
-    
+
     def inf(self, v):
         return {"h": self.breakpoint(v)["hinf"]}
 
@@ -205,7 +199,7 @@ class s(S):
         guard = torch.tensor(3.3484e-06, dtype=v.dtype, device=v.device)
         out = self.bsA / (1.0 + Exp((v - self.vtraub + self.bsB) / self.bsC))
         return torch.where(v < -150.0, guard, out)
-    
+
     def alpha(self, v):
         return self.q10() * self.vtrap10(v)
 
@@ -218,7 +212,7 @@ class s(S):
         stau = 1 / (as_ + bs)
         sinf = as_ * stau
         return {"stau": stau, "sinf": sinf}
-    
+
     def inf(self, v):
         return {"s": self.breakpoint(v)["sinf"]}
 
@@ -226,8 +220,7 @@ class s(S):
 class axnode_myel(M):
     M.STATE(m, p, h, s)
     M.GLOBAL(
-        gnabar=3.0, gnapbar=0.01, gkbar=0.08, 
-        gl=0.007, ena=50.0, ek=-90.0, el=-90.0
+        gnabar=3.0, gnapbar=0.01, gkbar=0.08, gl=0.007, ena=50.0, ek=-90.0, el=-90.0
     )
 
     M.NONSPECIFIC_CURRENT("inap", "ina", "ik", "il")

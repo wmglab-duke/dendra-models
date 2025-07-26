@@ -45,7 +45,7 @@ class m(S):
         v = v + 70.0
         a = self.alpha(v)
         b = self.beta(v)
-        return {'m': a / (a + b)}
+        return {"m": a / (a + b)}
 
 
 class h(S):
@@ -88,7 +88,7 @@ class h(S):
         v = v + 70.0
         a = self.alpha(v)
         b = self.beta(v)
-        return {'h': a / (a + b)}
+        return {"h": a / (a + b)}
 
 
 class n(S):
@@ -131,7 +131,7 @@ class n(S):
         v = v + 70.0
         a = self.alpha(v)
         b = self.beta(v)
-        return {'n': a / (a + b)}
+        return {"n": a / (a + b)}
 
 
 class p(S):
@@ -174,7 +174,7 @@ class p(S):
         v = v + 70.0
         a = self.alpha(v)
         b = self.beta(v)
-        return {'p': a / (a + b)}
+        return {"p": a / (a + b)}
 
 
 class fh(M):

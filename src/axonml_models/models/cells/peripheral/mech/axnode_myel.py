@@ -39,7 +39,7 @@ class m(S):
         mtau = 1 / (am + bm)
         minf = am * mtau
         return {"mtau": mtau, "minf": minf}
-    
+
     def inf(self, v):
         return {"m": self.breakpoint(v)["minf"]}
 
@@ -78,7 +78,7 @@ class p(S):
         ptau = 1 / (amp + bmp)
         pinf = amp * ptau
         return {"ptau": ptau, "pinf": pinf}
-    
+
     def inf(self, v):
         return {"p": self.breakpoint(v)["pinf"]}
 
@@ -116,7 +116,7 @@ class h(S):
         htau = 1 / (ah + bh)
         hinf = ah * htau
         return {"htau": htau, "hinf": hinf}
-    
+
     def inf(self, v):
         return {"h": self.breakpoint(v)["hinf"]}
 
@@ -156,7 +156,7 @@ class s(S):
         stau = 1 / (as_ + bs)
         sinf = as_ * stau
         return {"stau": stau, "sinf": sinf}
-    
+
     def inf(self, v):
         return {"s": self.breakpoint(v)["sinf"]}
 
@@ -164,8 +164,7 @@ class s(S):
 class axnode_myel(M):
     M.STATE(m, p, h, s)
     M.GLOBAL(
-        gnabar=3.0, gnapbar=0.01, gkbar=0.08, 
-        gl=0.007, ena=50.0, ek=-90.0, el=-90.0
+        gnabar=3.0, gnapbar=0.01, gkbar=0.08, gl=0.007, ena=50.0, ek=-90.0, el=-90.0
     )
 
     M.NONSPECIFIC_CURRENT("i")

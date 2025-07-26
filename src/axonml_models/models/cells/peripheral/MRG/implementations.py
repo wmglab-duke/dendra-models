@@ -30,7 +30,7 @@ class mrg_rhoa(torch.nn.Module):
         self.register_buffer("fd", fd)
 
     def forward(self, rhoa):
-        return rhoa * (1 / (self.secd / self.fd))**2
+        return rhoa * (1 / (self.secd / self.fd)) ** 2
 
 
 class MRG(ExtCell):
@@ -38,6 +38,7 @@ class MRG(ExtCell):
     A model of a large myelinated axon with multiple nodes of Ranvier.
     This model is based on the MRG model by McIntyre et al. (2002).
     """
+
     ExtCell.RANGE(cm=2.0, rhoa=70.0)
 
     def __init__(
@@ -68,56 +69,64 @@ class MRG(ExtCell):
 
         interlength = (deltax - nodelength0 - (2 * paralength1) - (2 * paralength2)) / 6
 
-        rhoa     = 0.7e6
+        rhoa = 0.7e6
         space_p1 = 0.002
         space_p2 = 0.004
-        space_i  = 0.004
+        space_i = 0.004
 
-        rpn0 = (rhoa * 0.01) / (torch.pi * ((((nodeD / 2) + space_p1) ** 2) - ((nodeD / 2) ** 2)))
-        rpn1 = (rhoa * 0.01) / (torch.pi * ((((nodeD / 2) + space_p1) ** 2) - ((nodeD / 2) ** 2)))
-        rpn2 = (rhoa * 0.01) / (torch.pi * ((((axonD / 2) + space_p2) ** 2) - ((axonD / 2) ** 2)))
-        rpx  = (rhoa * 0.01) / (torch.pi * ((((axonD / 2) + space_i) ** 2) - ((axonD / 2) ** 2)))
+        rpn0 = (rhoa * 0.01) / (
+            torch.pi * ((((nodeD / 2) + space_p1) ** 2) - ((nodeD / 2) ** 2))
+        )
+        rpn1 = (rhoa * 0.01) / (
+            torch.pi * ((((nodeD / 2) + space_p1) ** 2) - ((nodeD / 2) ** 2))
+        )
+        rpn2 = (rhoa * 0.01) / (
+            torch.pi * ((((axonD / 2) + space_p2) ** 2) - ((axonD / 2) ** 2))
+        )
+        rpx = (rhoa * 0.01) / (
+            torch.pi * ((((axonD / 2) + space_i) ** 2) - ((axonD / 2) ** 2))
+        )
 
         diam = fd.expand(n_ax, n_c).clone()
-        diam[:, self.find('node')] = nodeD
+        diam[:, self.find("node")] = nodeD
         self.diam[:] = diam
 
         dx = torch.zeros(n_ax, n_c)
-        dx[:, self.find('node')] = nodelength0
-        dx[:, self.find('mysa')] = paralength1
-        dx[:, self.find('flut')] = paralength2
-        dx[:, self.find('stin')] = interlength
+        dx[:, self.find("node")] = nodelength0
+        dx[:, self.find("mysa")] = paralength1
+        dx[:, self.find("flut")] = paralength2
+        dx[:, self.find("stin")] = interlength
         self.dx[:] = dx
 
         scale = torch.full((n_ax, n_c), 0.0001)
-        scale[:, self.find('mysa')] = 0.001
+        scale[:, self.find("mysa")] = 0.001
 
         secd = fd.expand(n_ax, n_c).clone()
-        secd[:, self.find('flut')] = axonD
-        secd[:, self.find('mysa')] = nodeD
-        secd[:, self.find('stin')] = axonD
+        secd[:, self.find("flut")] = axonD
+        secd[:, self.find("mysa")] = nodeD
+        secd[:, self.find("stin")] = axonD
 
-        self.register_parametrization('cm',   mrg_cm(secd, fd))
-        self.register_parametrization('rhoa', mrg_rhoa(secd, fd))
+        self.register_parametrization("cm", mrg_cm(secd, fd))
+        self.register_parametrization("rhoa", mrg_rhoa(secd, fd))
 
         xc = (0.1 / (nl * 2)).expand(n_ax, n_c).clone()
-        xc[:, self.find('node')] = 0.0
+        xc[:, self.find("node")] = 0.0
 
         xg = (0.001 / (nl * 2)).expand(n_ax, n_c).clone()
-        xg[:, self.find('node')] = 1e10
+        xg[:, self.find("node")] = 1e10
 
         xraxial = torch.empty(n_ax, n_c).to(dtype=self.dtype(), device=self.device())
-        xraxial[:, self.find('node')] = rpn0
-        xraxial[:, self.find('flut')] = rpn2
-        xraxial[:, self.find('stin')] = rpx
-        xraxial[:, self.find('mysa')] = rpn1
+        xraxial[:, self.find("node")] = rpn0
+        xraxial[:, self.find("flut")] = rpn2
+        xraxial[:, self.find("stin")] = rpx
+        xraxial[:, self.find("mysa")] = rpn1
 
         self.xc[..., 0] = xc.to(dtype=self.dtype(), device=self.device())
         self.xg[..., 0] = xg.to(dtype=self.dtype(), device=self.device())
         self.xraxial[..., 0] = xraxial
 
     def c(self, *args):
-        locs = self.find('node', as_list=True)
+        locs = self.find("node", as_list=True)
         n = len(locs)
         return [locs[round((n - 1) * arg)] for arg in args]
 
@@ -126,10 +135,9 @@ class MRG(ExtCell):
 
 
 class bigMRG(MRG):
-
     nl = lambda fd: torch.clamp(-0.4749 * fd**2 + 16.85 * fd - 0.7648, min=1)
-    axonD = lambda fd: 0.02361 * fd ** 2 + 0.3673 * fd + 0.7122
-    nodeD = lambda fd: 0.01093 * fd ** 2 + 0.1008 * fd + 1.099
+    axonD = lambda fd: 0.02361 * fd**2 + 0.3673 * fd + 0.7122
+    nodeD = lambda fd: 0.01093 * fd**2 + 0.1008 * fd + 1.099
     deltax = lambda fd: -8.215284e00 * fd**2 + 2.724201e02 * fd + -7.802411e02
 
     nodelength0 = lambda fd: 1.0
@@ -157,18 +165,18 @@ class bigMRG(MRG):
         nodeD = self.__class__.nodeD(fd)
         axonD = self.__class__.axonD(fd)
 
-        n_mysa = len(self.find('mysa', as_list=True))
+        n_mysa = len(self.find("mysa", as_list=True))
         node_scale = (nodeD / fd).expand(n_ax, n_mysa).flatten()
 
-        n_stin = len(self.find('stin', as_list=True))
+        n_stin = len(self.find("stin", as_list=True))
         stin_scale = (axonD / fd).expand(n_ax, n_stin).flatten()
 
-        n_flut = len(self.find('flut', as_list=True))
+        n_flut = len(self.find("flut", as_list=True))
         flut_scale = (axonD / fd).expand(n_ax, n_flut).flatten()
 
         self.flut.insert(pas, g=0.0001 * flut_scale, e=self.v_init)
         self.stin.insert(pas, g=0.0001 * stin_scale, e=self.v_init)
-        self.mysa.insert(pas, g=0.001  * node_scale, e=self.v_init)
+        self.mysa.insert(pas, g=0.001 * node_scale, e=self.v_init)
 
         self.node.insert(axnode_myel)
 
@@ -178,7 +186,6 @@ class bigMRG(MRG):
 
 
 class smolMRG(MRG):
-
     nl = lambda fd: torch.clamp(torch.floor(17.4 * (0.553 * fd - 0.024) - 1.74), min=1)
     axonD = lambda fd: 0.553 * fd - 0.024
     nodeD = lambda fd: 0.321 * smolMRG.axonD(fd) + 0.37
@@ -196,7 +203,9 @@ class smolMRG(MRG):
         v_init=-80.0,
         integrator=None,
     ):
-        if torch.any((torch.as_tensor(diameters) > 5.7) | (torch.as_tensor(diameters) < 1.011)):
+        if torch.any(
+            (torch.as_tensor(diameters) > 5.7) | (torch.as_tensor(diameters) < 1.011)
+        ):
             warnings.warn(
                 "Fiber diameter should not be <1.011um or >5.7 um for smolMRG. Use bigMRG for larger fibers."
             )
@@ -209,18 +218,18 @@ class smolMRG(MRG):
         nodeD = self.__class__.nodeD(fd)
         axonD = self.__class__.axonD(fd)
 
-        n_mysa = len(self.find('mysa', as_list=True))
+        n_mysa = len(self.find("mysa", as_list=True))
         node_scale = (nodeD / fd).expand(n_ax, n_mysa).flatten()
 
-        n_stin = len(self.find('stin', as_list=True))
+        n_stin = len(self.find("stin", as_list=True))
         stin_scale = (axonD / fd).expand(n_ax, n_stin).flatten()
 
-        n_flut = len(self.find('flut', as_list=True))
+        n_flut = len(self.find("flut", as_list=True))
         flut_scale = (axonD / fd).expand(n_ax, n_flut).flatten()
 
         self.flut.insert(pas, g=0.0001 * flut_scale, e=self.v_init)
         self.stin.insert(pas, g=0.0001 * stin_scale, e=self.v_init)
-        self.mysa.insert(pas, g=0.001  * node_scale, e=self.v_init)
+        self.mysa.insert(pas, g=0.001 * node_scale, e=self.v_init)
 
         self.node.insert(axnode_myel, gnabar=2.333333, gkbar=0.115556)
 

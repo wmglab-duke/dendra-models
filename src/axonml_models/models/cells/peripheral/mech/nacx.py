@@ -12,19 +12,19 @@ class nacx(M):
     M.EXPLICIT("ina", "ica")
 
     def breakpoint(self, v):
-        dfcain = self.nai**3*self.cao*exp(0.5*v*self.FRT)
-        dfcaout = self.nao**3*self.cai*exp(-0.5*v*self.FRT)
-        s = 1 + self.dnaca*(self.cai*self.nao**3 + self.cao*self.nai**3)
-        self.inaca = self.gbar*self.q10*self.knaca*(dfcain-dfcaout)/s
+        dfcain = self.nai**3 * self.cao * exp(0.5 * v * self.FRT)
+        dfcaout = self.nao**3 * self.cai * exp(-0.5 * v * self.FRT)
+        s = 1 + self.dnaca * (self.cai * self.nao**3 + self.cao * self.nai**3)
+        self.inaca = self.gbar * self.q10 * self.knaca * (dfcain - dfcaout) / s
 
     def initial(self, v):
         T = 273 + self.celsius
-        self.q10.copy_((2.2*(T-296.0)+(310.0-T))/14.0)
-        self.FRT = self.F/(self.R*T)
+        self.q10.copy_((2.2 * (T - 296.0) + (310.0 - T)) / 14.0)
+        self.FRT = self.F / (self.R * T)
         self.breakpoint(v)
 
     def ina(self, v):
         return 3 * self.inaca
-    
+
     def ica(self, v):
         return -2 * self.inaca

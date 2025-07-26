@@ -12,10 +12,10 @@ class m(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
-    
+
     def breakpoint(self, v):
-        minf = (1/(1+exp((v+97)/7.35)))**(1/3)
-        taum = 0.5/(exp((v-42)/11.8)+exp(-1*(v+498)/66.6))
+        minf = (1 / (1 + exp((v + 97) / 7.35))) ** (1 / 3)
+        taum = 0.5 / (exp((v - 42) / 11.8) + exp(-1 * (v + 498) / 66.6))
         taum = taum / self.q10()
         return {"taum": taum, "minf": minf}
 
@@ -32,16 +32,16 @@ class n(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
-    
+
     def breakpoint(self, v):
-        ninf = (1/(1+exp((v+94)/8.9)))**(1/3)
-        taun = 0.5/(exp((v+25)/4.1)+exp(-1*(v+356)/32))
+        ninf = (1 / (1 + exp((v + 94) / 8.9))) ** (1 / 3)
+        taun = 0.5 / (exp((v + 25) / 4.1) + exp(-1 * (v + 356) / 32))
         taun = taun / self.q10()
         return {"taun": taun, "ninf": ninf}
 
     def inf(self, v):
         return {"n": self.breakpoint(v)["ninf"]}
-    
+
 
 class hcn(M):
     M.STATE(m, n)
@@ -51,9 +51,9 @@ class hcn(M):
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ik(self, v):
-        g = self.gbar * (0.25*self.n + 0.75*self.m)
-        return (self.ekna-self.ena)*g*(v-self.ek)/(self.ek-self.ena)
-    
+        g = self.gbar * (0.25 * self.n + 0.75 * self.m)
+        return (self.ekna - self.ena) * g * (v - self.ek) / (self.ek - self.ena)
+
     def ina(self, v):
-        g = self.gbar * (0.25*self.n + 0.75*self.m)
-        return (self.ekna-self.ek)*g*(v-self.ena)/(self.ena-self.ek)
+        g = self.gbar * (0.25 * self.n + 0.75 * self.m)
+        return (self.ekna - self.ek) * g * (v - self.ena) / (self.ena - self.ek)

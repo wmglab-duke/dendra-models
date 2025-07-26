@@ -18,7 +18,7 @@ class oc_cai(S):
     )
 
     def initial(self, v):
-        self.SA  = math.pi * (1e-4) * self.diam * self.lseg
+        self.SA = math.pi * (1e-4) * self.diam * self.lseg
         self.Vol = math.pi * ((1e-4) * (self.diam / 2)) ** 2 * self.lseg
 
 

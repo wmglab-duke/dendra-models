@@ -10,7 +10,7 @@ from ..mech import axnode_myel
 
 
 _PACKAGE_DIR = Path(__file__).resolve().parent
-_PARAMS      = str(_PACKAGE_DIR / "SMF.pt")
+_PARAMS = str(_PACKAGE_DIR / "SMF.pt")
 
 
 ic = {"m": 0.0732093, "h": 0.62069505, "p": 0.20260409, "s": 0.04302994}
@@ -93,6 +93,7 @@ class SMF(Myelinated):
            mammalian nerve fibers: influence of afterpotentials on the recovery cycle.
            Journal of Neurophysiology, 87(2), 995-1006.
     """
+
     Myelinated.RANGE(
         cm=9.352452121675014,
         rhoa=69.99446868896484,

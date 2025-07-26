@@ -11,7 +11,7 @@ class Rattay1993(Unmyelinated):
     def __init__(
         self,
         diameters=[1.0],
-        L=5.0*mm,
+        L=5.0 * mm,
         dx=10,
         temp=37.0,
         v_init=-70.0,
@@ -23,4 +23,3 @@ class Rattay1993(Unmyelinated):
 
         with equilibria(ena=45.0, ek=-82.0):
             self.build()
-

@@ -14,16 +14,16 @@ class m(S):
 
     def breakpoint(self, v):
         qt = self.q10()
-        minf = 1.0/(1+exp((v- -52.6)/-4.6))
+        minf = 1.0 / (1 + exp((v - -52.6) / -4.6))
         guard = torch.tensor(-38.0, device=v.device, dtype=v.dtype)
         v = torch.where(torch.isin(v, guard), v + 0.0001, v)
-        mAlpha = (0.182 * (v- -38))/(1-(exp(-(v- -38)/6)))
-        mBeta  = (0.124 * (-v -38))/(1-(exp(-(-v -38)/6)))
-        mTau = 6*(1/(mAlpha + mBeta))/qt
-        return {'taum': mTau, 'minf': minf}
+        mAlpha = (0.182 * (v - -38)) / (1 - (exp(-(v - -38) / 6)))
+        mBeta = (0.124 * (-v - 38)) / (1 - (exp(-(-v - 38) / 6)))
+        mTau = 6 * (1 / (mAlpha + mBeta)) / qt
+        return {"taum": mTau, "minf": minf}
 
     def inf(self, v):
-        return {'m': self.breakpoint(v)['minf']}
+        return {"m": self.breakpoint(v)["minf"]}
 
 
 class h(S):
@@ -39,14 +39,14 @@ class h(S):
         guard = torch.tensor([-17.0, -64.4], device=v.device, dtype=v.dtype)
         v = torch.where(torch.isin(v, guard), v + 0.0001, v)
         qt = self.q10()
-        hInf = 1.0/(1+exp((v- -48.8)/10))
-        hAlpha = -2.88e-6 * (v + 17) / (1 - exp((v + 17)/4.63))
-        hBeta = 6.94e-6 * (v + 64.4) / (1 - exp(-(v + 64.4)/2.63))
-        hTau = (1/(hAlpha + hBeta))/qt
-        return {'tauh': hTau, 'hinf': hInf}
+        hInf = 1.0 / (1 + exp((v - -48.8) / 10))
+        hAlpha = -2.88e-6 * (v + 17) / (1 - exp((v + 17) / 4.63))
+        hBeta = 6.94e-6 * (v + 64.4) / (1 - exp(-(v + 64.4) / 2.63))
+        hTau = (1 / (hAlpha + hBeta)) / qt
+        return {"tauh": hTau, "hinf": hInf}
 
     def inf(self, v):
-        return {'h': self.breakpoint(v)['hinf']}
+        return {"h": self.breakpoint(v)["hinf"]}
 
 
 class nap_et2(M):

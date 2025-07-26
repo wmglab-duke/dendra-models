@@ -30,14 +30,14 @@ class Schild1997(Unmyelinated):
     def __init__(
         self,
         diameters=[1.0],
-        L=5.0*mm,
+        L=5.0 * mm,
         dx=10,
         celsius=37.0,
         v_init=-68.5,
         integrator=None,
     ):
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
-        R = 8314   # molar gas constant
+        R = 8314  # molar gas constant
         F = 96500  # Faraday's constant
 
         ko = 5.4
@@ -79,14 +79,14 @@ class Schild1994(Unmyelinated):
     def __init__(
         self,
         diameters=[1.0],
-        L=5.0*mm,
+        L=5.0 * mm,
         dx=10,
         celsius=37.0,
         v_init=-46.5,
         integrator=None,
     ):
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
-        R = 8314   # molar gas constant
+        R = 8314  # molar gas constant
         F = 96500  # Faraday's constant
 
         ko = 5.4

@@ -12,16 +12,16 @@ class m(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
-    
+
     def breakpoint(self, v):
-        minf = (1/(1+exp((-1*(v - 1)/10))))**(1/3)
-        taum = 2+1.2/(exp((v-15)/8.5)+exp(-1*(v+68)/15))
+        minf = (1 / (1 + exp((-1 * (v - 1) / 10)))) ** (1 / 3)
+        taum = 2 + 1.2 / (exp((v - 15) / 8.5) + exp(-1 * (v + 68) / 15))
         taum = taum / self.q10()
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
         return {"m": self.breakpoint(v)["minf"]}
-    
+
 
 class h(S):
     has_q10 = True
@@ -32,16 +32,18 @@ class h(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
-    
+
     def breakpoint(self, v):
-        hinf = 0.15 + .85/(1+exp(((v + 27)/7)))
-        tauh = 45/(exp((v-10.2)/8)+exp(-1*(v+101)/8)) + 8200/(1+exp((-1*v/60)))
+        hinf = 0.15 + 0.85 / (1 + exp(((v + 27) / 7)))
+        tauh = 45 / (exp((v - 10.2) / 8) + exp(-1 * (v + 101) / 8)) + 8200 / (
+            1 + exp((-1 * v / 60))
+        )
         tauh = tauh / self.q10()
         return {"tauh": tauh, "hinf": hinf}
 
     def inf(self, v):
         return {"h": self.breakpoint(v)["hinf"]}
-    
+
 
 class kv21(M):
     M.STATE(m, h)

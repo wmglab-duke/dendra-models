@@ -5,9 +5,17 @@ from axonml.units import mm
 
 
 from ..mech import (
-    ks, kf, h, nattxs, nav1p8,
-    nav1p9, nakpump,
-    kdrTiger, kna, naoiTiger, koiTiger,
+    ks,
+    kf,
+    h,
+    nattxs,
+    nav1p8,
+    nav1p9,
+    nakpump,
+    kdrTiger,
+    kna,
+    naoiTiger,
+    koiTiger,
     leak,
 )
 
@@ -92,7 +100,7 @@ class Tigerholm2014(Unmyelinated):
     def __init__(
         self,
         diameters=[1.0],
-        L=5.0*mm,
+        L=5.0 * mm,
         dx=10.0,
         celsius=37.0,
         v_init=-55.0,

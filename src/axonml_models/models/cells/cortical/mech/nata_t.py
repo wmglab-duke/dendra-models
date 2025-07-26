@@ -48,7 +48,7 @@ class m(S):
         taum = 1 / (a + b)
         minf = a * taum
         return {"taum": taum, "minf": minf}
-    
+
     def inf(self, v):
         return {"m": self.breakpoint(v)["minf"]}
 

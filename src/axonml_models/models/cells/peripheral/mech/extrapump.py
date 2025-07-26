@@ -15,6 +15,6 @@ class extrapump(M):
 
     def ina(self, v):
         return self.pumpina
-    
+
     def ica(self, v):
         return self.pumpica

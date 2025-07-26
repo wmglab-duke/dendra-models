@@ -94,7 +94,7 @@ class h(S):
         tauh = 1 / (a + b)
         hinf = a * tauh
         return {"tauh": tauh, "hinf": hinf}
-    
+
     def inf(self, v):
         return {"h": self.breakpoint(v)["hinf"]}
 

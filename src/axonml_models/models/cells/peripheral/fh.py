@@ -32,7 +32,7 @@ class FHUM(Unmyelinated):
     def __init__(
         self,
         diameters=[2.0],
-        L=5.0*mm,
+        L=5.0 * mm,
         dx=25.0,
         celsius=20.0,
         v_init=-70.0,
@@ -42,4 +42,3 @@ class FHUM(Unmyelinated):
         self.insert(fh)
         with C(nai0=13.74, nao0=114.5, ki0=120.0, ko0=2.5):
             self.build()
-            
