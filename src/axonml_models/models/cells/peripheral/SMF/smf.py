@@ -26,32 +26,6 @@ class SMF(Myelinated):
     geometry with reparameterized non-linear ionic conductances to reproduce the behavior of the
     detailed NEURON implementation with orders-of-magnitude faster performance.
 
-    Parameters
-    ----------
-    diameters : list of float, optional
-        Axon diameters in μm. Must be ≥ 5.7 μm. Default is [8.0].
-    n_node : int, optional
-        Number of nodes in the model. Default is 101.
-    temp : float, optional
-        Temperature in °C. Default is 37.0.
-    v_init : float, optional
-        Initial membrane potential in mV. Default is -80.0.
-    method : str, optional
-        Numerical integration method. Only 'euler' or 'rk1' supported. Default is "euler".
-
-    Attributes
-    ----------
-    node_l : float
-        Node of Ranvier length in μm. Default is 1.0 μm.
-    axon_d : dict
-        Polynomial coefficients for axon diameter scaling.
-    node_d : dict
-        Polynomial coefficients for node diameter scaling.
-    delta_x : dict
-        Polynomial coefficients for internodal distance scaling.
-    membrane : dict
-        Membrane electrical properties including cm (10 μF/cm²) and rhoa (70 Ω·cm).
-
     Notes
     -----
     The S-MF model is designed to enable rapid exploration of electrical stimulation parameters
