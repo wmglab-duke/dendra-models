@@ -94,18 +94,15 @@ class ThioAutonomic2025(Unmyelinated):
         self.insert(koi)
         self.insert(extrapump)
 
-        with (
-            E(ena=ena, ek=ek),
-            C(
-                cao0=2.0,
-                cai0=0.000117,
-                ko0=ko_real,
-                ki0=ki_real,
-                nao0=nao,
-                nai0=nai_real,
-            ),
-        ):
-            self.build()
+        self.equilibria(ena=ena, ek=ek)
+        self.concentrations(
+            cao0=2.0,
+            cai0=0.000117,
+            ko0=ko_real,
+            ki0=ki_real,
+            nao0=nao,
+            nai0=nai_real,
+        )
 
 
 class ThioCutaneous2025(Unmyelinated):
@@ -161,15 +158,12 @@ class ThioCutaneous2025(Unmyelinated):
         self.insert(koi)
         self.insert(extrapump)
 
-        with (
-            E(ena=ena, ek=ek),
-            C(
-                cao0=2.0,
-                cai0=0.000117,
-                ko0=ko_real,
-                ki0=ki_real,
-                nao0=nao,
-                nai0=nai_real,
-            ),
-        ):
-            self.build()
+        self.equilibria(ena=ena, ek=ek)
+        self.concentrations(
+            cao0=2.0,
+            cai0=0.000117,
+            ko0=ko_real,
+            ki0=ki_real,
+            nao0=nao,
+            nai0=nai_real,
+        )

@@ -4,7 +4,7 @@ import torch
 
 from axonml.models.mechanisms._mechanism import Mechanism as M
 from axonml.models.mechanisms._state import State as S
-from axonml.models.mechanisms.ops import *
+from axonml.models.mechanisms.ops import exp
 
 
 def Exp(x):
@@ -35,18 +35,14 @@ class m(S):
 
     def vtrap6(self, v):
         cond = (v + self.amB) / self.amC
-        out = (self.amA * (v + self.amB)) / (1.0 - Exp(-cond))
+        out = (self.amA * (v + self.amB)) / (1.0 - exp(-cond))
         out = torch.where(torch.abs(cond) < 1e-6, self.amA * self.amC, out)
-        guard = torch.tensor(0.15733, dtype=out.dtype, device=out.device)
-        out = torch.where(v < -150.0, guard, out)
         return out
 
     def vtrap7(self, v):
         cond = (v + self.bmB) / self.bmC
-        out = (self.bmA * -(v + self.bmB)) / (1.0 - Exp(cond))
+        out = (self.bmA * -(v + self.bmB)) / (1.0 - exp(cond))
         out = torch.where(torch.abs(cond) < 1e-6, self.bmA * self.bmC, out)
-        guard = torch.tensor(0.0057268, dtype=out.dtype, device=out.device)
-        out = torch.where(v > 150.0, guard, out)
         return out
 
     def alpha(self, v):
@@ -88,18 +84,14 @@ class p(S):
 
     def vtrap1(self, v):
         cond = (v + self.ampB) / self.ampC
-        out = (self.ampA * (v + self.ampB)) / (1.0 - Exp(-cond))
+        out = (self.ampA * (v + self.ampB)) / (1.0 - exp(-cond))
         out = torch.where(torch.abs(cond) < 1e-6, self.ampA * self.ampC, out)
-        guard = torch.tensor(0.00086725, dtype=out.dtype, device=out.device)
-        out = torch.where(v < -150.0, guard, out)
         return out
 
     def vtrap2(self, v):
         cond = (v + self.bmpB) / self.bmpC
-        out = (self.bmpA * -(v + self.bmpB)) / (1.0 - Exp(cond))
+        out = (self.bmpA * -(v + self.bmpB)) / (1.0 - exp(cond))
         out = torch.where(torch.abs(cond) < 1e-6, self.bmpA * self.bmpC, out)
-        guard = torch.tensor(1.5855e-05, dtype=out.dtype, device=out.device)
-        out = torch.where(v > 150.0, guard, out)
         return out
 
     def alpha(self, v):
@@ -141,16 +133,13 @@ class h(S):
 
     def vtrap8(self, v):
         cond = (v + self.ahB) / self.ahC
-        out = (self.ahA * -(v + self.ahB)) / (1.0 - Exp(cond))
+        out = (self.ahA * -(v + self.ahB)) / (1.0 - exp(cond))
         out = torch.where(torch.abs(cond) < 1e-6, self.ahA * self.ahC, out)
-        guard = torch.tensor(0.0032594, dtype=out.dtype, device=out.device)
-        out = torch.where(v > 150.0, guard, out)
         return out
 
     def vtrap9(self, v):
-        out = self.bhA / (1.0 + Exp(-(v + self.bhB) / self.bhC))
-        guard = torch.tensor(0.0014054, dtype=out.dtype, device=out.device)
-        return torch.where(v < -150.0, guard, out)
+        out = self.bhA / (1.0 + exp(-(v + self.bhB) / self.bhC))
+        return out
 
     def alpha(self, v):
         return self.q10() * self.vtrap8(v)
@@ -191,14 +180,12 @@ class s(S):
         return self.aq10_3 ** ((self.celsius - self.bq10) / self.cq10)
 
     def vtrap10(self, v):
-        guard = torch.tensor(3.3484e-05, dtype=v.dtype, device=v.device)
-        out = self.asA / (1.0 + Exp((v - self.vtraub + self.asB) / self.asC))
-        return torch.where(v < -150.0, guard, out)
+        out = self.asA / (1.0 + exp((v - self.vtraub + self.asB) / self.asC))
+        return out
 
     def vtrap11(self, v):
-        guard = torch.tensor(3.3484e-06, dtype=v.dtype, device=v.device)
-        out = self.bsA / (1.0 + Exp((v - self.vtraub + self.bsB) / self.bsC))
-        return torch.where(v < -150.0, guard, out)
+        out = self.bsA / (1.0 + exp((v - self.vtraub + self.bsB) / self.bsC))
+        return out
 
     def alpha(self, v):
         return self.q10() * self.vtrap10(v)

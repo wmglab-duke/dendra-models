@@ -20,7 +20,7 @@ def valid_ids():
     return ids
 
 
-def L5_PC(ID, N, integrator=None):
+def L5_TTPC(ID, N, integrator=None):
     gml_path = _MORPH_DIR / f"L5_{ID}.gml"
     g = nx.read_gml(gml_path, destringizer=int)
 
@@ -92,7 +92,6 @@ def L5_PC(ID, N, integrator=None):
     cell.node.insert(nata_t, alias="node", gbar=3.137968 * 2.0)
     cell.unmyelin.insert(nata_t, alias="unmyelin", gbar=3.137968)
 
-    with equilibria(ek=-85.0, ena=50.0):
-        cell.build()
+    cell.equilibria(ek=-85.0, ena=50.0)
 
     return cell

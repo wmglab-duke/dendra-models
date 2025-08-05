@@ -79,5 +79,4 @@ class Sundt2015(Unmyelinated):
         self.insert(nahh, gnabar=0.04)
         self.insert(pas, g=0.0001, e=-60.0)
 
-        with equilibria(ek=-90.0):
-            self.build()
+        self.equilibria(ek=-90.0)

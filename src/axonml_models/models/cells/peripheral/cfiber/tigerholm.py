@@ -124,5 +124,4 @@ class Tigerholm2014(Unmyelinated):
         self.insert(koiTiger)
         self.insert(leak)
 
-        with concentrations(nai0=11.4, nao0=154.0, ki0=144.9, ko0=5.6):
-            self.build()
+        self.concentrations(nai0=11.4, nao0=154.0, ki0=144.9, ko0=5.6)

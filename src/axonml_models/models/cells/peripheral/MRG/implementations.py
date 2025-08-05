@@ -182,8 +182,6 @@ class bigMRG(MRG):
 
         self.x[:] = self._x()
 
-        self.build()
-
 
 class smolMRG(MRG):
     nl = lambda fd: torch.clamp(torch.floor(17.4 * (0.553 * fd - 0.024) - 1.74), min=1)
@@ -235,4 +233,25 @@ class smolMRG(MRG):
 
         self.x[:] = self._x()
 
-        self.build()
+
+class exactMRG(MRG):
+    valid_diams = [1.0, 2.0, 5.7, 7.3, 8.7, 10.0, 11.5, 12.8, 14.0, 15.0, 16.0]
+
+
+
+    def __init__(
+        self,
+        diameters=[5.7],
+        n_node=101,
+        celsius=37.0,
+        v_init=-80.0,
+        integrator=None,
+    ):
+        valid_diams = torch.as_tensor(self.valid_diams)
+        # Ensure that the diameters are valid
+        if not torch.all(torch.isin(torch.as_tensor(diameters), valid_diams)):
+            raise ValueError(
+                f"Invalid diameters. Valid diameters are: {valid_diams.tolist()}"
+            )
+        
+        super().__init__(diameters, n_node, celsius, v_init, integrator)

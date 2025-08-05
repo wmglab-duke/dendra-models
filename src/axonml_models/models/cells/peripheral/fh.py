@@ -1,5 +1,4 @@
 from axonml.models.core import Unmyelinated, Myelinated
-from axonml.models.mechanisms import concentrations as C
 from axonml.units import mm
 
 from .mech import fh
@@ -40,5 +39,4 @@ class FHUM(Unmyelinated):
     ):
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
         self.insert(fh)
-        with C(nai0=13.74, nao0=114.5, ki0=120.0, ko0=2.5):
-            self.build()
+        self.concentrations(nai0=13.74, nao0=114.5, ki0=120.0, ko0=2.5)

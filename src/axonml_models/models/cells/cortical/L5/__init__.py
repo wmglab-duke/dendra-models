@@ -1,1 +1,1 @@
-from .cell import L5_PC, valid_ids
+from .cell import L5_TTPC, valid_ids

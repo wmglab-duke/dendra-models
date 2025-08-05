@@ -66,12 +66,8 @@ class Schild1997(Unmyelinated):
         self.insert(naf97mean, gbar=0.022434928)
         self.insert(nas97mean, gbar=0.022434928)
 
-        with (
-            E(ena=ena, ek=ek),
-            C(cao0=2.0, cai0=0.000117, ko0=ko, ki0=ki, nao0=nao, nai0=nai),
-        ):
-            self.build()
-
+        self.equilibria(ena=ena, ek=ek)
+        self.concentrations(cao0=2.0, cai0=0.000117, ko0=ko, ki0=ki, nao0=nao, nai0=nai)
 
 class Schild1994(Unmyelinated):
     Unmyelinated.RANGE(cm=1.326291192, rhoa=100.0)
@@ -115,8 +111,5 @@ class Schild1994(Unmyelinated):
         self.insert(naf)
         self.insert(nas)
 
-        with (
-            E(ena=ena, ek=ek),
-            C(cao0=2.0, cai0=0.000117, ko0=ko, ki0=ki, nao0=nao, nai0=nai),
-        ):
-            self.build()
+        self.equilibria(ena=ena, ek=ek)
+        self.concentrations(cao0=2.0, cai0=0.000117, ko0=ko, ki0=ki, nao0=nao, nai0=nai)

@@ -92,7 +92,6 @@ def L23_PC(ID, N, integrator=None):
     cell.node.insert(nata_t, alias="node", gbar=3.429725 * 2.0)
     cell.unmyelin.insert(nata_t, alias="unmyelin", gbar=3.429725)
 
-    with equilibria(ek=-85.0, ena=50.0):
-        cell.build()
+    cell.equilibria(ek=-85.0, ena=50.0)
 
     return cell

@@ -21,5 +21,4 @@ class Rattay1993(Unmyelinated):
 
         self.insert(rattay_aberham)
 
-        with equilibria(ena=45.0, ek=-82.0):
-            self.build()
+        self.equilibria(ena=45.0, ek=-82.0)
