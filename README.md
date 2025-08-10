@@ -5,3 +5,66 @@
 ***
 
 Models implemented in AxonML.
+
+## Peripheral nerve fibers
+### Unmyelinated
+
+| 1  |`Rattay1993`  |
+|----|-----------------|
+||Rattay, F., Aberham, M., 1993. Modeling axon membranes for functional electrical stimulation. IEEE Transactions on Biomedical Engineering 40, 1201–1209. https://doi.org/10.1109/10.250575
+
+| 2  |`Schild1994`  |
+|----|-----------------|
+||Schild, J.H., Clark, J.W., Hay, M., Mendelowitz, D., Andresen, M.C., Kunze, D.L., 1994. A- and C-type rat nodose sensory neurons: model interpretations of dynamic discharge characteristics. Journal of Neurophysiology 71, 2338–2358. https://doi.org/10.1152/jn.1994.71.6.2338
+
+| 3  |`Schild1997`  |
+|----|-----------------|
+||Schild, J.H., Kunze, D.L., 1997. Experimental and Modeling Study of Na+ Current Heterogeneity in Rat Nodose Neurons and Its Impact on Neuronal Discharge. Journal of Neurophysiology. https://doi.org/10.1152/jn.1997.78.6.3198
+
+| 4  |`Sundt2015`  |
+|----|-----------------|
+||Sundt, D., Gamper, N., Jaffe, D.B., 2015. Spike propagation through the dorsal root ganglia in an unmyelinated sensory neuron: a modeling study. J Neurophysiol 114, 3140–3153. https://doi.org/10.1152/jn.00226.2015
+
+| 5  |`ThioAutonomic2024`|
+|----|-------------------|
+||Thio, B.J., Titus, N.D., Pelot, N.A., Grill, W.M., 2024. Reverse-engineered models reveal differential membrane properties of autonomic and cutaneous unmyelinated fibers. PLOS Computational Biology 20, e1012475. https://doi.org/10.1371/journal.pcbi.1012475
+
+| 5  |`ThioCutaneous2024`|
+|----|-------------------|
+||Thio, B.J., Titus, N.D., Pelot, N.A., Grill, W.M., 2024. Reverse-engineered models reveal differential membrane properties of autonomic and cutaneous unmyelinated fibers. PLOS Computational Biology 20, e1012475. https://doi.org/10.1371/journal.pcbi.1012475
+
+| 6  |`Tigerholm2014`  |
+|----|-----------------|
+||Tigerholm, J., Petersson, M.E., Obreja, O., Lampert, A., Carr, R., Schmelz, M., Fransén, E., 2014. Modeling activity-dependent changes of axonal spike conduction in primary afferent C-nociceptors. J Neurophysiol 111, 1721–1735. https://doi.org/10.1152/jn.00777.2012
+
+
+### Myelinated
+
+#### MRG & Surrogate
+
+| 1  |`exactMRG`|
+|----|----------|
+||McIntyre, C.C., Richardson, A.G., Grill, W.M., 2002. Modeling the Excitability of Mammalian Nerve Fibers:  Influence of Afterpotentials on the Recovery Cycle. Journal of Neurophysiology 87, 995–1006. https://doi.org/10.1152/jn.00353.2001
+
+|2   |`bigMRG` (intepolation 5.7+ um diameter)|
+|----|--------|
+||Musselman, E.D., Cariello, J.E., Grill, W.M., Pelot, N.A., 2021. ASCENT (Automated Simulations to Characterize Electrical Nerve Thresholds): A pipeline for sample-specific computational modeling of electrical stimulation of peripheral nerves. PLoS Comput Biol 17, e1009285. https://doi.org/10.1371/journal.pcbi.1009285
+
+|3   |`smolMRG` (thinly myelinated 1.1+ um diameter)|
+|----|--------|
+||Peña, E., Pelot, N.A., Grill, W.M., 2024. Computational models of compound nerve action potentials: Efficient filter-based methods to quantify effects of tissue conductivities, conduction distance, and nerve fiber parameters. PLOS Computational Biology 20, e1011833. https://doi.org/10.1371/journal.pcbi.1011833
+
+|4   |`SMF` (interpolation 5.7+ um diameter; surrogate)|
+|----|------|
+||Hussain, M.A., Grill, W.M., Pelot, N.A., 2024. Highly efficient modeling and optimization of neural fiber responses to electrical stimulation. Nat Commun 15, 7597. https://doi.org/10.1038/s41467-024-51709-8
+
+
+#### Other
+
+| 1  |`FHM` / `SENN`  |
+|----|----------------|
+||Reilly, J.P., Freeman, V.T., Larkin, W.D., 1985. Sensory Effects of Transient Electrical Stimulation - Evaluation with a Neuroelectric Model. IEEE Trans. Biomed. Eng. BME-32, 1001–1011. https://doi.org/10.1109/TBME.1985.325509
+
+|2   |`Sweeney198`|
+|---|-----|
+||Sweeney, J., Mortimer, J., Durand, D., 1987. Modeling of mammalian myelinated nerve for functional neuromuscular stimulation. Presented at the IEEE 9th Annual Conference of the Engineering in Medicine and Biology Society, pp. 1577–1578.

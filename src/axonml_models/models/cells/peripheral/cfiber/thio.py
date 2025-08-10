@@ -41,7 +41,7 @@ def balance(model):
     model.mech.extrapump.pumpica_default.copy_(-model.mech.ca_ion.ica.flatten()[0])
 
 
-class ThioAutonomic2025(Unmyelinated):
+class ThioAutonomic2024(Unmyelinated):
     Unmyelinated.RANGE(cm=1.326291192, rhoa=23.117539)
 
     def __init__(
@@ -105,7 +105,7 @@ class ThioAutonomic2025(Unmyelinated):
         )
 
 
-class ThioCutaneous2025(Unmyelinated):
+class ThioCutaneous2024(Unmyelinated):
     Unmyelinated.RANGE(cm=1.326291192, rhoa=27.513088)
 
     def __init__(

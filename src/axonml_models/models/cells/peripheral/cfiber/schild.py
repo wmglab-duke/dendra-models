@@ -69,6 +69,7 @@ class Schild1997(Unmyelinated):
         self.equilibria(ena=ena, ek=ek)
         self.concentrations(cao0=2.0, cai0=0.000117, ko0=ko, ki0=ki, nao0=nao, nai0=nai)
 
+
 class Schild1994(Unmyelinated):
     Unmyelinated.RANGE(cm=1.326291192, rhoa=100.0)
 

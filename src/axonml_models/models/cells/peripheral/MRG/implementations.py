@@ -39,7 +39,7 @@ class MRG(ExtCell):
     This model is based on the MRG model by McIntyre et al. (2002).
     """
 
-    ExtCell.RANGE(cm=2.0, rhoa=70.0)
+    ExtCell.PARAMETER(cm=2.0, rhoa=70.0)
 
     def __init__(
         self,
@@ -237,8 +237,6 @@ class smolMRG(MRG):
 class exactMRG(MRG):
     valid_diams = [1.0, 2.0, 5.7, 7.3, 8.7, 10.0, 11.5, 12.8, 14.0, 15.0, 16.0]
 
-
-
     def __init__(
         self,
         diameters=[5.7],
@@ -253,5 +251,5 @@ class exactMRG(MRG):
             raise ValueError(
                 f"Invalid diameters. Valid diameters are: {valid_diams.tolist()}"
             )
-        
+
         super().__init__(diameters, n_node, celsius, v_init, integrator)

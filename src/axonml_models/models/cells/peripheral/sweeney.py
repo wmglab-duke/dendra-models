@@ -74,4 +74,3 @@ class Sweeney1987(Myelinated):
     ):
         super().__init__(diameters, n_node, node_length, celsius, v_init, integrator)
         self.insert(sweeney)
-        self.build()
