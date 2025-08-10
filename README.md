@@ -68,3 +68,16 @@ Models implemented in AxonML.
 |2   |`Sweeney1987`|
 |---|-----|
 ||Sweeney, J., Mortimer, J., Durand, D., 1987. Modeling of mammalian myelinated nerve for functional neuromuscular stimulation. Presented at the IEEE 9th Annual Conference of the Engineering in Medicine and Biology Society, pp. 1577–1578.
+
+
+## Cortical neurons
+### Myelinated
+
+| 1  |N|`L23_PC`  |
+|----|-|----------|
+||44|Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 2020. Simulation of transcranial magnetic stimulation in head model with morphologically-realistic cortical neurons. Brain Stimul 13, 175–189. https://doi.org/10.1016/j.brs.2019.10.002
+
+|2   |N|`L5_TTPC`|
+|----|-|---------|
+||37|Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 2020. Simulation of transcranial magnetic stimulation in head model with morphologically-realistic cortical neurons. Brain Stimul 13, 175–189. https://doi.org/10.1016/j.brs.2019.10.002
+
