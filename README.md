@@ -50,7 +50,7 @@ Models implemented in AxonML.
 |----|--------|
 ||Musselman, E.D., Cariello, J.E., Grill, W.M., Pelot, N.A., 2021. ASCENT (Automated Simulations to Characterize Electrical Nerve Thresholds): A pipeline for sample-specific computational modeling of electrical stimulation of peripheral nerves. PLoS Comput Biol 17, e1009285. https://doi.org/10.1371/journal.pcbi.1009285
 
-|3   |`smolMRG` (thinly myelinated interpolation; 1.1+ um diameter)|
+|3   |`smolMRG` (thinly myelinated interpolation; 1.011 - 5.7 um diameter)|
 |----|--------|
 ||Peña, E., Pelot, N.A., Grill, W.M., 2024. Computational models of compound nerve action potentials: Efficient filter-based methods to quantify effects of tissue conductivities, conduction distance, and nerve fiber parameters. PLOS Computational Biology 20, e1011833. https://doi.org/10.1371/journal.pcbi.1011833
 
