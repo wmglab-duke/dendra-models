@@ -7,7 +7,7 @@ from .fh import FHM, SENN
 from .fh import FHUM
 from .sweeney import Sweeney1987
 from .SMF import SMF
-from .MRG import bigMRG, smolMRG
+from .MRG import bigMRG, smolMRG, exactMRG
 
 __all__ = [
     "Sundt2015",
@@ -24,4 +24,5 @@ __all__ = [
     "SMF",
     "bigMRG",
     "smolMRG",
+    "exactMRG",
 ]

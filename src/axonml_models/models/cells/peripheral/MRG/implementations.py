@@ -1,7 +1,7 @@
+from typing import Callable, Sequence, Union, Optional
 import warnings
 
 import torch
-import axonml as ax
 
 from axonml.models.heterogeneous.compartments import CompartmentID
 from axonml.models.extcell import ExtCell
@@ -234,8 +234,119 @@ class smolMRG(MRG):
         self.x[:] = self._x()
 
 
+Number = Union[int, float]
+
+
+def make_substituter(
+    keys: Sequence[Number],
+    values: Sequence[Number],
+    *,
+    default: Optional[Number | str] = "raise",  # "identity" | "raise" | numeric fill
+    tol: Optional[float] = None,  # for float keys: match nearest within atol
+) -> Callable[[torch.Tensor], torch.Tensor]:
+    """
+    Return a function that maps each occurrence of `keys[i]` to `values[i]`
+    in a tensor `x` of ANY shape (ndim). Output has the same shape and device.
+
+    - `default="identity"` leaves unmatched elements unchanged.
+    - `default="raise"` raises KeyError if any element is unmatched.
+    - `default=<number>` fills unmatched elements with that number.
+    - If `tol` is set, float keys are matched to the *nearest* key within `atol=tol`.
+    """
+    k = torch.as_tensor(keys)
+    v = torch.as_tensor(values)
+    if k.ndim != 1 or v.ndim != 1 or k.numel() != v.numel():
+        raise ValueError("`keys` and `values` must be 1D and the same length.")
+    if torch.unique(k).numel() != k.numel():
+        raise ValueError("`keys` must be unique.")
+
+    # sort once so we can use searchsorted
+    perm = torch.argsort(k)
+    k_sorted = k[perm]
+    v_sorted = v[perm]
+
+    def substitute(x: torch.Tensor) -> torch.Tensor:
+        # work on a flat view, then restore shape
+        orig_shape = x.shape
+        xx = x.reshape(-1)
+
+        # compute in x's dtype/device
+        kx = k_sorted.to(device=xx.device, dtype=xx.dtype)
+        vx = v_sorted.to(device=xx.device, dtype=xx.dtype)
+
+        # left insertion positions
+        idx = torch.searchsorted(kx, xx)
+        n = kx.numel()
+        in_range_r = idx < n
+
+        if tol is None:
+            # exact match (no need to check left neighbor)
+            matched = torch.zeros(xx.numel(), dtype=torch.bool, device=xx.device)
+            probe_mask = in_range_r
+            matched[probe_mask] = kx[idx[probe_mask]] == xx[probe_mask]
+            chosen = idx  # valid only where matched==True
+        else:
+            # nearest-neighbor within atol=tol (check right and left candidates)
+            x64 = xx.to(torch.float64)
+            k64 = kx.to(torch.float64)
+
+            # right candidate
+            diff_r = torch.full_like(x64, float("inf"))
+            mR = in_range_r
+            diff_r[mR] = (k64[idx[mR]] - x64[mR]).abs()
+
+            # left candidate
+            diff_l = torch.full_like(x64, float("inf"))
+            mL = idx > 0
+            idxL = idx[mL] - 1
+            diff_l[mL] = (k64[idxL] - x64[mL]).abs()
+
+            # pick closer (ties → left)
+            choose_left = diff_l <= diff_r
+            chosen = idx.clone()
+            chosen[choose_left] -= 1
+
+            # matched if nearest is within tol
+            nearest_diff = torch.minimum(diff_l, diff_r)
+            matched = nearest_diff <= float(tol)
+
+        out = xx.clone()
+        if matched.any():
+            out[matched] = vx[chosen[matched]]
+
+        if not matched.all():
+            if default == "raise":
+                bad = xx[~matched][:8].tolist()
+                raise KeyError(f"Unmapped values encountered (up to 8 shown): {bad}")
+            elif default == "identity" or default is None:
+                pass
+            else:
+                fill = torch.as_tensor(default, dtype=out.dtype, device=out.device)
+                out[~matched] = fill
+
+        return out.reshape(orig_shape)
+
+    return substitute
+
+
 class exactMRG(MRG):
     valid_diams = [1.0, 2.0, 5.7, 7.3, 8.7, 10.0, 11.5, 12.8, 14.0, 15.0, 16.0]
+    nl_vals = [15, 30, 80, 100, 110, 120, 130, 135, 140, 145, 150]
+
+    nl = make_substituter(valid_diams, nl_vals)
+
+    axonD_vals = [0.8, 1.6, 3.4, 4.6, 5.8, 6.9, 8.1, 9.2, 10.4, 11.5, 12.7]
+    nodeD_vals = [0.7, 1.4, 1.9, 2.4, 2.8, 3.3, 3.7, 4.2, 4.7, 5.0, 5.5]
+    deltax_vals = [100, 200, 500, 750, 1000, 1150, 1250, 1350, 1400, 1450, 1500]
+
+    axonD = make_substituter(valid_diams, axonD_vals)
+    nodeD = make_substituter(valid_diams, nodeD_vals)
+    deltax = make_substituter(valid_diams, deltax_vals)
+
+    nodelength0 = lambda fd: 1.0
+    paralength1 = lambda fd: 3.0
+    paralength2_vals = [5, 10, 35, 38, 40, 46, 50, 54, 56, 58, 60]
+    paralength2 = make_substituter(valid_diams, paralength2_vals)
 
     def __init__(
         self,
@@ -249,7 +360,30 @@ class exactMRG(MRG):
         # Ensure that the diameters are valid
         if not torch.all(torch.isin(torch.as_tensor(diameters), valid_diams)):
             raise ValueError(
-                f"Invalid diameters. Valid diameters are: {valid_diams.tolist()}"
+                f"Invalid diameters. Valid diameters are: {self.valid_diams}"
             )
 
         super().__init__(diameters, n_node, celsius, v_init, integrator)
+
+        n_ax = self.n_ax
+
+        fd = self.diameters.unsqueeze(1)
+        nodeD = self.__class__.nodeD(fd)
+        axonD = self.__class__.axonD(fd)
+
+        n_mysa = len(self.find("mysa", as_list=True))
+        node_scale = (nodeD / fd).expand(n_ax, n_mysa).flatten()
+
+        n_stin = len(self.find("stin", as_list=True))
+        stin_scale = (axonD / fd).expand(n_ax, n_stin).flatten()
+
+        n_flut = len(self.find("flut", as_list=True))
+        flut_scale = (axonD / fd).expand(n_ax, n_flut).flatten()
+
+        self.flut.insert(pas, g=0.0001 * flut_scale, e=self.v_init)
+        self.stin.insert(pas, g=0.0001 * stin_scale, e=self.v_init)
+        self.mysa.insert(pas, g=0.001 * node_scale, e=self.v_init)
+
+        self.node.insert(axnode_myel, gnabar=2.333333, gkbar=0.115556)
+
+        self.x[:] = self._x()

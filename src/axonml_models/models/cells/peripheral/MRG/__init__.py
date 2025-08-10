@@ -1,1 +1,1 @@
-from .implementations import bigMRG, smolMRG
+from .implementations import bigMRG, smolMRG, exactMRG
