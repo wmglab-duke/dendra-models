@@ -46,15 +46,15 @@ Models implemented in AxonML.
 |----|----------|
 ||McIntyre, C.C., Richardson, A.G., Grill, W.M., 2002. Modeling the Excitability of Mammalian Nerve Fibers:  Influence of Afterpotentials on the Recovery Cycle. Journal of Neurophysiology 87, 995–1006. https://doi.org/10.1152/jn.00353.2001
 
-|2   |`bigMRG` (intepolation 5.7+ um diameter)|
+|2   |`bigMRG` (intepolation; 5.7+ um diameter)|
 |----|--------|
 ||Musselman, E.D., Cariello, J.E., Grill, W.M., Pelot, N.A., 2021. ASCENT (Automated Simulations to Characterize Electrical Nerve Thresholds): A pipeline for sample-specific computational modeling of electrical stimulation of peripheral nerves. PLoS Comput Biol 17, e1009285. https://doi.org/10.1371/journal.pcbi.1009285
 
-|3   |`smolMRG` (thinly myelinated 1.1+ um diameter)|
+|3   |`smolMRG` (thinly myelinated interpolation; 1.1+ um diameter)|
 |----|--------|
 ||Peña, E., Pelot, N.A., Grill, W.M., 2024. Computational models of compound nerve action potentials: Efficient filter-based methods to quantify effects of tissue conductivities, conduction distance, and nerve fiber parameters. PLOS Computational Biology 20, e1011833. https://doi.org/10.1371/journal.pcbi.1011833
 
-|4   |`SMF` (interpolation 5.7+ um diameter; surrogate)|
+|4   |`SMF` (interpolation; 5.7+ um diameter; surrogate)|
 |----|------|
 ||Hussain, M.A., Grill, W.M., Pelot, N.A., 2024. Highly efficient modeling and optimization of neural fiber responses to electrical stimulation. Nat Commun 15, 7597. https://doi.org/10.1038/s41467-024-51709-8
 
@@ -65,6 +65,6 @@ Models implemented in AxonML.
 |----|----------------|
 ||Reilly, J.P., Freeman, V.T., Larkin, W.D., 1985. Sensory Effects of Transient Electrical Stimulation - Evaluation with a Neuroelectric Model. IEEE Trans. Biomed. Eng. BME-32, 1001–1011. https://doi.org/10.1109/TBME.1985.325509
 
-|2   |`Sweeney198`|
+|2   |`Sweeney1987`|
 |---|-----|
 ||Sweeney, J., Mortimer, J., Durand, D., 1987. Modeling of mammalian myelinated nerve for functional neuromuscular stimulation. Presented at the IEEE 9th Annual Conference of the Engineering in Medicine and Biology Society, pp. 1577–1578.
