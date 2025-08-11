@@ -165,13 +165,13 @@ class bigMRG(MRG):
         nodeD = self.__class__.nodeD(fd)
         axonD = self.__class__.axonD(fd)
 
-        n_mysa = len(self.find("mysa", as_list=True))
+        n_mysa = self.mysa.numel() // n_ax
         node_scale = (nodeD / fd).expand(n_ax, n_mysa).flatten()
 
-        n_stin = len(self.find("stin", as_list=True))
+        n_stin = self.stin.numel() // n_ax
         stin_scale = (axonD / fd).expand(n_ax, n_stin).flatten()
 
-        n_flut = len(self.find("flut", as_list=True))
+        n_flut = self.flut.numel() // n_ax
         flut_scale = (axonD / fd).expand(n_ax, n_flut).flatten()
 
         self.flut.insert(pas, g=0.0001 * flut_scale, e=self.v_init)
@@ -216,13 +216,13 @@ class smolMRG(MRG):
         nodeD = self.__class__.nodeD(fd)
         axonD = self.__class__.axonD(fd)
 
-        n_mysa = len(self.find("mysa", as_list=True))
+        n_mysa = self.mysa.numel() // n_ax
         node_scale = (nodeD / fd).expand(n_ax, n_mysa).flatten()
 
-        n_stin = len(self.find("stin", as_list=True))
+        n_stin = self.stin.numel() // n_ax
         stin_scale = (axonD / fd).expand(n_ax, n_stin).flatten()
 
-        n_flut = len(self.find("flut", as_list=True))
+        n_flut = self.flut.numel() // n_ax
         flut_scale = (axonD / fd).expand(n_ax, n_flut).flatten()
 
         self.flut.insert(pas, g=0.0001 * flut_scale, e=self.v_init)
@@ -371,13 +371,13 @@ class exactMRG(MRG):
         nodeD = self.__class__.nodeD(fd)
         axonD = self.__class__.axonD(fd)
 
-        n_mysa = len(self.find("mysa", as_list=True))
+        n_mysa = self.mysa.numel() // n_ax
         node_scale = (nodeD / fd).expand(n_ax, n_mysa).flatten()
 
-        n_stin = len(self.find("stin", as_list=True))
+        n_stin = self.stin.numel() // n_ax
         stin_scale = (axonD / fd).expand(n_ax, n_stin).flatten()
 
-        n_flut = len(self.find("flut", as_list=True))
+        n_flut = self.flut.numel() // n_ax
         flut_scale = (axonD / fd).expand(n_ax, n_flut).flatten()
 
         self.flut.insert(pas, g=0.0001 * flut_scale, e=self.v_init)
