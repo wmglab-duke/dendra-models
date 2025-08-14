@@ -45,6 +45,10 @@ Models implemented in AxonML.
 | 1  |`exactMRG`|
 |----|----------|
 ||McIntyre, C.C., Richardson, A.G., Grill, W.M., 2002. Modeling the Excitability of Mammalian Nerve Fibers:  Influence of Afterpotentials on the Recovery Cycle. Journal of Neurophysiology 87, 995–1006. https://doi.org/10.1152/jn.00353.2001
+||McIntyre, C.C., Grill, W.M., Sherman, D.L., Thakor, N.V., 2004. Cellular Effects of Deep Brain Stimulation: Model-Based Analysis of Activation and Inhibition. Journal of Neurophysiology 91, 1457–1469. https://doi.org/10.1152/jn.00989.2003 ($2 \ \mu m$)
+||Pelot, N.A., Behrend, C.E., Grill, W.M., 2017. Modeling the response of small myelinated axons in a compound nerve to kilohertz frequency signals. J Neural Eng 14, 046022. https://doi.org/10.1088/1741-2552/aa6a5f ($1 \ \mu m$)
+
+
 
 |2   |`bigMRG` (intepolation; 5.7+ um diameter)|
 |----|--------|
