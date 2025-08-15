@@ -384,6 +384,6 @@ class exactMRG(MRG):
         self.stin.insert(pas, g=0.0001 * stin_scale, e=self.v_init)
         self.mysa.insert(pas, g=0.001 * node_scale, e=self.v_init)
 
-        self.node.insert(axnode_myel, gnabar=2.333333, gkbar=0.115556)
+        self.node.insert(axnode_myel)
 
         self.x[:] = self._x()

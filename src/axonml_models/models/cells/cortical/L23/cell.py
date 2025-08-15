@@ -6,7 +6,6 @@ import networkx as nx
 import axonml as ax
 from axonml.models.utils import distance
 from axonml.models.mod import pas
-from axonml.models.mechanisms import equilibria
 
 from ..mech import *
 
@@ -20,7 +19,7 @@ def valid_ids():
     return ids
 
 
-def L23_PC(ID, N, integrator=None):
+def L23_PC_cADpyr(ID, N, integrator=None):
     gml_path = _MORPH_DIR / f"L23_{ID}.gml"
     g = nx.read_gml(gml_path, destringizer=int)
 
@@ -95,3 +94,6 @@ def L23_PC(ID, N, integrator=None):
     cell.equilibria(ek=-85.0, ena=50.0)
 
     return cell
+
+
+L23_PC_cADpyr.valid_ids = valid_ids

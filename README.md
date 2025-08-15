@@ -29,11 +29,11 @@ Models implemented in AxonML.
 |----|-------------------|
 ||Thio, B.J., Titus, N.D., Pelot, N.A., Grill, W.M., 2024. Reverse-engineered models reveal differential membrane properties of autonomic and cutaneous unmyelinated fibers. PLOS Computational Biology 20, e1012475. https://doi.org/10.1371/journal.pcbi.1012475
 
-| 5  |`ThioCutaneous2024`|
+| 6  |`ThioCutaneous2024`|
 |----|-------------------|
 ||Thio, B.J., Titus, N.D., Pelot, N.A., Grill, W.M., 2024. Reverse-engineered models reveal differential membrane properties of autonomic and cutaneous unmyelinated fibers. PLOS Computational Biology 20, e1012475. https://doi.org/10.1371/journal.pcbi.1012475
 
-| 6  |`Tigerholm2014`  |
+| 7  |`Tigerholm2014`  |
 |----|-----------------|
 ||Tigerholm, J., Petersson, M.E., Obreja, O., Lampert, A., Carr, R., Schmelz, M., Fransén, E., 2014. Modeling activity-dependent changes of axonal spike conduction in primary afferent C-nociceptors. J Neurophysiol 111, 1721–1735. https://doi.org/10.1152/jn.00777.2012
 
@@ -77,11 +77,11 @@ Models implemented in AxonML.
 ## Cortical neurons
 ### Myelinated
 
-| 1  |N|`L23_PC`  |
+| 1  |N|`L23_PC_cADpyr`  |
 |----|-|----------|
 ||44|Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 2020. Simulation of transcranial magnetic stimulation in head model with morphologically-realistic cortical neurons. Brain Stimul 13, 175–189. https://doi.org/10.1016/j.brs.2019.10.002
 
-|2   |N|`L5_TTPC`|
+|2   |N|`L5_TTPC_cADpyr`|
 |----|-|---------|
 ||37|Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 2020. Simulation of transcranial magnetic stimulation in head model with morphologically-realistic cortical neurons. Brain Stimul 13, 175–189. https://doi.org/10.1016/j.brs.2019.10.002
 

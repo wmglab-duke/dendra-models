@@ -1,1 +1,1 @@
-from .cell import L23_PC, valid_ids
+from .cell import L23_PC_cADpyr
