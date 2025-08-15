@@ -44,60 +44,51 @@ def L4_LBC_cACint(ID, N, integrator=None):
 
     # apic
     cell.apic.insert(pas, e=-63.118492, g=1e-6)
-    cell.apic.insert(nats2_t, alias="apical", gbar=0.000001)
-    cell.apic.insert(skv3_1, alias="apical", gbar=0.000001)
-    cell.apic.insert(nap_et2, alias="apical", gbar=0.000001)
+    cell.apic.insert(nats2_t, alias="apical", gbar=0.001373)
+    cell.apic.insert(skv3_1, alias="apical", gbar=0.000041)
     d_apic = distance(cell, cell.find("soma"), cell.find("apic"))
     gbar_ih_apic = (-0.869600 + 2.087000 * torch.exp((d_apic) * 0.003)) * 0.000023
     cell.apic.insert(ih, alias="apical", gbar=gbar_ih_apic[None, :])
-    cell.apic.insert(im, alias="apical", gbar=0.000032)
-    cell.apic.insert(k_p, alias="apical", gbar=0.000001)
-    cell.apic.insert(k_t, alias="apical", gbar=0.000001)
+    cell.apic.insert(im, alias="apical", gbar=0.000014)
+    cell.apic.insert(k_p, alias="apical", gbar=0.00001)
+    cell.apic.insert(k_t, alias="apical", gbar=0.007375)
 
     # dend
     cell.dend.insert(pas, e=-63.118492, g=1e-6)
-    cell.dend.insert(nats2_t, alias="basal", gbar=0.000001)
-    cell.dend.insert(skv3_1, alias="basal", gbar=0.000001)
-    cell.dend.insert(nap_et2, alias="basal", gbar=0.000001)
+    cell.dend.insert(nats2_t, alias="basal", gbar=0.001373)
+    cell.dend.insert(skv3_1, alias="basal", gbar=0.000041)
     d_dend = distance(cell, cell.find("soma"), cell.find("dend"))
     gbar_ih_dend = (-0.869600 + 2.087000 * torch.exp((d_dend) * 0.003)) * 0.000023
     cell.dend.insert(ih, alias="basal", gbar=gbar_ih_dend[None, :])
-    cell.dend.insert(im, alias="basal", gbar=0.000032)
-    cell.dend.insert(k_p, alias="basal", gbar=0.000001)
-    cell.dend.insert(k_t, alias="basal", gbar=0.000001)
+    cell.dend.insert(im, alias="basal", gbar=0.000014)
+    cell.dend.insert(k_p, alias="basal", gbar=0.00001)
+    cell.dend.insert(k_t, alias="basal", gbar=0.007375)
 
     # axon
     cell.axon.insert(pas, e=-64.601696, g=0.000063)
-    cell.axon.insert(nats2_t, alias="axon", gbar=0.000001)
-    cell.axon.insert(skv3_1, alias="axon", gbar=0.000001)
-    cell.axon.insert(ca_hva, alias="axon", gbar=0.000001)
-    cell.axon.insert(sk_e2, alias="axon", gbar=0.000001)
-    cell.axon.insert(cadynamics, alias="axon", gamma=0.000001, decay=0.000001)
-    cell.axon.insert(nap_et2, alias="axon", gbar=0.000001)
+    cell.axon.insert(skv3_1, alias="axon", gbar=0.517764)
+    cell.axon.insert(ca_hva, alias="axon", gbar=0.000501)
+    cell.axon.insert(sk_e2, alias="axon", gbar=0.005611)
+    cell.axon.insert(cadynamics, alias="axon", gamma=0.000503, decay=573.007045)
     cell.axon.insert(im, alias="axon", gbar=0.000345)
-    cell.axon.insert(k_p, alias="axon", gbar=0.959296)
-    cell.axon.insert(k_t, alias="axon", gbar=0.001035)
-    cell.axon.insert(ca_lva, alias="axon", gbar=0.000001)
-    cell.axon.insert(nata_t, alias="axon", gbar=3.429725)
+    cell.axon.insert(k_p, alias="axon", gbar=0.068460)
+    cell.axon.insert(ca_lva, alias="axon", gbar=0.009986)
+    cell.axon.insert(nata_t, alias="axon", gbar=3.993125)
 
     # myelin
     cell.myelin.insert(pas, e=-64.601696, g=1 / 1.125e6)
 
     # unmyelin
     cell.unmyelin.insert(pas, e=-64.601696, g=0.000063)
-    cell.unmyelin.insert(skv3_1, alias="unmyelin", gbar=0.000001)
-    cell.unmyelin.insert(nap_et2, alias="unmyelin", gbar=0.000001)
-    cell.unmyelin.insert(k_p, alias="unmyelin", gbar=0.959296)
-    cell.unmyelin.insert(k_t, alias="unmyelin", gbar=0.001035)
-    cell.unmyelin.insert(nata_t, alias="unmyelin", gbar=3.429725)
+    cell.unmyelin.insert(skv3_1, alias="unmyelin", gbar=0.517764)
+    cell.unmyelin.insert(k_p, alias="unmyelin", gbar=0.068460)
+    cell.unmyelin.insert(nata_t, alias="unmyelin", gbar=3.993125)
 
     # node
     cell.node.insert(pas, e=-64.601696, g=0.000063)
-    cell.node.insert(skv3_1, alias="node", gbar=0.000001)
-    cell.node.insert(nap_et2, alias="node", gbar=0.000001)
-    cell.node.insert(k_p, alias="node", gbar=0.959296)
-    cell.node.insert(k_t, alias="node", gbar=0.001035)
-    cell.node.insert(nata_t, alias="node", gbar=3.429725)
+    cell.node.insert(skv3_1, alias="node", gbar=0.517764)
+    cell.node.insert(k_p, alias="node", gbar=0.068460)
+    cell.node.insert(nata_t, alias="node", gbar=3.993125*2)
 
     cell.equilibria(ek=-85.0, ena=50.0)
 
