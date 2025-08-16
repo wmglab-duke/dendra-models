@@ -77,11 +77,15 @@ Models implemented in AxonML.
 ## Cortical neurons
 ### Myelinated
 
-| 1  |N|`L23_PC_cADpyr`  |
-|----|-|----------|
-||44|Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 2020. Simulation of transcranial magnetic stimulation in head model with morphologically-realistic cortical neurons. Brain Stimul 13, 175–189. https://doi.org/10.1016/j.brs.2019.10.002
+Myelination scheme from Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 2020. Simulation of transcranial magnetic stimulation in head model with morphologically-realistic cortical neurons. Brain Stimul 13, 175–189. https://doi.org/10.1016/j.brs.2019.10.002
 
-|2   |N|`L5_TTPC_cADpyr`|
-|----|-|---------|
-||37|Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 2020. Simulation of transcranial magnetic stimulation in head model with morphologically-realistic cortical neurons. Brain Stimul 13, 175–189. https://doi.org/10.1016/j.brs.2019.10.002
-
+| |Class|N|Meaning|
+|-|-----|-|-------|
+|1|`L23_PC_cADpyr`|44|Layer 2/3 pyramidal cell, continuous adapting (pyramidal) e-type|
+|2|`L5_TTPC_cADpyr`|37|Layer 5 thick-tufted pyramidal cell, continuous adapting (pyramidal) e-type|
+|3|`L4_LBC_cACint`|35|Layer 4 large basket interneuron, continuous accommodating e-type|
+|4|`L4_LBC_dNAC`|35|Layer 4 large basket interneuron, delayed non-accommodating e-type|
+|5|`L4_NBC_cACint`|35|Layer 4 nest basket interneuron, continuous accommodating e-type|
+|6|`L4_NBC_dNAC`|35|Layer 4 nest basket interneuron, delayed non-accommodating e-type|
+|7|`L4_SBC_bNAC`|35|Layer 4 small basket interneuron, burst non-accommodating e-type|
+|8|`L4_SBC_cACint`|35|Layer 4 small basket interneuron, continuous accommodating e-type|

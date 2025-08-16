@@ -11,27 +11,21 @@ class mh(S):
     S.GLOBAL(aq10=2.3, bq10=22.0, cq10=10.0, vhalfm=-43.0, vhalfh=-67.0, km=8.0, kh=7.3)
     S.PARAMETER(taum=0.6, tauh=1500.0)
 
-    S.DERIVATIVE(
-        "m' = (minf - m) / taum",
-        "h' = (hinf - h) / tauh"
-    )
+    S.DERIVATIVE("m' = (minf - m) / taum", "h' = (hinf - h) / tauh")
     S.ASSIGNED("minf", "hinf")
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
-    
+
     def breakpoint(self, v):
-        minf = 1 - 1 / (1 + exp((v-self.vhalfm)/self.km))
-        hinf = 1 / (1 + exp((v-self.vhalfh)/self.kh))
+        minf = 1 - 1 / (1 + exp((v - self.vhalfm) / self.km))
+        hinf = 1 / (1 + exp((v - self.vhalfh) / self.kh))
         return {"minf": minf, "hinf": hinf}
-    
+
     def inf(self, v):
         states = self.breakpoint(v)
-        return {
-            "m": states["minf"],
-            "h": states["hinf"]
-        }
-    
+        return {"m": states["minf"], "h": states["hinf"]}
+
 
 class kdshu2007(M):
     M.STATE(mh)

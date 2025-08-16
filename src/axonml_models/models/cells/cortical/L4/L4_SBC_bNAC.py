@@ -93,7 +93,7 @@ def L4_SBC_bNAC(ID, N, integrator=None):
     cell.node.insert(skv3_1, alias="node", gbar=0.386953)
     cell.node.insert(k_p, alias="node", gbar=0.001693)
     cell.node.insert(k_t, alias="node", gbar=0.042115)
-    cell.node.insert(nata_t, alias="node", gbar=3.999855*2)
+    cell.node.insert(nata_t, alias="node", gbar=3.999855 * 2)
     cell.node.insert(nap_et2, alias="node", gbar=0.000001)
 
     cell.equilibria(ek=-85.0, ena=50.0)

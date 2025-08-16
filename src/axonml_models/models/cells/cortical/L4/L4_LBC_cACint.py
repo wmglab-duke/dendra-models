@@ -88,7 +88,7 @@ def L4_LBC_cACint(ID, N, integrator=None):
     cell.node.insert(pas, e=-64.601696, g=0.000063)
     cell.node.insert(skv3_1, alias="node", gbar=0.517764)
     cell.node.insert(k_p, alias="node", gbar=0.068460)
-    cell.node.insert(nata_t, alias="node", gbar=3.993125*2)
+    cell.node.insert(nata_t, alias="node", gbar=3.993125 * 2)
 
     cell.equilibria(ek=-85.0, ena=50.0)
 
