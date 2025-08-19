@@ -4,7 +4,7 @@ import warnings
 import torch
 
 from axonml.models.heterogeneous.compartments import CompartmentID
-from axonml.models.extcell import ExtCell
+from axonml.models.extcell import ExtCellAxon
 from axonml.models.mod import pas
 
 from .axnode_myel import axnode_myel
@@ -33,13 +33,13 @@ class mrg_rhoa(torch.nn.Module):
         return rhoa * (1 / (self.secd / self.fd)) ** 2
 
 
-class MRG(ExtCell):
+class MRG(ExtCellAxon):
     """
     A model of a large myelinated axon with multiple nodes of Ranvier.
     This model is based on the MRG model by McIntyre et al. (2002).
     """
 
-    ExtCell.PARAMETER(cm=2.0, rhoa=70.0)
+    ExtCellAxon.PARAMETER(cm=2.0, rhoa=70.0)
 
     def __init__(
         self,

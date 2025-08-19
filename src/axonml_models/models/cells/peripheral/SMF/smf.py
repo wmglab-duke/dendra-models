@@ -1,16 +1,11 @@
-from pathlib import Path
+from importlib.resources import files, as_file
 
 import torch
 
-import axonml as ax
 from axonml.models.core import Myelinated
 from axonml.models.integrators import eulerv1
 
 from ..mech import axnode_myel
-
-
-_PACKAGE_DIR = Path(__file__).resolve().parent
-_PARAMS = str(_PACKAGE_DIR / "SMF.pt")
 
 
 ic = {"m": 0.0732093, "h": 0.62069505, "p": 0.20260409, "s": 0.04302994}
@@ -105,4 +100,5 @@ class SMF(Myelinated):
         super().__init__(diameters, n_node, node_length, celsius, v_init, eulerv1())
         self.insert(axnode_myel, ic=ic)
         self.build()
-        self.load(_PARAMS)
+        with as_file(files(__package__) / "SMF.pt") as p:
+            self.load(str(p))

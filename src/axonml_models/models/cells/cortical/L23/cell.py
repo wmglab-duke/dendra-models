@@ -1,4 +1,5 @@
-from pathlib import Path
+import re
+from importlib.resources import files, as_file
 
 import torch
 import networkx as nx
@@ -9,19 +10,28 @@ from axonml.models.mod import pas
 
 from ..mech import *
 
-_PACKAGE_DIR = Path(__file__).resolve().parent
-_MORPH_DIR = _PACKAGE_DIR / "morphologies"
+
+_MORPH = files(__package__) / "morphologies"
 
 
 def valid_ids():
-    all_morphs = _MORPH_DIR.glob("L23_*.gml")
-    ids = [int(morph.stem.split("_")[1]) for morph in all_morphs]
-    return ids
+    """Return sorted integer IDs from files like L23_<ID>.gml packaged in morphologies/."""
+    ids = []
+    for p in _MORPH.iterdir():
+        m = re.fullmatch(r"L23_(\d+)\.gml", p.name)
+        if m:
+            ids.append(int(m.group(1)))
+    return sorted(ids)
 
 
 def L23_PC_cADpyr(ID, N, integrator=None):
-    gml_path = _MORPH_DIR / f"L23_{ID}.gml"
-    g = nx.read_gml(gml_path, destringizer=int)
+    target = _MORPH / f"L23_{ID}.gml"
+    if not target.is_file():
+        raise FileNotFoundError(f"Missing morphology: {target}")
+
+    # Give NetworkX a real filesystem path (extracted if needed)
+    with as_file(target) as p:
+        g = nx.read_gml(p, destringizer=int)
 
     cell = ax.Tree.from_graph(g, integrator=integrator, N=N, v_init=-70.0)
     for group in ["soma", "apic", "dend", "axon", "myelin", "unmyelin", "node"]:

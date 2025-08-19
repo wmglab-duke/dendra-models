@@ -79,7 +79,7 @@ Models implemented in AxonML.
 
 Myelination scheme from Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 2020. Simulation of transcranial magnetic stimulation in head model with morphologically-realistic cortical neurons. Brain Stimul 13, 175–189. https://doi.org/10.1016/j.brs.2019.10.002
 
-| |Class|N|Meaning|
+| |Class|N||
 |-|-----|-|-------|
 |1|`L23_PC_cADpyr`|44|Layer 2/3 pyramidal cell, continuous adapting (pyramidal) e-type|
 |2|`L5_TTPC_cADpyr`|37|Layer 5 thick-tufted pyramidal cell, continuous adapting (pyramidal) e-type|
