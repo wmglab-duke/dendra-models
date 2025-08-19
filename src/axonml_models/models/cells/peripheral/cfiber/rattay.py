@@ -1,5 +1,4 @@
 from axonml.models.core import Unmyelinated
-from axonml.models.mechanisms import equilibria
 from axonml.units import mm
 
 from ..mech import rattay_aberham
@@ -18,7 +17,5 @@ class Rattay1993(Unmyelinated):
         integrator=None,
     ):
         super().__init__(diameters, L, dx, temp, v_init, integrator)
-
         self.insert(rattay_aberham)
-
         self.equilibria(ena=45.0, ek=-82.0)

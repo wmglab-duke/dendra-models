@@ -1,5 +1,4 @@
 from axonml.models.core import Unmyelinated
-from axonml.models.mechanisms import equilibria as E, concentrations as C
 from axonml.units import mm
 
 

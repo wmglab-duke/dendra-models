@@ -27,7 +27,7 @@ def valid_ids():
 def L23_PC_cADpyr(ID, N, integrator=None):
     target = _MORPH / f"L23_{ID}.gml"
     if not target.is_file():
-        raise FileNotFoundError(f"Missing morphology: {target}")
+        raise FileNotFoundError(f"Missing morphology: {target}. Valid IDs: {valid_ids()}")
 
     # Give NetworkX a real filesystem path (extracted if needed)
     with as_file(target) as p:

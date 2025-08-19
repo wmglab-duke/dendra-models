@@ -18,8 +18,7 @@ class FHM(Myelinated):
     ):
         super().__init__(diameters, n_node, node_length, celsius, v_init, integrator)
         self.insert(fh)
-        with C(nai0=13.74, nao0=114.5, ki0=120.0, ko0=2.5):
-            self.build()
+        self.concentrations(nai0=13.74, nao0=114.5, ki0=120.0, ko0=2.5)
 
 
 SENN = FHM
