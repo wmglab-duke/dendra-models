@@ -8,7 +8,7 @@ Models implemented in AxonML.
 
 ### Installation instructions
 ---
-0. Install [AxonML](https://gitlab.oit.duke.edu/mah148/axonml)
+0. Install [AxonML](https://gitlab.oit.duke.edu/mah148/axonml).
 1. Clone this repository.
 2. Navigate to the cloned directory.
 3. `python -m pip install .`
