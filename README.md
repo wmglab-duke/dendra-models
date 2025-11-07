@@ -15,7 +15,7 @@ Models implemented in AxonML.
 
 ### Accessing models
 ---
-Models can be access via `axonml_models.models`, e.g., `from axonml_models.models import Tigerholm2014...`
+Models can be accessed via `axonml_models.models`, e.g., `from axonml_models.models import Tigerholm2014...`
 
 # Available models
 ## Peripheral nerve fibers
