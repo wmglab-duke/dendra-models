@@ -33,7 +33,7 @@ class c(S):
     def beta(self, v):
         return self.A_betac * safe_exp((v + self.B_betac) / self.C_betac)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         s = 1 / (a + b)
@@ -42,7 +42,7 @@ class c(S):
         return {"tauc": tauc, "cinf": cinf}
 
     def inf(self, v):
-        return {"c": self.breakpoint(v)["cinf"]}
+        return {"c": self.breakpoint(v, None)["cinf"]}
 
 
 class kca(M):

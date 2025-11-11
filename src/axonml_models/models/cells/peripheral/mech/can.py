@@ -28,7 +28,7 @@ class d(S):
     def calc_q10(self):
         return self.Q10can ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         taud = self.q10() * (
             self.A_taud * exp(-((self.B_taud) ** 2) * (v - self.Vpd) ** 2) + self.C_taud
         )
@@ -36,7 +36,7 @@ class d(S):
         return {"taud": taud, "dinf": dinf}
 
     def inf(self, v):
-        return {"d": self.breakpoint(v)["dinf"]}
+        return {"d": self.breakpoint(v, None)["dinf"]}
 
 
 class f1(S):
@@ -62,7 +62,7 @@ class f1(S):
     def calc_q10(self):
         return self.Q10can ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         tauf1 = self.q10() * (
             self.A_tauf1 * exp(-((self.B_tauf1) ** 2) * (v - self.Vpf1) ** 2)
             + self.C_tauf1
@@ -71,7 +71,7 @@ class f1(S):
         return {"tauf1": tauf1, "f1inf": f1inf}
 
     def inf(self, v):
-        return {"f1": self.breakpoint(v)["f1inf"]}
+        return {"f1": self.breakpoint(v, None)["f1inf"]}
 
 
 class f2(S):
@@ -99,7 +99,7 @@ class f2(S):
     def calc_q10(self):
         return self.Q10can ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         tauf2 = self.q10() * (
             self.A_tauf2 * exp(-((self.B_tauf2) ** 2) * (v - self.Vpf2) ** 2)
             + self.C_tauf2
@@ -111,7 +111,7 @@ class f2(S):
         return {"tauf2": tauf2, "f2inf": f2inf}
 
     def inf(self, v):
-        return {"f2": self.breakpoint(v)["f2inf"]}
+        return {"f2": self.breakpoint(v, None)["f2inf"]}
 
 
 class can(M):

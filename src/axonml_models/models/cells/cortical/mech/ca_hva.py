@@ -11,7 +11,7 @@ class mh(S):
     )
     S.ASSIGNED("minf", "taum", "hinf", "tauh")
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         guard = torch.tensor(-27.0, device=v.device, dtype=v.dtype)
         v = torch.where(torch.isin(v, guard), v + 0.0001, v)
         mAlpha = (0.055 * (-27 - v)) / (exp((-27 - v) / 3.8) - 1)
@@ -30,7 +30,7 @@ class mh(S):
         }
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {
             "m": states["minf"],
             "h": states["hinf"],

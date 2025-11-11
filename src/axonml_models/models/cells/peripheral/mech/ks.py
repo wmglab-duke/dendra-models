@@ -21,7 +21,7 @@ class s(S):
     def calc_q10(self):
         return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         sinf = sigmoid((v + 30.0) / 6.0)
         taus = self.q10() * torch.where(v < -60.0, 219.0, (13.0 * v + 1000.0))
         return {"sinf": sinf, "taus": taus}
@@ -47,7 +47,7 @@ class f(S):
     def beta(self, v):
         return 0.00395 * exp(-(v + 30.0) / 20.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         finf = sigmoid((v + 30.0) / 6.0)

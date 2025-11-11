@@ -8,13 +8,13 @@ class m(S):
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         taum = 0.2 * 20.000 / (1 + exp(((v - (-46.560)) / (-44.140))))
         minf = 1 / (1 + exp(((v - (18.700)) / (-9.700))))
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
-        return {"m": self.breakpoint(v)["minf"]}
+        return {"m": self.breakpoint(v, None)["minf"]}
 
 
 class skv3_1(M):

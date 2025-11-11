@@ -13,7 +13,7 @@ class m(S):
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         q10 = self.q10()
         pca = log10(self.cai) - 3.0
         v12 = -50.0 * pca - 232.0
@@ -45,7 +45,7 @@ class h(S):
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         q10 = self.q10()
         pca = log10(self.cai) - 3.0
         vh12 = -8.0 * pca + 35.0

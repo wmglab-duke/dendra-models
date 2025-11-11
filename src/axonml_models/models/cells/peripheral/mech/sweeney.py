@@ -24,7 +24,7 @@ class m(S):
             / (1 + exp(-(self.amA + v) / self.amD))
         )
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         taum = 1 / (a + b)
@@ -32,7 +32,7 @@ class m(S):
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
-        return {"m": self.breakpoint(v)["minf"]}
+        return {"m": self.breakpoint(v, None)["minf"]}
 
 
 class h(S):
@@ -51,7 +51,7 @@ class h(S):
     def beta(self, v):
         return self.ahB / (1 + exp(-(v + self.ahA) / self.bhA))
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         tauh = 1 / (a + b)
@@ -59,7 +59,7 @@ class h(S):
         return {"tauh": tauh, "hinf": hinf}
 
     def inf(self, v):
-        return {"h": self.breakpoint(v)["hinf"]}
+        return {"h": self.breakpoint(v, None)["hinf"]}
 
 
 class sweeney(M):

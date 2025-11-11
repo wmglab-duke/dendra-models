@@ -14,7 +14,7 @@ class cai(S):
     def initial(self, v):
         self.shell = -10_000 * (self.gamma / (2 * self.FARADAY * self.depth))
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         return {"shell_ica": self.shell * self.ica}
 
 

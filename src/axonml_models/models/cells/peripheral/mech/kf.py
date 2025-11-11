@@ -18,7 +18,7 @@ class h(S):
     def calc_q10(self):
         return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         hinf = sigmoid((v - self.vhh + self.shift) / -self.kh)
         tauh = 20 + 50 * exp(-((v + 40) ** 2) / (2 * 40**2))
         tauh = self.q10() * torch.where(tauh < 5, 5.0, tauh)
@@ -39,7 +39,7 @@ class m(S):
     def calc_q10(self):
         return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         minf = sigmoid((v - self.vhm + self.shift) / self.km) ** 4
         taum = self.q10() * (0.25 + 10.04 * exp(-((v + 24.67) ** 2) / (2 * 34.8**2)))
         return {"minf": minf, "taum": taum}

@@ -18,7 +18,7 @@ class m(S):
     def beta(self, v):
         return self.q10() * 3.3e-3 * exp(-2.5 * 0.04 * (v - -35))
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         q10 = self.q10()
         a = q10 * self.alpha(v)
         b = q10 * self.beta(v)
@@ -27,7 +27,7 @@ class m(S):
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {"m": states["minf"]}
 
 

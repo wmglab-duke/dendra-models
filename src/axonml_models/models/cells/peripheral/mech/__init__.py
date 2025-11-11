@@ -9,6 +9,8 @@ py_files = [
     f for f in os.listdir(module_dir) if f.endswith(".py") and f != "__init__.py"
 ]
 
+_registry = {}
+
 # Import each file and fetch its classes
 for file in py_files:
     module_name = file[:-3]  # Remove '.py' extension
@@ -19,3 +21,10 @@ for file in py_files:
         module_name  # Assume class name is the capitalized version of file name
     )
     globals()[class_name] = getattr(module, class_name)  # Add class to global namespace
+    _registry[class_name] = getattr(module, class_name)  # Add to registry
+
+
+def get_mechanism(name):
+    return _registry.get(name, None)
+
+get_mechanism.available = lambda: list(_registry.keys())

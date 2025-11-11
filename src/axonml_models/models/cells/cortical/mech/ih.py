@@ -8,7 +8,7 @@ class m(S):
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         alpha = 0.001 * 6.43 * vtrap(v + 154.9, 11.9)
         beta = 0.001 * 193 * exp(v / 33.1)
         taum = 1 / (alpha + beta)
@@ -16,7 +16,7 @@ class m(S):
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
-        return {"m": self.breakpoint(v)["minf"]}
+        return {"m": self.breakpoint(v, None)["minf"]}
 
 
 class ih(M):

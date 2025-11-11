@@ -18,7 +18,7 @@ class m(S):
     def calc_q10(self):
         return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = 2.85 - 2.839 * sigmoid((1.159 - v) / 13.95)
         b = 7.6205 * sigmoid((-46.463 - v) / 8.8289)
         s = 1 / (a + b)
@@ -43,7 +43,7 @@ class h(S):
     def calc_q10(self):
         return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         hinf = sigmoid((-32.2 - v) / 4.0)
         tauh = self.q10() * (1.218 + 42.043 * exp(-((v + 38.1) ** 2) / (2 * 15.19**2)))
         return {"hinf": hinf, "tauh": tauh}
@@ -69,7 +69,7 @@ class s(S):
     def beta(self, v):
         return 0.001 * 5.0757 * sigmoid((v + 15.968) / 11.542)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         taus = self.q10() / (a + b)
@@ -97,7 +97,7 @@ class u(S):
     def beta(self, v):
         return 0.0002 * 1.9952 * sigmoid((v + 30.963) / 14.792)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         tauu = self.q10() / (a + b)

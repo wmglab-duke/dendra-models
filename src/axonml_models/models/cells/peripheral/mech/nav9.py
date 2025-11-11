@@ -13,7 +13,7 @@ class m(S):
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         q10 = self.q10()
         minf = (1 / (1 + exp(-1 * (v + 51) / 8.4))) ** (1 / 3)
         taum = (0.3 + 1 / (exp((v + 1.3) / 22) + exp(-1 * (v + 82) / 10))) / 2
@@ -34,7 +34,7 @@ class h(S):
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         q10 = self.q10()
         hinf = 1 / (1 + exp((v + 55) / 11.5))
         tauh = 2 + 1 / (exp((v - 32) / 14) + exp(-1 * (v + 157) / 12))
@@ -55,7 +55,7 @@ class s(S):
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         q10 = self.q10()
         sinf = 0.03 + 0.97 / (1 + exp((v + 79) / 6.87))
         taus = 1 / (exp((v - 195) / 29) + exp(-1 * (v + 193) / 12.4)) + 1165 / (

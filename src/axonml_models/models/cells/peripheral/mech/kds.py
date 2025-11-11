@@ -28,7 +28,7 @@ class x(S):
     def calc_q10(self):
         return self.Q10kds ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         taux = (
             self.A_taux * exp(-((self.B_taux) ** 2) * (v - self.Vpx) ** 2) + self.C_taux
         )
@@ -60,7 +60,7 @@ class y(S):
     def calc_q10(self):
         return self.Q10kds ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         tauy = self.tau_y22 * self.q10()
         yinf = sigmoid(-(v + self.V0p5y + self.shiftkds) / self.S0p5y)
         return {"tauy": tauy, "yinf": yinf}

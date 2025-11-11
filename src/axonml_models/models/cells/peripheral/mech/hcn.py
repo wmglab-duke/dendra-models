@@ -13,14 +13,14 @@ class m(S):
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         minf = (1 / (1 + exp((v + 97) / 7.35))) ** (1 / 3)
         taum = 0.5 / (exp((v - 42) / 11.8) + exp(-1 * (v + 498) / 66.6))
         taum = taum / self.q10()
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
-        return {"m": self.breakpoint(v)["minf"]}
+        return {"m": self.breakpoint(v, None)["minf"]}
 
 
 class n(S):
@@ -33,14 +33,14 @@ class n(S):
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         ninf = (1 / (1 + exp((v + 94) / 8.9))) ** (1 / 3)
         taun = 0.5 / (exp((v + 25) / 4.1) + exp(-1 * (v + 356) / 32))
         taun = taun / self.q10()
         return {"taun": taun, "ninf": ninf}
 
     def inf(self, v):
-        return {"n": self.breakpoint(v)["ninf"]}
+        return {"n": self.breakpoint(v, None)["ninf"]}
 
 
 class hcn(M):

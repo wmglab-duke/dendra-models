@@ -28,7 +28,7 @@ class d(S):
     def calc_q10(self):
         return self.Q10catd ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         taud = (
             self.A_taud * exp(-((self.B_taud) ** 2) * (v - self.Vpd) ** 2) + self.C_taud
         )
@@ -63,7 +63,7 @@ class f(S):
     def calc_q10(self):
         return self.Q10catf ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         tauf = (
             self.A_tauf * exp(-((self.B_tauf) ** 2) * (v - self.Vpf) ** 2) + self.C_tauf
         )

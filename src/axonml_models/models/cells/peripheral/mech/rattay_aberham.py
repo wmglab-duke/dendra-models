@@ -20,7 +20,7 @@ class m(S):
     def beta(self, v):
         return 4.0 * exp(-(v + 70.0) / 18.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         s = a + b
@@ -29,7 +29,7 @@ class m(S):
         return {"mtau": mtau, "minf": minf}
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {"m": states["minf"]}
 
 
@@ -49,7 +49,7 @@ class h(S):
     def beta(self, v):
         return expit((-3.0) + 0.1 * (v + 70))
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         s = a + b
@@ -58,7 +58,7 @@ class h(S):
         return {"htau": htau, "hinf": hinf}
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {"h": states["hinf"]}
 
 
@@ -78,7 +78,7 @@ class n(S):
     def beta(self, v):
         return 0.125 * exp(-(v + 70.0) / 80.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         s = a + b
@@ -87,7 +87,7 @@ class n(S):
         return {"ntau": ntau, "ninf": ninf}
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {"n": states["ninf"]}
 
 

@@ -12,7 +12,7 @@ class m(S):
     def calc_q10(self):
         return 2.3 ** ((self.celsius - 21.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         qt = self.q10()
         minf = 1.0 / (1 + exp((v - -52.6) / -4.6))
         guard = torch.tensor(-38.0, device=v.device, dtype=v.dtype)
@@ -23,7 +23,7 @@ class m(S):
         return {"taum": mTau, "minf": minf}
 
     def inf(self, v):
-        return {"m": self.breakpoint(v)["minf"]}
+        return {"m": self.breakpoint(v, None)["minf"]}
 
 
 class h(S):
@@ -35,7 +35,7 @@ class h(S):
     def calc_q10(self):
         return 2.3 ** ((self.celsius - 21.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         guard = torch.tensor([-17.0, -64.4], device=v.device, dtype=v.dtype)
         v = torch.where(torch.isin(v, guard), v + 0.0001, v)
         qt = self.q10()
@@ -46,7 +46,7 @@ class h(S):
         return {"tauh": hTau, "hinf": hInf}
 
     def inf(self, v):
-        return {"h": self.breakpoint(v)["hinf"]}
+        return {"h": self.breakpoint(v, None)["hinf"]}
 
 
 class nap_et2(M):

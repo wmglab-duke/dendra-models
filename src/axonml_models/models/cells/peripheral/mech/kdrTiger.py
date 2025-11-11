@@ -17,7 +17,7 @@ class n(S):
     def calc_q10(self):
         return 1.0 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         ninf = sigmoid((v + self.vh - 10.0) / self.k1)
         ntau_a = 0.16 + 0.8 * exp(-0.0267 * (v + 11.0))
         ntau_b = 1000 * (

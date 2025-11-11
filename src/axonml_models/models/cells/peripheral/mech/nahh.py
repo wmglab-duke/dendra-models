@@ -35,7 +35,7 @@ class m(S):
     def beta(self, v):
         return self.q10() * self.bm1 * exprelr(v - self.bm2, self.bm3)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         v = v + 65.0 + self.mshift
         a = self.alpha(v)
         b = self.beta(v)
@@ -44,7 +44,7 @@ class m(S):
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {"m": states["minf"]}
 
 
@@ -77,7 +77,7 @@ class h(S):
     def beta(self, v):
         return self.q10() * self.bh1 * expit((v - self.bh2) / self.bh3)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         v = v + 65.0 + self.hshift
         a = self.alpha(v)
         b = self.beta(v)
@@ -86,7 +86,7 @@ class h(S):
         return {"tauh": tauh, "hinf": hinf}
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {"h": states["hinf"]}
 
 

@@ -1,5 +1,4 @@
 from axonml.models.core import Unmyelinated
-
 from axonml.units import mm
 
 

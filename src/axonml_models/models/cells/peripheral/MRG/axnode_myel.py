@@ -36,13 +36,13 @@ class m(S):
     def vtrap6(self, v):
         cond = (v + self.amB) / self.amC
         out = (self.amA * (v + self.amB)) / (1.0 - exp(-cond))
-        out = torch.where(torch.abs(cond) < 1e-6, self.amA * self.amC, out)
+        # out = torch.where(torch.abs(cond) < 1e-6, self.amA * self.amC, out)
         return out
 
     def vtrap7(self, v):
         cond = (v + self.bmB) / self.bmC
         out = (self.bmA * -(v + self.bmB)) / (1.0 - exp(cond))
-        out = torch.where(torch.abs(cond) < 1e-6, self.bmA * self.bmC, out)
+        # out = torch.where(torch.abs(cond) < 1e-6, self.bmA * self.bmC, out)
         return out
 
     def alpha(self, v):
@@ -51,7 +51,7 @@ class m(S):
     def beta(self, v):
         return self.q10() * self.vtrap7(v)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         am = self.alpha(v)
         bm = self.beta(v)
         mtau = 1 / (am + bm)
@@ -59,7 +59,7 @@ class m(S):
         return {"mtau": mtau, "minf": minf}
 
     def inf(self, v):
-        return {"m": self.breakpoint(v)["minf"]}
+        return {"m": self.breakpoint(v, None)["minf"]}
 
 
 class p(S):
@@ -85,13 +85,13 @@ class p(S):
     def vtrap1(self, v):
         cond = (v + self.ampB) / self.ampC
         out = (self.ampA * (v + self.ampB)) / (1.0 - exp(-cond))
-        out = torch.where(torch.abs(cond) < 1e-6, self.ampA * self.ampC, out)
+        #out = torch.where(torch.abs(cond) < 1e-6, self.ampA * self.ampC, out)
         return out
 
     def vtrap2(self, v):
         cond = (v + self.bmpB) / self.bmpC
         out = (self.bmpA * -(v + self.bmpB)) / (1.0 - exp(cond))
-        out = torch.where(torch.abs(cond) < 1e-6, self.bmpA * self.bmpC, out)
+        # out = torch.where(torch.abs(cond) < 1e-6, self.bmpA * self.bmpC, out)
         return out
 
     def alpha(self, v):
@@ -100,7 +100,7 @@ class p(S):
     def beta(self, v):
         return self.q10() * self.vtrap2(v)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         amp = self.alpha(v)
         bmp = self.beta(v)
         ptau = 1 / (amp + bmp)
@@ -108,7 +108,7 @@ class p(S):
         return {"ptau": ptau, "pinf": pinf}
 
     def inf(self, v):
-        return {"p": self.breakpoint(v)["pinf"]}
+        return {"p": self.breakpoint(v, None)["pinf"]}
 
 
 class h(S):
@@ -134,7 +134,7 @@ class h(S):
     def vtrap8(self, v):
         cond = (v + self.ahB) / self.ahC
         out = (self.ahA * -(v + self.ahB)) / (1.0 - exp(cond))
-        out = torch.where(torch.abs(cond) < 1e-6, self.ahA * self.ahC, out)
+        # out = torch.where(torch.abs(cond) < 1e-6, self.ahA * self.ahC, out)
         return out
 
     def vtrap9(self, v):
@@ -147,7 +147,7 @@ class h(S):
     def beta(self, v):
         return self.q10() * self.vtrap9(v)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         ah = self.alpha(v)
         bh = self.beta(v)
         htau = 1 / (ah + bh)
@@ -155,7 +155,7 @@ class h(S):
         return {"htau": htau, "hinf": hinf}
 
     def inf(self, v):
-        return {"h": self.breakpoint(v)["hinf"]}
+        return {"h": self.breakpoint(v, None)["hinf"]}
 
 
 class s(S):
@@ -193,7 +193,7 @@ class s(S):
     def beta(self, v):
         return self.q10() * self.vtrap11(v)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         as_ = self.alpha(v)
         bs = self.beta(v)
         stau = 1 / (as_ + bs)
@@ -201,7 +201,7 @@ class s(S):
         return {"stau": stau, "sinf": sinf}
 
     def inf(self, v):
-        return {"s": self.breakpoint(v)["sinf"]}
+        return {"s": self.breakpoint(v, None)["sinf"]}
 
 
 class axnode_myel(M):

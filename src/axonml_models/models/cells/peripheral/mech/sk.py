@@ -13,7 +13,7 @@ class n(S):
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         pca = log10(self.cai) - 3
         ninf = 1 / (1 + exp(-1 * (pca + 6.4) / 0.12))
         taun = -1 * pca / self.q10()

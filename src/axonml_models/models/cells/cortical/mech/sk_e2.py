@@ -9,13 +9,13 @@ class z(S):
     S.DERIVATIVE("z' = (zinf - z) / ztau")
     S.ASSIGNED("zinf")
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         cai = torch.where(self.cai < 1e-7, self.cai + 1e-7, self.cai)
         zinf = 1 / (1 + (0.00043 / cai) ** 4.8)
         return {"zinf": zinf}
 
     def inf(self, v):
-        return {"z": self.breakpoint(v)["zinf"]}
+        return {"z": self.breakpoint(v, None)["zinf"]}
 
 
 class sk_e2(M):

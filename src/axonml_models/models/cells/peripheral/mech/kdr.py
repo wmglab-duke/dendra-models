@@ -45,7 +45,7 @@ class l(S):
             / (8.315 * (273.16 + self.celsius))
         )
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         al = 1 + a
@@ -97,7 +97,7 @@ class n(S):
             / (8.315 * (273.16 + self.celsius))
         )
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         an = 1 + a

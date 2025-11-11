@@ -41,7 +41,7 @@ class m(S):
             / (1 - exp(-(-v + self.mshift) / self.mb2))
         )
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         v = torch.where(torch.isin(v, self.mshift_default), v + 0.0001, v)
         a = self.alpha(v)
         b = self.beta(v)
@@ -50,7 +50,7 @@ class m(S):
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
-        return {"m": self.breakpoint(v)["minf"]}
+        return {"m": self.breakpoint(v, None)["minf"]}
 
 
 class h(S):
@@ -89,7 +89,7 @@ class h(S):
             / (1 - exp((-v + self.hshift) / self.hb2))
         )
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         v = torch.where(torch.isin(v, self.hshift_default), v + 0.0001, v)
         a = self.alpha(v)
         b = self.beta(v)
@@ -98,7 +98,7 @@ class h(S):
         return {"tauh": tauh, "hinf": hinf}
 
     def inf(self, v):
-        return {"h": self.breakpoint(v)["hinf"]}
+        return {"h": self.breakpoint(v, None)["hinf"]}
 
 
 class nata_t(M):

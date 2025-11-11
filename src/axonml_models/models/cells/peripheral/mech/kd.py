@@ -35,7 +35,7 @@ class n(S):
     def beta(self, v):
         return self.A_betan * exp((v + self.B_betan) / self.C_betan)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         ntau = self.q10() * (1.0 + (1.0 / (a + b)))
@@ -43,7 +43,7 @@ class n(S):
         return {"ntau": ntau, "ninf": ninf}
 
     def inf(self, v):
-        return {"n": self.breakpoint(v)["ninf"]}
+        return {"n": self.breakpoint(v, None)["ninf"]}
 
 
 class kd(M):

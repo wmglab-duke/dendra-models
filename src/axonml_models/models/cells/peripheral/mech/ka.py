@@ -25,7 +25,7 @@ class p(S):
     def calc_q10(self):
         return self.q10ka ** ((self.q10TempA - self.celsius) / self.q10TempB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         taup = self.q10() * (
             self.A_taup * exp(-((self.B_taup) ** 2) * (v - self.Vpp) ** 2) + self.C_taup
         )
@@ -33,7 +33,7 @@ class p(S):
         return {"taup": taup, "pinf": pinf}
 
     def inf(self, v):
-        return {"p": self.breakpoint(v)["pinf"]}
+        return {"p": self.breakpoint(v, None)["pinf"]}
 
 
 class q(S):
@@ -58,7 +58,7 @@ class q(S):
     def calc_q10(self):
         return self.q10ka ** ((self.q10TempA - self.celsius) / self.q10TempB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         tauq = self.q10() * (
             self.A_tauq * exp(-((self.B_tauq) ** 2) * (v - self.Vpq) ** 2) + self.C_tauq
         )
@@ -66,7 +66,7 @@ class q(S):
         return {"tauq": tauq, "qinf": qinf}
 
     def inf(self, v):
-        return {"q": self.breakpoint(v)["qinf"]}
+        return {"q": self.breakpoint(v, None)["qinf"]}
 
 
 class ka(M):

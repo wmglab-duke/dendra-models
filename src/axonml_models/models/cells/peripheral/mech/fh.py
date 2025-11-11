@@ -33,7 +33,7 @@ class m(S):
     def beta(self, v):
         return self.q10() * self.aB * exprelr(v - self.bB, self.cB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         v = v + 70.0
         a = self.alpha(v)
         b = self.beta(v)
@@ -76,7 +76,7 @@ class h(S):
     def beta(self, v):
         return self.q10() * self.aB / (exp((self.bB - v) / self.cB) + 1.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         v = v + 70.0
         a = self.alpha(v)
         b = self.beta(v)
@@ -119,7 +119,7 @@ class n(S):
     def beta(self, v):
         return self.q10() * self.aB * exprelr(v - self.bB, self.cB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         v = v + 70.0
         a = self.alpha(v)
         b = self.beta(v)
@@ -162,7 +162,7 @@ class p(S):
     def beta(self, v):
         return self.q10() * self.aB * exprelr(v - self.bB, self.cB)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         v = v + 70.0
         a = self.alpha(v)
         b = self.beta(v)

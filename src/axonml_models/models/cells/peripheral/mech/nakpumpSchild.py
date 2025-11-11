@@ -25,9 +25,9 @@ class nakpumpSchild(M):
         self.INaKmax = self.INaKmax22 * self.Q10NaK ** (
             (self.Q10TempA - self.celsius) / self.Q10TempB
         )
-        self.breakpoint(v)
+        self.breakpoint(v, None)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         fnk = (v + 150.0) / (v + 200.0)
         self.ink = (
             self.INaKmax

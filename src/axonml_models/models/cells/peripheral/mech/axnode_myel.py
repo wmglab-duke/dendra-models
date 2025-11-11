@@ -33,7 +33,7 @@ class m(S):
         x = v + self.bmB
         return self.q10() * self.bmA * exprelr(x, self.bmC)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         am = self.alpha(v)
         bm = self.beta(v)
         mtau = 1 / (am + bm)
@@ -41,7 +41,7 @@ class m(S):
         return {"mtau": mtau, "minf": minf}
 
     def inf(self, v):
-        return {"m": self.breakpoint(v)["minf"]}
+        return {"m": self.breakpoint(v, None)["minf"]}
 
 
 class p(S):
@@ -72,7 +72,7 @@ class p(S):
         x = v + self.bmpB
         return self.q10() * self.bmpA * exprelr(x, self.bmpC)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         amp = self.alpha(v)
         bmp = self.beta(v)
         ptau = 1 / (amp + bmp)
@@ -80,7 +80,7 @@ class p(S):
         return {"ptau": ptau, "pinf": pinf}
 
     def inf(self, v):
-        return {"p": self.breakpoint(v)["pinf"]}
+        return {"p": self.breakpoint(v, None)["pinf"]}
 
 
 class h(S):
@@ -110,7 +110,7 @@ class h(S):
     def beta(self, v):
         return self.q10() * self.bhA * expit((v + self.bhB) / self.bhC)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         ah = self.alpha(v)
         bh = self.beta(v)
         htau = 1 / (ah + bh)
@@ -118,7 +118,7 @@ class h(S):
         return {"htau": htau, "hinf": hinf}
 
     def inf(self, v):
-        return {"h": self.breakpoint(v)["hinf"]}
+        return {"h": self.breakpoint(v, None)["hinf"]}
 
 
 class s(S):
@@ -150,7 +150,7 @@ class s(S):
         b = self.q10() * self.bsA * expit((self.vtraub - v - self.bsB) / self.bsC)
         return b
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         as_ = self.alpha(v)
         bs = self.beta(v)
         stau = 1 / (as_ + bs)
@@ -158,7 +158,7 @@ class s(S):
         return {"stau": stau, "sinf": sinf}
 
     def inf(self, v):
-        return {"s": self.breakpoint(v)["sinf"]}
+        return {"s": self.breakpoint(v, None)["sinf"]}
 
 
 class axnode_myel(M):

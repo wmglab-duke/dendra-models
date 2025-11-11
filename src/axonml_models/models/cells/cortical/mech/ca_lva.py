@@ -15,7 +15,7 @@ class mh(S):
     def calc_q10(self):
         return 2.3 ** ((self.celsius - 21.0) / 10.0)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         v = v + 10.0
         q10 = self.q10()
         minf = 1.0000 / (1 + exp((v - -30.000) / -6))
@@ -30,7 +30,7 @@ class mh(S):
         }
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {
             "m": states["minf"],
             "h": states["hinf"],

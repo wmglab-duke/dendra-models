@@ -33,7 +33,7 @@ class m(S):
     def beta(self, v):
         return self.A_bm * sigmoid((-self.B_bm - v) / self.C_bm)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         s = 1 / (a + b)
@@ -42,7 +42,7 @@ class m(S):
         return {"minf": minf, "taum": taum}
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {"m": states["minf"]}
 
 
@@ -74,7 +74,7 @@ class h(S):
     def beta(self, v):
         return -0.00283 + self.A_bh * sigmoid((-self.B_bh - v) / self.C_bh)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         s = 1 / (a + b)
@@ -83,7 +83,7 @@ class h(S):
         return {"hinf": hinf, "tauh": tauh}
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {"h": states["hinf"]}
 
 
@@ -115,7 +115,7 @@ class s(S):
     def beta(self, v):
         return 132.05 + self.A_bs * sigmoid((-self.B_bs - v) / self.C_bs)
 
-    def breakpoint(self, v):
+    def breakpoint(self, v, states):
         a = self.alpha(v)
         b = self.beta(v)
         s = 1 / (a + b)
@@ -124,7 +124,7 @@ class s(S):
         return {"sinf": sinf, "taus": taus}
 
     def inf(self, v):
-        states = self.breakpoint(v)
+        states = self.breakpoint(v, None)
         return {"s": states["sinf"]}
 
 
