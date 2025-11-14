@@ -1,1 +1,1 @@
-from .yu_2024 import yu_2024
+from .yu_2024 import yu_2024 as Yu2024

@@ -101,3 +101,11 @@ Myelination scheme from Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 20
 |6|`L4_NBC_dNAC`|35|Layer 4 nest basket interneuron, delayed non-accommodating e-type|
 |7|`L4_SBC_bNAC`|35|Layer 4 small basket interneuron, burst non-accommodating e-type|
 |8|`L4_SBC_cACint`|35|Layer 4 small basket interneuron, continuous accommodating e-type|
+
+
+## Networks
+### Cortical
+
+|1 |`Yu2024`|
+|---|-----|
+||Yu, Gene J., Federico Ranieri, Vincenzo Di Lazzaro, Marc A. Sommer, Angel V. Peterchev, and Warren M. Grill. “Circuits and Mechanisms for TMS-Induced Corticospinal Waves: Connecting Sensitivity Analysis to the Network Graph.” PLOS Computational Biology 20, no. 12 (2024): e1012640. https://doi.org/10.1371/journal.pcbi.1012640.
