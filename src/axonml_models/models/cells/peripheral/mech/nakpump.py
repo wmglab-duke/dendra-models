@@ -15,9 +15,9 @@ class nakpump(M):
     M.EXPLICIT("ina", "ik")
 
     def initial(self, v):
-        self.breakpoint(v, None)
+        self.breakpoint(v)
 
-    def breakpoint(self, v, states):
+    def breakpoint(self, v):
         self.pump = (
             self.smalla
             / ((1.0 + self.b1 / self.ko) ** 2)

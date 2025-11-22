@@ -64,9 +64,9 @@ class h(M):
     M.ASSIGNED("g")
 
     def initial(self, v):
-        self.breakpoint(v, None)
+        self.breakpoint(v)
 
-    def breakpoint(self, v, states):
+    def breakpoint(self, v):
         self.g = self.gbar * (0.5 * self.s + 0.5 * self.f)
 
     def ina(self, v):

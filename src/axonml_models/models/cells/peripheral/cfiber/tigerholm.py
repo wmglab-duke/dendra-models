@@ -109,10 +109,10 @@ class Tigerholm2014(Unmyelinated):
         self.register_pre_initialize_hook(pre_init)
         self.register_post_initialize_hook(balance)
 
-        self.insert(ks, gbar=0.0069733)
-        self.insert(kf, gbar=0.012756)
+        self.insert(ks, gbar=0.0069733) # KM
+        self.insert(kf, gbar=0.012756) #KA
         self.insert(h, gbar=0.0025377)
-        self.insert(nattxs, gbar=0.10664)
+        self.insert(nattxs, gbar=0.10664) #Nav1.7
         self.insert(nav1p8, gbar=0.24271)
         self.insert(nav1p9, gbar=9.4779e-05)
         self.insert(nakpump, smalla=-0.0047891)
