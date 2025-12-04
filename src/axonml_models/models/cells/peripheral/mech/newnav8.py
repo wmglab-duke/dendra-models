@@ -79,3 +79,9 @@ class newnav8(M):
 
     def ina(self, v):
         return self.gbar * self.m**3 * self.h * self.s * (v - self.ena)
+
+
+class newnav8_augmented(newnav8):
+    newnav8.GLOBAL(aug=1.0)
+    def ina(self, v):
+        return self.gbar * self.m**3 * self.h * self.s * (v - self.ena) * self.aug

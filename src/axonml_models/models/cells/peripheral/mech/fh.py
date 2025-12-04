@@ -187,7 +187,7 @@ class fh(M):
         gl=30.3e-3,
         el=-69.74,
         R=8.31441,
-        FARADAY=96514,
+        FARADAY=96514.0,
     )
 
     M.USEION("k", read=["ki", "ko"], write=["ik"])

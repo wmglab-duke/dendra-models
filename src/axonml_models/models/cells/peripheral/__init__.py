@@ -1,6 +1,6 @@
 from .cfiber import Sundt2015
 from .cfiber import Tigerholm2014
-from .cfiber import ThioCutaneous2024, ThioAutonomic2024
+from .cfiber import ThioCutaneous2024, ThioAutonomic2024, ThioCutaneousAugmented2024
 from .cfiber import Rattay1993
 from .cfiber import Schild1994, Schild1997
 from .fh import FHM, SENN
@@ -14,6 +14,7 @@ __all__ = [
     "Tigerholm2014",
     "ThioCutaneous2024",
     "ThioAutonomic2024",
+    "ThioCutaneousAugmented2024",
     "Rattay1993",
     "Schild1994",
     "Schild1997",

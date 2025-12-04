@@ -57,3 +57,16 @@ class hcn(M):
     def ina(self, v):
         g = self.gbar * (0.25 * self.n + 0.75 * self.m)
         return (self.ekna - self.ek) * g * (v - self.ena) / (self.ena - self.ek)
+    
+
+class hcn_augmented(hcn):
+    hcn.GLOBAL(ik_aug=1.0, ina_aug=1.0)
+
+    def ik(self, v):
+        g = self.gbar * (0.25 * self.n + 0.75 * self.m)
+        return (self.ekna - self.ena) * g * self.ik_aug * (v - self.ek) / (self.ek - self.ena)
+    
+    def ina(self, v):
+        g = self.gbar * (0.25 * self.n + 0.75 * self.m)
+        return (self.ekna - self.ek) * g * self.ina_aug * (v - self.ena) / (self.ena - self.ek)
+    

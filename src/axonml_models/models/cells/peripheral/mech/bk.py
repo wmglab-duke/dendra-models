@@ -72,3 +72,10 @@ class bk(M):
 
     def ik(self, v):
         return self.gbar * self.m * self.h * (v - self.ek)
+
+
+class bk_augmented(bk):
+    bk.GLOBAL(aug=1.0)
+
+    def ik(self, v):
+        return self.gbar * self.m * self.h * (v - self.ek) * self.aug

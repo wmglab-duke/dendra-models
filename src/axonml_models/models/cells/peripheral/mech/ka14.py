@@ -82,3 +82,10 @@ class ka14(M):
 
     def ik(self, v):
         return self.gbar * self.m**3 * self.h * self.s * (v - self.ek)
+    
+
+class ka14_augmented(ka14):
+    ka14.GLOBAL(aug=1.0)
+
+    def ik(self, v):
+        return self.gbar * self.m**3 * self.h * self.s * (v - self.ek) * self.aug

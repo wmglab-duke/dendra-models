@@ -9,12 +9,35 @@ from axonml.models.mechanisms.ops import *
 
 class oc_cai(S):
     S.STATE("oc", "cai")
-    S.GLOBAL(lseg=1e-3, ku=100, kr=0.238, nb=4.0, Bi=0.001, FARADAY=96500)
+    S.GLOBAL(lseg=1e-3, ku=100.0, kr=0.238, nb=4.0, Bi=0.001, FARADAY=96500.0)
     S.BUFFER("SA", "Vol")
 
     S.DERIVATIVE(
         "oc' = ku * cai * (1-oc) - kr * oc",
-        "cai' = -ica * (SA) / Vol / (2*FARADAY) - (nb * Bi * (ku * cai * (1 - oc) - kr * oc))",
+        "cai' = (-ica * (SA) / Vol / (2*FARADAY) - (nb * Bi * (ku * cai * (1 - oc) - kr * oc)))",
+    )
+
+    def initial(self, v):
+        self.SA = math.pi * (1e-4) * self.diam * self.lseg
+        self.Vol = math.pi * ((1e-4) * (self.diam / 2)) ** 2 * self.lseg
+
+
+class oc_cai_augmented(S):
+    S.STATE("oc", "cai")
+    S.GLOBAL(
+        lseg=1e-3,
+        ku=100.0,
+        kr=0.238,
+        nb=4.0,
+        Bi=0.001,
+        FARADAY=96500.0,
+        raug=1.0,
+    )
+    S.BUFFER("SA", "Vol")
+
+    S.DERIVATIVE(
+        "oc' = (ku * cai * (1-oc) - kr * oc)",
+        "cai' = raug * (-ica * (SA) / Vol / (2*FARADAY) - (nb * Bi * (ku * cai * (1 - oc) - kr * oc)))",
     )
 
     def initial(self, v):
@@ -24,5 +47,11 @@ class oc_cai(S):
 
 class caintscale(M):
     M.STATE(oc_cai)
+    M.USEION("ca", read=["ica"], write=["cai"])
+    M.INIT(oc=0.05)
+
+
+class caintscale_augmented(M):
+    M.STATE(oc_cai_augmented)
     M.USEION("ca", read=["ica"], write=["cai"])
     M.INIT(oc=0.05)

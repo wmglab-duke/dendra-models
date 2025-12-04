@@ -20,8 +20,12 @@ for file in py_files:
     class_name = (
         module_name  # Assume class name is the capitalized version of file name
     )
-    globals()[class_name] = getattr(module, class_name)  # Add class to global namespace
-    _registry[class_name] = getattr(module, class_name)  # Add to registry
+    all_names = dir(module)
+    for name in all_names:
+        if class_name.lower() in name.lower():
+            class_name = name
+            globals()[name] = getattr(module, name)  # Add class to global namespace
+            _registry[name] = getattr(module, name)  # Add to registry
 
 
 def get_mechanism(name):

@@ -12,7 +12,7 @@ class nakpumpSchild(M):
         Kmko=0.621,
         Q10NaK=1.16,
         Q10TempA=22.85,
-        Q10TempB=10,
+        Q10TempB=10.0,
     )
 
     M.USEION("k", read=["ko"], write=["ik"])
@@ -41,3 +41,13 @@ class nakpumpSchild(M):
 
     def ik(self, v):
         return -2 * self.ink
+
+
+class nakpumpSchild_augmented(nakpumpSchild):
+    nakpumpSchild.GLOBAL(ina_aug=1.0, ik_aug=1.0)
+
+    def ina(self, v):
+        return 3 * self.ink * self.ina_aug
+
+    def ik(self, v):
+        return -2 * self.ink * self.ik_aug

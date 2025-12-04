@@ -77,7 +77,7 @@ class f(S):
 
 class cat(M):
     M.STATE(d, f)
-    M.GLOBAL(gbar=1.23787e-05, R=8314.0, z=2, ecaoffset=78.7, F=96500)
+    M.GLOBAL(gbar=1.23787e-05, R=8314.0, z=2.0, ecaoffset=78.7, F=96500.0)
     M.USEION("ca", read=["cao", "cai"], write=["ica"])
 
     @property

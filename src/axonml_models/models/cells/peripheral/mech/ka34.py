@@ -51,3 +51,10 @@ class ka34(M):
 
     def ik(self, v):
         return self.gbar * self.m**3 * self.h * (v - self.ek)
+
+
+class ka34_augmented(ka34):
+    ka34.GLOBAL(aug=1.0)
+
+    def ik(self, v):
+        return self.gbar * self.m**3 * self.h * (v - self.ek) * self.aug

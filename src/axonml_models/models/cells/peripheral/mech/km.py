@@ -59,3 +59,10 @@ class km(M):
 
     def ik(self, v):
         return self.gbar * (0.25 * self.m**3 + 0.75 * self.n**3) * (v - self.ek)
+    
+
+class km_augmented(km):
+    km.GLOBAL(aug=1.0)
+
+    def ik(self, v):
+        return self.gbar * (0.25 * self.m**3 + 0.75 * self.n**3) * (v - self.ek) * self.aug

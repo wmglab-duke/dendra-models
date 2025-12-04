@@ -12,7 +12,7 @@ class m(S):
     S.GLOBAL(
         Q10nafm=2.30,
         Q10TempA=22.85,
-        Q10TempB=10,
+        Q10TempB=10.0,
         shiftnaf=-17.5,
         V0p5m=41.35,
         S0p5m=-4.75,
@@ -46,7 +46,7 @@ class h(S):
     S.GLOBAL(
         Q10nafh=1.50,
         Q10TempA=22.85,
-        Q10TempB=10,
+        Q10TempB=10.0,
         V0p5h=62.00,
         S0p5h=4.50,
         A_tauh=6.5,

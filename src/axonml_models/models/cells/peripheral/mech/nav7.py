@@ -55,3 +55,10 @@ class nav7(M):
 
     def ina(self, v):
         return self.gbar * self.m**3 * self.h * (v - self.ena)
+    
+
+class nav7_augmented(nav7):
+    nav7.GLOBAL(aug=1.0)
+    def ina(self, v):
+        return self.gbar * self.m**3 * self.h * (v - self.ena) * self.aug
+    

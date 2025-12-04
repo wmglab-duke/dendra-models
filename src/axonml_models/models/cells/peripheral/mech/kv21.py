@@ -53,3 +53,10 @@ class kv21(M):
 
     def ik(self, v):
         return self.gbar * self.m**3 * self.h * (v - self.ek)
+
+
+class kv21_augmented(kv21):
+    kv21.GLOBAL(aug=1.0)
+
+    def ik(self, v):
+        return self.gbar * self.m**3 * self.h * (v - self.ek) * self.aug

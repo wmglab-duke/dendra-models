@@ -11,8 +11,8 @@ class m(S):
     S.STATE("m")
     S.GLOBAL(
         Q10nasm=2.30,
-        Q10TempA=22,
-        Q10TempB=10,
+        Q10TempA=22.0,
+        Q10TempB=10.0,
         V0p5m=-11.29,
         S0p5m=5.54,
         A_taum=1.45,
@@ -44,8 +44,8 @@ class h(S):
     S.STATE("h")
     S.GLOBAL(
         Q10nash=1.50,
-        Q10TempA=22,
-        Q10TempB=10,
+        Q10TempA=22.0,
+        Q10TempB=10.0,
         V0p5h=-31.00,
         S0p5h=-5.20,
         A_tauh=10.75,

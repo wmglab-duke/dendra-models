@@ -71,3 +71,10 @@ class cav22(M):
 
     def ica(self, v):
         return self.gbar * self.m**3 * self.h * self.s * (v - self.eca)
+
+
+class cav22_augmented(cav22):
+    cav22.GLOBAL(aug=1.0)
+
+    def ica(self, v):
+        return self.gbar * self.m**3 * self.h * self.s * (v - self.eca) * self.aug

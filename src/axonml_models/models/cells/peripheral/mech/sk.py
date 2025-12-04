@@ -33,3 +33,10 @@ class sk(M):
 
     def ik(self, v):
         return self.gbar * self.n * (v - self.ek)
+
+
+class sk_augmented(sk):
+    sk.GLOBAL(aug=1.0)
+
+    def ik(self, v):
+        return self.gbar * self.n * (v - self.ek) * self.aug

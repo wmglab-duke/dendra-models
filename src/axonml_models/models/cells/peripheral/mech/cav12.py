@@ -51,3 +51,11 @@ class cav12(M):
 
     def ica(self, v):
         return self.gbar * self.m**3 * self.h * (v - self.eca)
+
+
+class cav12_augmented(cav12):
+    cav12.GLOBAL(aug=1.0)
+
+    def ica(self, v):
+        return self.gbar * self.m**3 * self.h * (v - self.eca) * self.aug
+    

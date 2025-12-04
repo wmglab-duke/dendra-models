@@ -11,8 +11,8 @@ class m(S):
     S.STATE("m")
     S.GLOBAL(
         aq10=2.5,
-        bq10=21,
-        cq10=10,
+        bq10=21.0,
+        cq10=10.0,
         A_am=15.5,
         B_am=-5.0,
         C_am=-12.08,
@@ -52,8 +52,8 @@ class h(S):
     S.STATE("h")
     S.GLOBAL(
         aq10=2.5,
-        bq10=21,
-        cq10=10,
+        bq10=21.0,
+        cq10=10.0,
         A_ah=0.38685,
         B_ah=122.35,
         C_ah=15.29,
@@ -93,8 +93,8 @@ class s(S):
     S.STATE("s")
     S.GLOBAL(
         aq10=2.5,
-        bq10=21,
-        cq10=10,
+        bq10=21.0,
+        cq10=10.0,
         A_as=0.00092,
         B_as=93.9,
         C_as=16.6,

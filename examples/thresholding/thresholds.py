@@ -5,7 +5,7 @@ import torch
 
 from axonml.models.instruments.thresholder import Thresholder
 from axonml.models.callbacks import Active
-from axonml.models.implementations import SMF
+from axonml_models.models import SMF
 
 
 parser = argparse.ArgumentParser()
@@ -56,12 +56,12 @@ if __name__ == "__main__":
     nrn_thresh_path = f"{directory}/example_thresholds_{field}.npy"
     thresh_nrn = np.load(nrn_thresh_path).flatten()
 
-    mrg = SMF(diameters=diams, n_node=n_comp).load("MRG")
+    mrg = SMF(diameters=diams, n_node=n_comp).cuda()
 
     dt = 0.005
     active = Active(dt=dt)
-    thresholder = Thresholder(mrg, active, bases=fp, diams=diams).float()
-    thresh, _ = thresholder.calculate_thresholds(dt=dt)
+    thresholder = Thresholder(mrg, active, bases=fp, rtol=0.01)
+    thresh, _ = thresholder.calculate_thresholds(dt=dt, tstop=5.0)
 
     err = 100 * (thresh - thresh_nrn) / thresh_nrn
 

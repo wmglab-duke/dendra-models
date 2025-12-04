@@ -10,12 +10,12 @@ class nacapump(M):
         KNaCa22=1.27324e-06,
         Q10NaCa=2.20,
         Q10TempA=22.85,
-        Q10TempB=10,
-        r=3,
+        Q10TempB=10.0,
+        r=3.0,
         gamma=0.5,
         DNaCa=0.0036,
-        F=96500,
-        R=8314,
+        F=96500.0,
+        R=8314.0,
     )
 
     M.USEION("ca", read=["cao", "cai"], write=["ica"])
