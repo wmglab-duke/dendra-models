@@ -56,7 +56,7 @@ class f(S):
         return {"f": sigmoid(-(v + 87.2) / 9.7)}
 
 
-class h(M):
+class mh(M):
     M.STATE(s, f)
     M.GLOBAL(gbar=0.0001)
     M.USEION("k", read=["ek"], write=["ik"])

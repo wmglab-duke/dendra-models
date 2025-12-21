@@ -13,11 +13,15 @@ class m(S):
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
 
-    def breakpoint(self, v, states):
-        minf = (1 / (1 + exp(-1 * (v + 4) / 7.5))) ** (1 / 3)
+    def minf(self, v):
+        return (1 / (1 + exp(-1 * (v + 4) / 7.5))) ** (1 / 3)
+    
+    def taum(self, v):
         taum = 0.1 + 0.5 / (exp((v - 3) / 6.7) + exp(-1 * (v + 37) / 13.5))
-        taum = taum / self.q10()
-        return {"taum": taum, "minf": minf}
+        return taum / self.q10()
+
+    def breakpoint(self, v, states):
+        return {"taum": self.taum(v), "minf": self.minf(v)}
 
     def inf(self, v):
         return {"m": self.breakpoint(v, None)["minf"]}
@@ -32,12 +36,16 @@ class h(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    
+    def hinf(self, v):
+        return 1 / (1 + exp((v + 48) / 7))
+    
+    def tauh(self, v):
+        tauh = 10 / (exp((v - 54) / 23) + exp(-1 * (v + 150) / 35))
+        return tauh / self.q10()
 
     def breakpoint(self, v, states):
-        hinf = 1 / (1 + exp((v + 48) / 7))
-        tauh = 10 / (exp((v - 54) / 23) + exp(-1 * (v + 150) / 35))
-        tauh = tauh / self.q10()
-        return {"tauh": tauh, "hinf": hinf}
+        return {"tauh": self.tauh(v), "hinf": self.hinf(v)}
 
     def inf(self, v):
         return {"h": self.breakpoint(v, None)["hinf"]}
@@ -52,12 +60,16 @@ class s(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    
+    def sinf(self, v):
+        return 1 / (1 + exp((v + 81) / 8.6))
+    
+    def taus(self, v):
+        taus = 50 + 30 / (exp((v - 50) / 26) + exp(-1 * (v + 150) / 26))
+        return taus / self.q10()
 
     def breakpoint(self, v, states):
-        sinf = 1 / (1 + exp((v + 81) / 8.6))
-        taus = 50 + 30 / (exp((v - 50) / 26) + exp(-1 * (v + 150) / 26))
-        taus = taus / self.q10()
-        return {"taus": taus, "sinf": sinf}
+        return {"taus": self.taus(v), "sinf": self.sinf(v)}
 
     def inf(self, v):
         return {"s": self.breakpoint(v, None)["sinf"]}

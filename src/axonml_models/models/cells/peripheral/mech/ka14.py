@@ -12,16 +12,20 @@ class m(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
-
-    def breakpoint(self, v, states):
-        minf = (1 / (1 + exp(-1 * (v + 25) / 12))) ** (1 / 3)
+    
+    def minf(self, v):
+        return (1 / (1 + exp(-1 * (v + 25) / 12))) ** (1 / 3)
+    
+    def taum(self, v):
         taum = (
             0.6
             + 2748 / (exp((v + 128) / 14.5) + exp(-1 * (v + 10) / 8))
             + 1.7 / (1 + exp((v + 8.5) / 10.65))
         ) / 2
-        taum = taum / self.q10()
-        return {"taum": taum, "minf": minf}
+        return taum / self.q10()
+
+    def breakpoint(self, v, states):
+        return {"taum": self.taum(v), "minf": self.minf(v)}
 
     def inf(self, v):
         return {"m": self.breakpoint(v, None)["minf"]}
@@ -36,12 +40,16 @@ class h(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    
+    def hinf(self, v):
+        return 0.073 + 0.927 / (1 + exp((v + 60) / 5))
+    
+    def tauh(self, v):
+        tauh = 35 + 11.22 / (exp((v + 21.4) / 9.48) + exp(-1 * (v + 155.3) / 16.4))
+        return tauh / self.q10()
 
     def breakpoint(self, v, states):
-        hinf = 0.073 + 0.924 / (1 + exp((v + 47) / 4.75))
-        tauh = 35 + 11.22 / (exp((v + 21.4) / 9.48) + exp(-1 * (v + 155.3) / 16.4))
-        tauh = tauh / self.q10()
-        return {"tauh": tauh, "hinf": hinf}
+        return {"tauh": self.tauh(v), "hinf": self.hinf(v)}
 
     def inf(self, v):
         return {"h": self.breakpoint(v, None)["hinf"]}
@@ -56,19 +64,23 @@ class s(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
-
-    def breakpoint(self, v, states):
-        sinf = (
+    
+    def sinf(self, v):
+        return (
             0.415
             + 0.576 / (1 + exp((v + 44.5) / 5.93))
             + 0.103 / (1 + exp(-1 * (v) / 18.37))
         )
+    
+    def taus(self, v):
         taus = 1000 * (
             3.97 / (exp((v + 35.1) / 9.97) + exp(-1 * (v + 83.3) / 18))
             + 2.5 / (1 + exp(-1 * (v + 27.3) / 7.11))
         )
-        taus = taus / self.q10()
-        return {"taus": taus, "sinf": sinf}
+        return taus / self.q10()
+
+    def breakpoint(self, v, states):
+        return {"taus": self.taus(v), "sinf": self.sinf(v)}
 
     def inf(self, v):
         return {"s": self.breakpoint(v, None)["sinf"]}

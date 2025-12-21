@@ -12,13 +12,17 @@ class m(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    
+    def minf(self, v):
+        return (1 / (1 + exp((v + 97) / 7.35))) ** (1 / 3)
+    
+    def taum(self, v):
+        taum = 0.5 / (exp((v - 42) / 11.8) + exp(-1 * (v + 498) / 66.6))
+        return taum / self.q10()
 
     def breakpoint(self, v, states):
-        minf = (1 / (1 + exp((v + 97) / 7.35))) ** (1 / 3)
-        taum = 0.5 / (exp((v - 42) / 11.8) + exp(-1 * (v + 498) / 66.6))
-        taum = taum / self.q10()
-        return {"taum": taum, "minf": minf}
-
+        return {"taum": self.taum(v), "minf": self.minf(v)}
+    
     def inf(self, v):
         return {"m": self.breakpoint(v, None)["minf"]}
 
@@ -32,12 +36,16 @@ class n(S):
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    
+    def ninf(self, v):
+        return (1 / (1 + exp((v + 94) / 8.9))) ** (1 / 3)
+    
+    def taun(self, v):
+        taun = 0.5 / (exp((v + 25) / 4.1) + exp(-1 * (v + 356) / 32))
+        return taun / self.q10()
 
     def breakpoint(self, v, states):
-        ninf = (1 / (1 + exp((v + 94) / 8.9))) ** (1 / 3)
-        taun = 0.5 / (exp((v + 25) / 4.1) + exp(-1 * (v + 356) / 32))
-        taun = taun / self.q10()
-        return {"taun": taun, "ninf": ninf}
+        return {"taun": self.taun(v), "ninf": self.ninf(v)}
 
     def inf(self, v):
         return {"n": self.breakpoint(v, None)["ninf"]}

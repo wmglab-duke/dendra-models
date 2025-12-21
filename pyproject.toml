@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # Distribution name (what you "pip install"). Can be hyphenated; import remains `axonml_models`.
 name = "axonml-models"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Models for AxonML"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -26,6 +26,9 @@ classifiers = [
 [tool.setuptools]
 # Tell setuptools that packages live under src/
 package-dir = { "" = "src" }
+
+[tool.setuptools.dynamic]
+version = {attr = "axonml_models.__version__"}
 
 [tool.setuptools.packages.find]
 # Find packages only under src, and include your package namespace
