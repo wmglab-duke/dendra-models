@@ -7,7 +7,7 @@ from axonml.models.mechanisms.ops import *
 
 class nakpumpSchild(M):
     M.GLOBAL(
-        INaKmax22=0.009726135,
+        gbar_INaKmax22=0.009726135,
         Kmnai=5.46,
         Kmko=0.621,
         Q10NaK=1.16,
@@ -22,7 +22,7 @@ class nakpumpSchild(M):
     M.EXPLICIT("ina", "ik")
 
     def initial(self, v):
-        self.INaKmax = self.INaKmax22 * self.Q10NaK ** (
+        self.INaKmax = self.gbar_INaKmax22 * self.Q10NaK ** (
             (self.Q10TempA - self.celsius) / self.Q10TempB
         )
         self.breakpoint(v)

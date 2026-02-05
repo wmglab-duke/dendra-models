@@ -30,15 +30,15 @@ import math
 
 
 def pre_init(model):
-    model.mech.extrapump.pumpina_default.zero_()
-    model.mech.extrapump.pumpik_default.zero_()
-    model.mech.extrapump.pumpica_default.zero_()
+    model.mech.extrapump.pumpina_param.zero_()
+    model.mech.extrapump.pumpik_param.zero_()
+    model.mech.extrapump.pumpica_param.zero_()
 
 
 def balance(model):
-    model.mech.extrapump.pumpina_default.copy_(-model.mech.na_ion.ina.flatten()[0])
-    model.mech.extrapump.pumpik_default.copy_(-model.mech.k_ion.ik.flatten()[0])
-    model.mech.extrapump.pumpica_default.copy_(-model.mech.ca_ion.ica.flatten()[0])
+    model.mech.extrapump.pumpina_param.copy_(-model.mech.na_ion.ina.flatten()[0])
+    model.mech.extrapump.pumpik_param.copy_(-model.mech.k_ion.ik.flatten()[0])
+    model.mech.extrapump.pumpica_param.copy_(-model.mech.ca_ion.ica.flatten()[0])
 
 
 class ThioAutonomic2024(Unmyelinated):
@@ -153,7 +153,7 @@ class ThioCutaneous2024(Unmyelinated):
         self.insert(ka14, gbar=0.000044)
         self.insert(sk, gbar=0.000755)
         self.insert(nacx, gbar=0.009242)
-        self.insert(nakpumpSchild, INaKmax22=0.000456)
+        self.insert(nakpumpSchild, gbar_INaKmax22=0.000456)
         self.insert(naoi)
         self.insert(koi)
         self.insert(extrapump)
@@ -218,7 +218,7 @@ class ThioCutaneousAugmented2024(Unmyelinated):
         self.insert(get_mechanism("ka14_augmented"), gbar=0.000044)
         self.insert(get_mechanism("sk_augmented"), gbar=0.000755)
         self.insert(get_mechanism("nacx_augmented"), gbar=0.009242)
-        self.insert(get_mechanism("nakpumpSchild_augmented"), INaKmax22=0.000456)
+        self.insert(get_mechanism("nakpumpSchild_augmented"), gbar_INaKmax22=0.000456)
         self.insert(get_mechanism("naoi_augmented"))
         self.insert(get_mechanism("koi_augmented"))
         self.insert(get_mechanism("extrapump"))

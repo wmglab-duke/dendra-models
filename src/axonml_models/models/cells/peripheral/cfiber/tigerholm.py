@@ -19,15 +19,15 @@ from ..mech import (
 
 
 def pre_init(model):
-    model.mech.leak.gkleak_default.data.zero_()
-    model.mech.leak.gnaleak_default.data.zero_()
+    model.mech.leak.gkleak_param.data.zero_()
+    model.mech.leak.gnaleak_param.data.zero_()
 
 
 def balance(model):
     ek, ik = model.mech.k_ion.ek.flatten()[0], model.mech.k_ion.ik.flatten()[0]
     ena, ina = model.mech.na_ion.ena.flatten()[0], model.mech.na_ion.ina.flatten()[0]
-    model.mech.leak.gkleak_default.data.copy_(-(ik / (model.v_init - ek)))
-    model.mech.leak.gnaleak_default.data.copy_(-(ina / (model.v_init - ena)))
+    model.mech.leak.gkleak_param.data.copy_(-(ik / (model.v_init - ek)))
+    model.mech.leak.gnaleak_param.data.copy_(-(ina / (model.v_init - ena)))
 
 
 class Tigerholm2014(Unmyelinated):
