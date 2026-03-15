@@ -31,9 +31,9 @@ class nacapump(M):
         temp = self.celsius + 273.15
         self.DFin = ((self.r - 2) * self.gamma * self.F) / (self.R * temp)
         self.DFout = ((self.r - 2) * (self.gamma - 1) * self.F) / (self.R * temp)
-        self.breakpoint(v, None)
+        self.breakpoint(v)
 
-    def breakpoint(self, v, states):
+    def breakpoint(self, v):
         S = 1.0 + self.DNaCa * (self.cai * self.nao**3 + self.cao * self.nai**3)
         DFin = self.nai**3 * self.cao * exp(self.DFin * v)
         DFout = self.nao**3 * self.cai * exp(self.DFout * v)

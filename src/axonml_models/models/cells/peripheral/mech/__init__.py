@@ -1,6 +1,8 @@
 import os
 import importlib
 
+from axonml.models.mechanisms import Mechanism
+
 # Get the directory of the current module
 module_dir = os.path.dirname(__file__)
 
@@ -22,10 +24,11 @@ for file in py_files:
     )
     all_names = dir(module)
     for name in all_names:
-        if class_name.lower() in name.lower():
-            class_name = name
-            globals()[name] = getattr(module, name)  # Add class to global namespace
-            _registry[name] = getattr(module, name)  # Add to registry
+        if name.lower().startswith(module_name.lower()):
+            c_ = getattr(module, name)
+            if isinstance(c_, type) and issubclass(c_, Mechanism):
+                globals()[name] = c_  # Add class to global namespace
+                _registry[name] = c_  # Add to registry
 
 
 def get_mechanism(name):

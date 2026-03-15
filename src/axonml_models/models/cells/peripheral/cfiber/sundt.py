@@ -23,7 +23,7 @@ class Sundt2015(Unmyelinated):
         Length of axon in mm. Default is 5.0.
     dx : float, optional
         Spatial discretization step in μm. Default is 10.
-    temp : float, optional
+    celsius : float, optional
         Temperature in °C. Default is 37.0.
     v_init : float, optional
         Initial membrane potential in mV. Default is -65.0.

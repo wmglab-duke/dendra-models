@@ -17,7 +17,7 @@ class Sweeney1987(Myelinated):
         Axon diameters in μm. Default is [10.0].
     n_node : int, optional
         Number of nodes in the model. Default is 101.
-    temp : float, optional
+    celsius : float, optional
         Temperature in °C. Default is 37.0.
     v_init : float, optional
         Initial membrane potential in mV. Default is -80.0.

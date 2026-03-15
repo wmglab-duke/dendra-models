@@ -12,10 +12,10 @@ class Rattay1993(Unmyelinated):
         diameters=[1.0],
         L=5.0 * mm,
         dx=10,
-        temp=37.0,
+        celsius=37.0,
         v_init=-70.0,
         integrator=None,
     ):
-        super().__init__(diameters, L, dx, temp, v_init, integrator)
+        super().__init__(diameters, L, dx, celsius, v_init, integrator)
         self.insert(rattay_aberham)
         self.equilibria(ena=45.0, ek=-82.0)
