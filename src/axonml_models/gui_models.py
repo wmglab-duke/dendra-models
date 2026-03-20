@@ -14,7 +14,7 @@ try:
         bigMRG,
         smolMRG,
         exactMRG,
-        SMF
+        SMF,
     )
 
     @register_model_node(
@@ -22,11 +22,11 @@ try:
         label="Thio Cutaneous 2024",
         description="Cutaneous afferent from Thio et al., 2024.",
         parameters=[
-            model_param("diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
-            model_param("L_mm", kind="number", default=5.0, unit="mm"),
-            model_param("dx", kind="number", default=10.0),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-58.5),
+            model_param("diameters", label="diameters", unit="µm", kind="number_array", default=[1.0], allow_tensor_input=True),
+            model_param("L_mm", label="length", kind="number", default=5.0, unit="mm"),
+            model_param("dx", label="dx", kind="number", default=10.0, unit="µm"),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-58.5, unit="mV"),
         ],
         category="C-fiber",
     )
@@ -53,11 +53,11 @@ try:
         label="Sundt 2015",
         description="Model of an unmyelinated sensory neuron from Sundt et al., 2015.",
         parameters=[
-            model_param("diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
-            model_param("L_mm", kind="number", default=5.0, unit="mm"),
-            model_param("dx", kind="number", default=10.0),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-60.0),
+            model_param("diameters", label="diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
+            model_param("L_mm", label="length", kind="number", default=5.0, unit="mm"),
+            model_param("dx", label="dx", kind="number", default=10.0, unit="µm"),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-60.0, unit="mV"),
         ],
         category="C-fiber",
     )
@@ -84,11 +84,11 @@ try:
         label="Tigerholm 2014",
         description="Model of an unmyelinated nociceptive neuron from Tigerholm et al., 2014.",
         parameters=[
-            model_param("diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
-            model_param("L_mm", kind="number", default=5.0, unit="mm"),
-            model_param("dx", kind="number", default=10.0),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-55.0),
+            model_param("diameters", label="diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
+            model_param("L_mm", label="length", kind="number", default=5.0, unit="mm"),
+            model_param("dx", label="dx", kind="number", default=10.0, unit="µm"),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-55.0, unit="mV"),
         ],
         category="C-fiber",
     )
@@ -115,16 +115,11 @@ try:
         label="Rattay 1993",
         description="Model of an unmyelinated neuron from Rattay, 1993.",
         parameters=[
-            model_param(
-                "diameters",
-                kind="number_array",
-                default=[1.0],
-                allow_tensor_input=True,
-            ),
-            model_param("L_mm", kind="number", default=5.0, unit="mm"),
-            model_param("dx", kind="number", default=10.0),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-70.0),
+            model_param("diameters", label="diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
+            model_param("L_mm", label="length", kind="number", default=5.0, unit="mm"),
+            model_param("dx", label="dx", kind="number", default=10.0, unit="µm"),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-70.0, unit="mV"),
         ],
         category="C-fiber",
     )
@@ -151,11 +146,11 @@ try:
         label="Schild 1997",
         description="Model of an unmyelinated neuron from Schild, 1997.",
         parameters=[
-            model_param("diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
-            model_param("L_mm", kind="number", default=5.0, unit="mm"),
-            model_param("dx", kind="number", default=10.0),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-68.5),
+            model_param("diameters", label="diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
+            model_param("L_mm", label="length", kind="number", default=5.0, unit="mm"),
+            model_param("dx", label="dx", kind="number", default=10.0, unit="µm"),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-68.5, unit="mV"),
         ],
         category="C-fiber",
     )
@@ -182,11 +177,11 @@ try:
         label="Schild 1994",
         description="Model of an unmyelinated neuron from Schild, 1994.",
         parameters=[
-            model_param("diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
-            model_param("L_mm", kind="number", default=5.0, unit="mm"),
-            model_param("dx", kind="number", default=10.0),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-46.5),
+            model_param("diameters", label="diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
+            model_param("L_mm", label="length", kind="number", default=5.0, unit="mm"),
+            model_param("dx", label="dx", kind="number", default=10.0, unit="µm"),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-46.5, unit="mV"),
         ],
         category="C-fiber",
     )
@@ -215,11 +210,11 @@ try:
         label="SENN",
         description="Spatially Extended Node Model (SENN)",
         parameters=[
-            model_param("diameters", kind="number_array", default=[10.0], allow_tensor_input=True),
-            model_param("n_node", kind="integer", default=101),
-            model_param("node_length", kind="number", default=2.5),
-            model_param("celsius", kind="number", default=20.0),
-            model_param("v_init", kind="number", default=-70.0),
+            model_param("diameters", label="diameters", kind="number_array", default=[10.0], unit="µm", allow_tensor_input=True),
+            model_param("n_node", label="number of nodes", kind="integer", default=101),
+            model_param("node_length", label="node length", kind="number", default=2.5, unit="µm"),
+            model_param("celsius", label="temperature", kind="number", default=20.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-70.0, unit="mV"),
         ],
         category="Myelinated",
     )
@@ -246,11 +241,11 @@ try:
         label="Sweeney 1987",
         description="Model of a myelinated neuron from Sweeney et al., 1987.",
         parameters=[
-            model_param("diameters", kind="number_array", default=[10.0], allow_tensor_input=True),
-            model_param("n_node", kind="integer", default=101),
-            model_param("node_length", kind="number", default=1.5),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-80.0),
+            model_param("diameters", label="diameters", kind="number_array", default=[10.0], unit="µm", allow_tensor_input=True),
+            model_param("n_node", label="number of nodes", kind="integer", default=101),
+            model_param("node_length", label="node length", kind="number", default=1.5, unit="µm"),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-80.0, unit="mV"),
         ],
         category="Myelinated",
     )
@@ -277,10 +272,10 @@ try:
         label="MRG (large diameter)",
         description="Large diameter myelinated axon (>= 5.7 µm).",
         parameters=[
-            model_param("diameters", kind="number_array", default=[10.0], allow_tensor_input=True),
-            model_param("n_node", kind="integer", default=101),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-80.0),
+            model_param("diameters", label="diameters", kind="number_array", default=[10.0], unit="µm", allow_tensor_input=True),
+            model_param("n_node", label="number of nodes", kind="integer", default=101),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-80.0, unit="mV"),
         ],
         category="Myelinated",
     )
@@ -305,10 +300,10 @@ try:
         label="MRG (small diameter)",
         description="Small diameter myelinated axon (< 5.7 µm, > 1.011 µm).",
         parameters=[
-            model_param("diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
-            model_param("n_node", kind="integer", default=101),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-80.0),
+            model_param("diameters", label="diameters", kind="number_array", default=[1.0], unit="µm", allow_tensor_input=True),
+            model_param("n_node", label="number of nodes", kind="integer", default=101),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-80.0, unit="mV"),
         ],
         category="Myelinated",
     )
@@ -333,10 +328,10 @@ try:
         label="MRG (exact diameter)",
         description="Exact diameter myelinated axon.",
         parameters=[
-            model_param("diameters", kind="number_array", default=[1.0], allow_tensor_input=True),
-            model_param("n_node", kind="integer", default=101),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-80.0),
+            model_param("diameters", label="diameters", kind="number_array", default=[5.7], unit="µm", allow_tensor_input=True),
+            model_param("n_node", label="number of nodes", kind="integer", default=101),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-80.0, unit="mV"),
         ],
         category="Myelinated",
     )
@@ -361,10 +356,10 @@ try:
         label="SMF",
         description="Surrogate myelinated fiber (SMF) model from Hussain et al., 2024 (> 5 µm).",
         parameters=[
-            model_param("diameters", kind="number_array", default=[10.0], allow_tensor_input=True),
-            model_param("n_node", kind="integer", default=101),
-            model_param("celsius", kind="number", default=37.0),
-            model_param("v_init", kind="number", default=-80.0),
+            model_param("diameters", label="diameters", kind="number_array", default=[10.0], unit="µm", allow_tensor_input=True),
+            model_param("n_node", label="number of nodes", kind="integer", default=101),
+            model_param("celsius", label="temperature", kind="number", default=37.0, unit="°C"),
+            model_param("v_init", label="initial voltage", kind="number", default=-80.0, unit="mV"),
         ],
         category="Surrogate",
     )
