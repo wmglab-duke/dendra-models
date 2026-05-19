@@ -52,7 +52,7 @@ class h(S):
 class nap_et2(M):
     M.STATE(m, h)
     M.USEION("na", read=["ena"], write=["ina"])
-    M.RANGE(gbar=0.0001)
+    M.RANGEP(gbar=0.0001)
 
     def ina(self, v):
         return self.gbar * self.m**3 * self.h * (v - self.ena)

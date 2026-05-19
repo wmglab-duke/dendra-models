@@ -22,7 +22,7 @@ class m(S):
 class ih(M):
     M.STATE(m)
 
-    M.RANGE(gbar=0.0001)
+    M.RANGEP(gbar=0.0001)
     M.GLOBAL(ehcn=-45.0)
     M.NONSPECIFIC_CURRENT("ihcn")
 

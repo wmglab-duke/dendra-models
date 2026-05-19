@@ -53,7 +53,7 @@ class h(S):
 
 class cav12(M):
     M.STATE(m, h)
-    M.GLOBAL(gbar=0.0001)
+    M.GLOBALP(gbar=0.0001)
 
     M.USEION("ca", read=["eca"], write=["ica"])
 

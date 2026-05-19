@@ -56,7 +56,7 @@ class h(S):
 
 class nav7(M):
     M.STATE(m, h)
-    M.GLOBAL(gbar=0.12)
+    M.GLOBALP(gbar=0.12)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):

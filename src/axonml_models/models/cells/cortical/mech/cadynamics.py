@@ -5,8 +5,8 @@ from axonml.models.mechanisms.ops import *
 
 class cai(S):
     S.STATE("cai")
-    S.RANGE(gamma=0.05, decay=80.0)
-    S.GLOBAL(FARADAY=96500, depth=0.1, minCai=1e-4)
+    S.RANGEP(gamma=0.05, decay=80.0)
+    S.GLOBALP(FARADAY=96500, depth=0.1, minCai=1e-4)
     S.ASSIGNED("shell_ica")
     S.DERIVATIVE("cai' = shell_ica - (cai - minCai)/decay")
     S.BUFFER("shell")

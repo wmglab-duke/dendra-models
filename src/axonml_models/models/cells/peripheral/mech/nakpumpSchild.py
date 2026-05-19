@@ -7,13 +7,13 @@ from axonml.models.mechanisms.ops import *
 
 class nakpumpSchild(M):
     M.GLOBAL(
-        gbar_INaKmax22=0.009726135,
         Kmnai=5.46,
         Kmko=0.621,
         Q10NaK=1.16,
         Q10TempA=22.85,
         Q10TempB=10.0,
     )
+    M.GLOBALP(gbar_INaKmax22=0.009726135)
 
     M.USEION("k", read=["ko"], write=["ik"])
     M.USEION("na", read=["nai"], write=["ina"])

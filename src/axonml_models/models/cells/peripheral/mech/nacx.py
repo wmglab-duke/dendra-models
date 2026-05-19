@@ -4,7 +4,8 @@ from axonml.models.mechanisms.ops import *
 
 
 class nacx(M):
-    M.GLOBAL(gbar=316.0, F=96500.0, R=8314.0, knaca=36e-9, dnaca=0.0036)
+    M.GLOBALP(gbar=316.0)
+    M.GLOBAL(F=96500.0, R=8314.0, knaca=36e-9, dnaca=0.0036)
     M.USEION("na", read=["nai", "nao"], write=["ina"])
     M.USEION("ca", read=["cai", "cao"], write=["ica"])
 

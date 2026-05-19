@@ -24,7 +24,7 @@ class sk_e2(M):
     M.USEION("k", read=["ek"], write=["ik"])
     M.USEION("ca", read=["cai"])
 
-    M.RANGE(gbar=0.0001)
+    M.RANGEP(gbar=0.0001)
 
     def ik(self, v):
         return self.gbar * self.z * (v - self.ek)

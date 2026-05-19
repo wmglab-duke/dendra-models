@@ -24,7 +24,7 @@ def valid_ids():
     return sorted(ids)
 
 
-def L5_TTPC_cADpyr(ID, N, integrator=None):
+def L5_TTPC_cADpyr(ID, N, integrator=None, v_init=-70.0):
     target = _MORPH / f"L5_{ID}.gml"
     if not target.is_file():
         raise FileNotFoundError(f"Missing morphology: {target}. Valid IDs: {valid_ids()}")
@@ -33,7 +33,7 @@ def L5_TTPC_cADpyr(ID, N, integrator=None):
     with as_file(target) as p:
         g = nx.read_gml(p, destringizer=int)
 
-    cell = ax.Tree.from_graph(g, integrator=integrator, N=N, v_init=-70.0)
+    cell = ax.Tree.from_graph(g, integrator=integrator, N=N, v_init=v_init)
     for group in ["soma", "apic", "dend", "axon", "myelin", "unmyelin", "node"]:
         cell.slice(group).label(group)
 

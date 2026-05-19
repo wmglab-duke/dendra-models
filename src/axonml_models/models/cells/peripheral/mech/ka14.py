@@ -88,7 +88,7 @@ class s(S):
 
 class ka14(M):
     M.STATE(m, h, s)
-    M.GLOBAL(gbar=0.0001)
+    M.GLOBALP(gbar=0.0001)
 
     M.USEION("k", read=["ek"], write=["ik"])
 

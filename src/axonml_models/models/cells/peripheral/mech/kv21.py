@@ -55,7 +55,7 @@ class h(S):
 
 class kv21(M):
     M.STATE(m, h)
-    M.GLOBAL(gbar=0.0001)
+    M.GLOBALP(gbar=0.0001)
 
     M.USEION("k", read=["ek"], write=["ik"])
 

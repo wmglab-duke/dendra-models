@@ -35,7 +35,7 @@ class im(M):
     M.STATE(m)
     M.USEION("k", read=["ek"], write=["ik"])
 
-    M.RANGE(gbar=0.0001)
+    M.RANGEP(gbar=0.0001)
 
     def ik(self, v):
         return self.gbar * self.m * (v - self.ek)

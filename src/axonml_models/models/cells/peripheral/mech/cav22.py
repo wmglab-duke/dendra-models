@@ -77,7 +77,7 @@ class s(S):
 
 class cav22(M):
     M.STATE(m, h, s)
-    M.GLOBAL(gbar=0.0001)
+    M.GLOBALP(gbar=0.0001)
 
     M.USEION("ca", read=["eca"], write=["ica"])
 

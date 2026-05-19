@@ -12,7 +12,7 @@ from axonml.models.mechanisms.ops import *
 class mh(S):
     has_q10 = True
     S.STATE("m", "h")
-    S.GLOBAL(aq10=2.3, bq10=21.0, cq10=10.0, celsius_const=34.0)
+    S.GLOBALP(aq10=2.3, bq10=21.0, cq10=10.0, celsius_const=34.0)
 
     S.DERIVATIVE(
         "m' = (minf - m) / taum",
@@ -44,7 +44,7 @@ class k_t(M):
     M.STATE(mh)
     M.USEION("k", read=["ek"], write=["ik"])
 
-    M.RANGE(gbar=0.00001)
+    M.RANGEP(gbar=0.00001)
 
     def ik(self, v):
         return self.gbar * self.m**4 * self.h * (v - self.ek)

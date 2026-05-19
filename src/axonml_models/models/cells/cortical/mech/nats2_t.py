@@ -6,16 +6,16 @@ from axonml.models.mechanisms.ops import *
 class m(S):
     has_q10 = True
     S.STATE("m")
-    S.GLOBAL(
+    S.GLOBALP(
         aq10=2.3,
         bq10=21.0,
         cq10=10.0,
-        mshift=-32.0,
         ma1=0.182,
         ma2=6.0,
         mb1=0.124,
         mb2=6.0,
     )
+    S.GLOBALN(mshift=-32.0)
 
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
@@ -54,16 +54,14 @@ class m(S):
 class h(S):
     has_q10 = True
     S.STATE("h")
-    S.GLOBAL(
+    S.GLOBALP(
         aq10=2.3,
         bq10=21.0,
         cq10=10.0,
-        hshift=-60.0,
-        ha1=-0.015,
         ha2=6.0,
-        hb1=-0.015,
         hb2=6.0,
     )
+    S.GLOBALN(hshift=-60.0, ha1=-0.015, hb1=-0.015)
 
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
@@ -102,7 +100,7 @@ class h(S):
 class nats2_t(M):
     M.STATE(m, h)
     M.USEION("na", read=["ena"], write=["ina"])
-    M.RANGE(gbar=0.00001)
+    M.RANGEP(gbar=0.00001)
 
     def ina(self, v):
         return self.gbar * self.m**3 * self.h * (v - self.ena)
