@@ -4,9 +4,9 @@ import torch
 from tqdm import tqdm
 import numpy as np
 
-import axonml as ax
-from axonml.units import nA, Hz, ms
-from axonml_models.models.cells.peripheral import SMF
+import dendra as ax
+from dendra.units import nA, Hz, ms
+from dendra_models.models.cells.peripheral import SMF
 
 
 torch.set_default_dtype(torch.float32)

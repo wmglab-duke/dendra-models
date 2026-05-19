@@ -1,5 +1,5 @@
 import torch
-import axonml as ax
+import dendra as ax
 
 import argparse
 

@@ -4,7 +4,7 @@ from typing import List
 
 import torch
 
-from axonml.models import Backend as A, Axon, SMF
+from dendra.models import Backend as A, Axon, SMF
 
 
 # model specification

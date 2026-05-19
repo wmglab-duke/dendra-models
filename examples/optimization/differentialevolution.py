@@ -10,8 +10,8 @@ from cajal.nrn.sources import PreComputedInterpolate1D
 from cajal.opt.differentialevolution import DEBASE
 from cajal.opt.differentialevolution.callbacks import Logger, EarlyStopping, Timer
 
-from axonml.models import SMF
-from axonml.models.callbacks import Active
+from dendra.models import SMF
+from dendra.models.callbacks import Active
 
 import de_config as config
 from utils import (

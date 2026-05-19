@@ -9,8 +9,8 @@ from cajal.common.logging import tic, toc
 from cajal.nrn.stimuli import SymmetricBiphasic
 from cajal.nrn.sources import PreComputedInterpolate1D
 
-from axonml.models.implementations import SMF
-from axonml.opt.gd import AxonSpec, FieldSpec, GDProblemUniform, GD
+from dendra.models.implementations import SMF
+from dendra.opt.gd import AxonSpec, FieldSpec, GDProblemUniform, GD
 
 from gd_parser import parser
 from utils import deltax, percent_on_target_active, percent_off_target_active

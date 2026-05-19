@@ -4,18 +4,18 @@
 
 ***
 
-Models implemented in AxonML.
+Models implemented in Dendra.
 
 ### Installation instructions
 ---
-0. Install [AxonML](https://gitlab.oit.duke.edu/mah148/axonml).
+0. Install [Dendra](https://gitlab.oit.duke.edu/mah148/axonml).
 1. Clone this repository.
 2. Navigate to the cloned directory.
 3. `python -m pip install .`
 
 ### Accessing models
 ---
-Models can be accessed via `axonml_models.models`, e.g., `from axonml_models.models import Tigerholm2014...`
+Models can be accessed via `dendra_models.models`, e.g., `from dendra_models.models import Tigerholm2014...`
 
 # Available models
 ## Peripheral nerve fibers

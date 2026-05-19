@@ -9,10 +9,10 @@ The basic procedure for running thresholds is:
 > [!IMPORTANT]
 > The resulting set of spatiotemporal extracellular potentials must be an array of shape `(n_conditions, n_timesteps, n_comps)`. For example, if you were calculating thresholds for the same extracellular field distribution for 50 different pulse-widths of monophasic extracellular cathodic stimulation, with a simulation duration of 5 ms and dt=0.005 ms and each fiber has 51 nodes, the array would have dimensions `(50, 1000, 51)`. If you were doing the same but for two fiber diameters, the resulting array would have dimensions `(100, 1000, 51)`, etc.
 
-3. Construct an `axonml.instruments.thresholder.Thresholder` object.
+3. Construct an `dendra.instruments.thresholder.Thresholder` object.
 
 ```python
-from axonml.models.instruments.thresholder import Thresholder
+from dendra.models.instruments.thresholder import Thresholder
 # load model, construct field arrays
 thresholder = Thresholder(model, field_arrays, fiber_diameters)
 ```

@@ -5,9 +5,9 @@ import numpy as np
 from natsort import natsorted
 import torch
 
-import axonml as ax
-from axonml.models.implementations import SMF
-from axonml.opt.gd import AxonSpec, FieldSpec, GDProblemArbitrary, GD
+import dendra as ax
+from dendra.models.implementations import SMF
+from dendra.opt.gd import AxonSpec, FieldSpec, GDProblemArbitrary, GD
 
 from utils import deltax, percent_on_target_active, percent_off_target_active
 from gd_parser import parser

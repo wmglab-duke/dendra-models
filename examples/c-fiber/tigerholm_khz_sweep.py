@@ -4,9 +4,9 @@ import torch
 import numpy as np
 import pandas as pd
 
-import axonml as ax
-from axonml.models.parametric import distributed
-from axonml.units import mm, um, nA, Hz, ms
+import dendra as ax
+from dendra.models.parametric import distributed
+from dendra.units import mm, um, nA, Hz, ms
 
 
 # decide if you want to retry with slower numerical methods if some
@@ -16,7 +16,7 @@ rerun_anomalies = False
 # record voltage? This will slow down the simulation by ~15%.
 # it will also generate a large datafile so run it in /work
 # it will write a file model_name_voltage.h5 that you can read
-# with axonml.data.H5Reader
+# with dendra.data.H5Reader
 record_v = False
 
 # declare the parameters you're going to sweep

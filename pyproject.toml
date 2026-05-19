@@ -3,20 +3,20 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-# Distribution name (what you "pip install"). Can be hyphenated; import remains `axonml_models`.
-name = "axonml-models"
+# Distribution name (what you "pip install"). Can be hyphenated; import remains `dendra_models`.
+name = "dendra-models"
 dynamic = ["version"]
-description = "Models for AxonML"
+description = "Models for Dendra"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
 authors = [{ name = "Minhaj Hussain", email = "minhaj.hussain@duke.edu" }]
 dependencies = [
-  "axonml"
+  "dendra"
 ]
 
 # Optional but nice-to-have
-keywords = ["neuroscience", "models", "axonml"]
+keywords = ["neuroscience", "models", "dendra"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",
@@ -28,16 +28,16 @@ classifiers = [
 package-dir = { "" = "src" }
 
 [tool.setuptools.dynamic]
-version = {attr = "axonml_models.__version__"}
+version = {attr = "dendra_models.__version__"}
 
 [tool.setuptools.packages.find]
 # Find packages only under src, and include your package namespace
 where = ["src"]
-include = ["axonml_models*"]
+include = ["dendra_models*"]
 
 [tool.setuptools.package-data]
-# patterns are relative to the *package root* (`src/axonml_models`)
-axonml_models = [
+# patterns are relative to the *package root* (`src/dendra_models`)
+dendra_models = [
   "models/**/*.pt",
   "models/**/*.gml"
 ]

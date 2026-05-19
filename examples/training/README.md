@@ -1,12 +1,12 @@
 ## :rocket: Training a model
 
-In the provided example, `axonml` trains approximations to the MRG[^2] myelinated fiber model. Check `axonml/models/README.md` for instructions on how to implement approximations of other fiber models. 
+In the provided example, `dendra` trains approximations to the MRG[^2] myelinated fiber model. Check `dendra/models/README.md` for instructions on how to implement approximations of other fiber models. 
 
 Training configurations can be modified by changing the relevant values in `config.py`:
 
 |Variable|Description|
 |---|---|
-|`model`|Surrogate fiber model `class` to train. **Default: `axonml.models.SMF`**.|
+|`model`|Surrogate fiber model `class` to train. **Default: `dendra.models.SMF`**.|
 |`cuda`|Whether to use GPU. **Default: True if GPU is available, False otherwise**.|
 |`fp32`|Whether to use single-precision floating point arithmetic. If not, double precision is used. **Default: False**.|
 |`nodes`|Nodes of Ranvier per axon. **Default: 53**.|
@@ -21,7 +21,7 @@ Training configurations can be modified by changing the relevant values in `conf
 |`grad_accumulation`|Whether to use gradient accumulation over disjoint chunks in truncated backpropagation through time. **Default: False**.|
 |`to_train`|Parameters to train.|
 |`to_train_groups`|Parameter groups to train.|
-|`train_n_idx`|Total # training set batches to use per training epoch (see `./axonml/data/generate_data.py` - `n_batches`). **Default: 64**.|
+|`train_n_idx`|Total # training set batches to use per training epoch (see `./dendra/data/generate_data.py` - `n_batches`). **Default: 64**.|
 |`val_n_idx`| # validation set batches to use per round of validation. **Default: 8**.|
 |`train_chunk_size`| # training set batches to use per gradient-descent step. (Should be a factor of `train_n_idx`). **Default: 2**.|
 |`val_chunk_size`| # validation set batches to use per validation step. **Default: 8**.|
@@ -34,6 +34,6 @@ Once you've set variables appropriately in `config.py`, you can initiate trainin
 
 ```bash
 (base) foo@bar : ~ $ cd /path/to/cloned/repository/examples/training
-(base) foo@bar : axonml/examples/training $ conda activate axonml
-(axonml) foo@bar : axonml/examples/training $ python train.py
+(base) foo@bar : dendra/examples/training $ conda activate dendra
+(dendra) foo@bar : dendra/examples/training $ python train.py
 ```

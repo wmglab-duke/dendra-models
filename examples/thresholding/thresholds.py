@@ -3,9 +3,9 @@ import argparse
 import numpy as np
 import torch
 
-from axonml.models.instruments.thresholder import Thresholder
-from axonml.models.callbacks import Active
-from axonml_models.models import SMF
+from dendra.models.instruments.thresholder import Thresholder
+from dendra.models.callbacks import Active
+from dendra_models.models import SMF
 
 
 parser = argparse.ArgumentParser()

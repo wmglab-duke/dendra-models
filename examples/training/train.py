@@ -2,8 +2,8 @@ import h5py
 import torch
 
 import config
-from axonml.models import Axon
-from axonml.training import tbptt, DataLoader
+from dendra.models import Axon
+from dendra.training import tbptt, DataLoader
 
 
 def collect_states(h5py_file, states):
