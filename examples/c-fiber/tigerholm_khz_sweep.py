@@ -4,7 +4,7 @@ import torch
 import numpy as np
 import pandas as pd
 
-import dendra as ax
+import dendra as dn
 from dendra.models.parametric import distributed
 from dendra.units import mm, um, nA, Hz, ms
 
@@ -28,7 +28,7 @@ all_params = list(
 total = len(all_params)
 
 # choose model
-model_type = ax.Tigerholm2014
+model_type = dn.Tigerholm2014
 model_name = "tigerholm2014"
 steady_state = False
 L = 40.0
@@ -55,34 +55,34 @@ def run(model, params, rec_suffix="", steady_state=False):
     f_s, a_s = map(list, zip(*params))
     f_s = distributed(f_s, over="a", kind="stim")
     a_s = distributed(a_s, over="a", kind="stim")
-    stim = ax.sin(amp=a_s, freq=f_s, delay=pre, off=off)
+    stim = dn.sin(amp=a_s, freq=f_s, delay=pre, off=off)
 
     # deliver intracellular current pulses (1 nA, 1 ms pw) @ 10 Hz after 15 ms
     # fastest is to precompute i_intra(t) and add to IntraStim object
 
     testpulse_fs = 10 * Hz
     testpulse_start = 15 * ms
-    intra = ax.IntraStim(model)
-    i_stim = ax.mono_rect(amp=1 * nA, pw=1 * ms).repeat(
+    intra = dn.IntraStim(model)
+    i_stim = dn.mono_rect(amp=1 * nA, pw=1 * ms).repeat(
         testpulse_fs, delay=testpulse_start
     )(t)
     intra.insert(i_stim, nodes=model.c(0.1))
 
     # ve from point source
-    ve_s = ax.isotropic_point(z=200.0, rhoe=100 / 1.79)(model)
+    ve_s = dn.isotropic_point(z=200.0, rhoe=100 / 1.79)(model)
 
     # setup callbacks
     # models will not terminate if they encounter numerical error, so use
     # AnomalyDetector to determine which results are valid
 
-    anom = ax.callbacks.AnomalyDetector()
-    rec = ax.callbacks.Raster(node_check=model.c(0.9), dt=dt)
+    anom = dn.callbacks.AnomalyDetector()
+    rec = dn.callbacks.Raster(node_check=model.c(0.9), dt=dt)
 
     if record_v:
         indices = model.c(
             0.1, 0.4, 0.5, 0.501, 0.502, 0.505, 0.51, 0.55, 0.6, 0.65, 0.7, 0.9
         )
-        v_rec = ax.callbacks.Recorder(["v"], node_indices=indices).set_hdf5(
+        v_rec = dn.callbacks.Recorder(["v"], node_indices=indices).set_hdf5(
             f"{model_name}_voltage{rec_suffix}.h5", cache_every=10000
         )
         callbacks = [anom, rec, v_rec]
@@ -117,7 +117,7 @@ if n_anomalous > 0 and rerun_anomalies:
         f"{n_anomalous} anomalies detected. Trying with Implicit Euler integrator & 64-bit math."
     )
     robust_model = model_type(
-        [1.0 * um] * n_anomalous, L=L * mm, dx=10.0 * um, integrator=ax.bwd_euler_ub()
+        [1.0 * um] * n_anomalous, L=L * mm, dx=10.0 * um, integrator=dn.bwd_euler_ub()
     ).double()
     rerun_params = [all_params[i] for i, f in enumerate(anomalous) if f]
     anomalous_r, raster_r = run(

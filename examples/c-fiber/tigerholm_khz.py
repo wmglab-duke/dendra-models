@@ -1,5 +1,5 @@
 import torch
-import dendra as ax
+import dendra as dn
 
 import argparse
 
@@ -15,22 +15,22 @@ if __name__ == "__main__":
     dx = 25.0  # fiber compartment length [um]
 
     diameters = torch.linspace(0.5, 2.0, n_ax)
-    model = ax.Tigerholm2014(diameters, L, dx=dx, method="euler").cuda()
+    model = dn.Tigerholm2014(diameters, L, dx=dx, method="euler").cuda()
 
     # -- space --
-    v_s = ax.isotropic_point(z=100.0, rhoe=500.0)(model)
+    v_s = dn.isotropic_point(z=100.0, rhoe=500.0)(model)
 
     # -- time --
     dt, tstop = 0.001, 100
     freq, amp = 1, 0.5
-    i_t = ax.sin(amp=amp, freq=freq).tstop(tstop)
+    i_t = dn.sin(amp=amp, freq=freq).tstop(tstop)
 
     # -- run & record --
     indices = model.c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
     states = [
         "v",
     ]
-    rec = ax.callbacks.Recorder(states, node_indices=indices).set_hdf5(
+    rec = dn.callbacks.Recorder(states, node_indices=indices).set_hdf5(
         "tigerholm_voltage.h5", cache_every=args.cache_every
     )
     model.longrun(

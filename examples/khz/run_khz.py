@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 import numpy as np
 
-import dendra as ax
+import dendra as dn
 from dendra.units import nA, Hz, ms
 from dendra_models.models.cells.peripheral import SMF
 
@@ -32,7 +32,7 @@ field_x = np.load("./fields/fiber_zs.npy")
 
 # -- generate field bases --
 # machinery
-interpolator = ax.precomputed_interpolate_1d(FIELD_DATA[s_idx] * 1000, field_x)
+interpolator = dn.precomputed_interpolate_1d(FIELD_DATA[s_idx] * 1000, field_x)
 
 
 def make_ve_at_nodes(diameter, a_idx, nodes=nodes, offset=37500):
@@ -76,7 +76,7 @@ diam = np.concatenate(diams)
 
 # code to run and count APs
 
-count = ax.callbacks.APCount(node_check=[-5], threshold=-20.0, t_start_check=50)
+count = dn.callbacks.APCount(node_check=[-5], threshold=-20.0, t_start_check=50)
 
 
 # run
@@ -88,7 +88,7 @@ for _ in frequencies:
     input_diams.append(torch.tensor(diam, device="cuda").float())
 input_diams = torch.cat(input_diams)
 
-stim = ax.sin(
+stim = dn.sin(
     amp=1.0, freq=np.repeat(frequencies, len(field_stack))[:, None], delay=0.5
 )
 field_stack = torch.tensor(field_stack).repeat(len(frequencies), 1)
@@ -100,7 +100,7 @@ dt = 0.001
 mrg = SMF(input_diams, nodes).cuda()
 
 # intracellular stim to generate activity
-intra = ax.mono_rect(amp=2.0 * nA, pw=0.1 * ms).repeat(100.0 * Hz, delay=50.0 * ms)
+intra = dn.mono_rect(amp=2.0 * nA, pw=0.1 * ms).repeat(100.0 * Hz, delay=50.0 * ms)
 mrg[:, 5].inject(intra)
 
 count.reset()
