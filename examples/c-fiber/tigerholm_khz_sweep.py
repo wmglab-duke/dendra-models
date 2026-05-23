@@ -24,7 +24,7 @@ frequencies = [1, 2, 5, 10, 20, 30, 40, 50, 60, 80, 100]
 amps = np.arange(0, 26.1).tolist()
 all_params = list(
     itertools.product(frequencies, amps)
-)  # in AxonML, we run everything at once
+)  # in Dendra, we run everything at once
 total = len(all_params)
 
 # choose model

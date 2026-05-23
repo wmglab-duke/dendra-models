@@ -5,7 +5,7 @@ import numpy as np
 from natsort import natsorted
 import torch
 
-import dendra as ax
+import dendra as dn
 from dendra.models.implementations import SMF
 from dendra.opt.gd import AxonSpec, FieldSpec, GDProblemArbitrary, GD
 
@@ -76,9 +76,9 @@ if __name__ == "__main__":
         dtype=dtype,
     )
 
-    ax.tic()
+    dn.tic()
     gd.solve(mrg, args.n_steps)
-    time = ax.toc()
+    time = dn.toc()
 
     if args.validate:
         from cajal.nrn import MRG

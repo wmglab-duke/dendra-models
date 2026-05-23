@@ -4,7 +4,7 @@ from importlib.resources import files, as_file
 import torch
 import networkx as nx
 
-import dendra as ax
+import dendra as dn
 from dendra.models.utils import distance
 from dendra.models.mod import pas
 

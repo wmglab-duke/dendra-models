@@ -1,6 +1,6 @@
 import numpy as np
 
-import dendra as ax
+import dendra as dn
 from dendra.models.mod import exp2syn
 
 from .mechanisms.esser import esser_mech_h
@@ -113,7 +113,7 @@ def yu_2024(params=None, rng=None):
     for name, n in params['cells']['n_total'].items():
         intervals.extend([1000.0 / FR[name]] * n)
         
-    ns = ax.NetStim(n_netstim_total, interval=intervals, noise=1.0)
+    ns = dn.NetStim(n_netstim_total, interval=intervals, noise=1.0)
 
     # make subpops
     idx = 0
@@ -127,7 +127,7 @@ def yu_2024(params=None, rng=None):
     # instantiate pop & biophysics
 
     idx = 0
-    p = ax.Population(C=n_cells_total, v_init=-77.5, integrator=ax.scnv())
+    p = dn.Population(C=n_cells_total, v_init=-77.5, integrator=dn.scnv())
 
     for name, n in params['cells']['n_total'].items():
         end = idx + n
@@ -184,9 +184,9 @@ def yu_2024(params=None, rng=None):
 
     fp32 = params.get("fp32", False)
     if fp32:
-        net = ax.Network({'cells':p}, netstim=ns).float()
+        net = dn.Network({'cells':p}, netstim=ns).float()
     else:
-        net = ax.Network({'cells':p}, netstim=ns).double()
+        net = dn.Network({'cells':p}, netstim=ns).double()
 
     # set references
     m = net.cells.mech

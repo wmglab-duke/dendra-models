@@ -4,7 +4,7 @@ from importlib.resources import files, as_file
 import torch
 import networkx as nx
 
-import dendra as ax
+import dendra as dn
 from dendra.models.utils import distance
 from dendra.models.mod import pas
 
@@ -32,7 +32,7 @@ def L4_SBC_bNAC(ID, N, integrator=None):
     with as_file(target) as p:
         g = nx.read_gml(p, destringizer=int)
 
-    cell = ax.Tree.from_graph(g, integrator=integrator, N=N, v_init=-70.0)
+    cell = dn.Tree.from_graph(g, integrator=integrator, N=N, v_init=-70.0)
     for group in ["soma", "apic", "dend", "axon", "myelin", "unmyelin", "node"]:
         cell.slice(group).label(group)
 
