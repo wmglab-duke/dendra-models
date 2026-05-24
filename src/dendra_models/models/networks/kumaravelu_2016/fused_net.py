@@ -7,7 +7,7 @@ from typing import Iterable, Mapping
 
 import numpy as np
 
-import dendra as ax
+import dendra as dn
 
 from .params import params as default_parameter_dict
 from .mechanisms.fused import make_kumaravelu_2016_fused
@@ -328,7 +328,18 @@ def _dbs_frequency(params: Mapping, pick_dbs_freq=None):
     return float(freqs[idx])
 
 
-def _fused_config(params: Mapping, realization, dt_ref: float, pick_dbs_freq=None, *, N: int = 1, synapse_discretization=None, delay_mode=None):
+def _fused_config(
+    params: Mapping,
+    realization,
+    dt_ref: float,
+    pick_dbs_freq=None,
+    *,
+    N: int = 1,
+    synapse_discretization=None,
+    synapse_update_mode=None,
+    spike_update_mode=None,
+    delay_mode=None,
+):
     pd = float(params.get("pd", 0.0))
     corstim = float(params.get("corstim", 0.0))
 
@@ -378,6 +389,10 @@ def _fused_config(params: Mapping, realization, dt_ref: float, pick_dbs_freq=Non
 
     if synapse_discretization is None:
         synapse_discretization = params.get("synapse_discretization", "euler")
+    if synapse_update_mode is None:
+        synapse_update_mode = params.get("synapse_update_mode", "uncoalesced")
+    if spike_update_mode is None:
+        spike_update_mode = params.get("spike_update_mode", "uncoalesced")
     if delay_mode is None:
         delay_mode = params.get("delay_mode", "auto")
 
@@ -385,6 +400,8 @@ def _fused_config(params: Mapping, realization, dt_ref: float, pick_dbs_freq=Non
         "n": int(params["n"]),
         "N": int(N),
         "synapse_discretization": str(synapse_discretization).lower(),
+        "synapse_update_mode": str(synapse_update_mode).lower(),
+        "spike_update_mode": str(spike_update_mode).lower(),
         "delay_mode": str(delay_mode).lower(),
         "pd": pd,
         "corstim": corstim,
@@ -415,6 +432,8 @@ def kumaravelu_2016_fused(
     pick_dbs_freq=None,
     differentiable_spikes: bool = True,
     synapse_discretization=None,
+    synapse_update_mode=None,
+    spike_update_mode=None,
     delay_mode=None,
 ):
     """Build the fused Kumaravelu CTX-BG-TH model as a single Dendra Population.
@@ -442,6 +461,12 @@ def kumaravelu_2016_fused(
         Recursive filter update used for alpha and double-exponential synapses.
         Defaults to ``params.get('synapse_discretization', 'euler')`` to preserve
         the original fused backend behavior.
+    synapse_update_mode : {"uncoalesced", "coalesced"}, optional
+        Tensor layout used for synaptic filter updates. ``"coalesced"`` stacks
+        same-family alpha and double-exponential filters into stream axes.
+    spike_update_mode : {"uncoalesced", "coalesced"}, optional
+        Tensor layout used for spike-event detection. ``"coalesced"`` stacks
+        populations and thresholds before evaluating reset and crossing events.
     delay_mode : {"auto", "shift", "circular", "circular_eager"}, optional
         Fixed-delay queue backend. ``"auto"`` uses fast circular buffers in
         eval/no-grad mode and graph-safe shifted queues in training mode.
@@ -482,12 +507,14 @@ def kumaravelu_2016_fused(
         pick_dbs_freq=pick_dbs_freq,
         N=N,
         synapse_discretization=synapse_discretization,
+        synapse_update_mode=synapse_update_mode,
+        spike_update_mode=spike_update_mode,
         delay_mode=delay_mode,
     )
     config["differentiable_spikes"] = bool(differentiable_spikes)
 
     mech_cls = make_kumaravelu_2016_fused(config)
-    pop = ax.Population(N=N, C=8 * n, v_init=v_init, integrator=ax.scnv())
+    pop = dn.Population(N=N, C=8 * n, v_init=v_init, integrator=dn.scnv())
     _label_population(pop, names, params["cells"]["n_by_type"])
 
     spike_params = dict(params.get("spikedetect_hh", {}))
@@ -512,6 +539,8 @@ def kumaravelu_2016_fused(
     pop.kumaravelu_N = int(N)
     pop.kumaravelu_spike_mode = "surrogate" if differentiable_spikes else "hard"
     pop.kumaravelu_synapse_discretization = config["synapse_discretization"]
+    pop.kumaravelu_synapse_update_mode = config.get("synapse_update_mode", "uncoalesced")
+    pop.kumaravelu_spike_update_mode = config.get("spike_update_mode", "uncoalesced")
     pop.kumaravelu_delay_mode = config["delay_mode"]
     return pop.double() if not params.get("fp32", False) else pop.float()
 

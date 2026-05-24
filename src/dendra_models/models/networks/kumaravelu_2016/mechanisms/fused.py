@@ -9,7 +9,8 @@ inside a single PyTorch tensor program.
 The equations follow the MATLAB reference implementation, but spike-triggered
 lookup-table synapses are represented as equivalent alpha or bi-exponential
 filter states with fixed delay queues.  The filter discretization is selectable
-(``euler``, ``backward_euler``, or ``exact``).  Fixed delays use Dendra's
+(``euler``, ``backward_euler``, or ``exact``), and the filter update layout is
+selectable (``uncoalesced`` or ``coalesced``).  Fixed delays use Dendra's
 batched mechanism-level delayed-state helper; ``delay_mode="auto"`` uses fast
 circular buffers in eval/no-grad mode and graph-safe shifted queues in training
 mode.  The local cortical alpha synapses use the same second-order alpha ODE
@@ -20,13 +21,18 @@ from __future__ import annotations
 
 import copy
 import math
-from typing import Any, Dict, Iterable, Mapping
+from typing import Any, Dict, Mapping
 
 import torch
 
 from dendra.models.networks.spiking import (
     crossing_spike as _dendra_crossing_spike,
     level_spike as _dendra_level_spike,
+)
+
+from dendra.models.networks.spiking import (
+    crossing_spikes as _dendra_crossing_spikes,
+    level_spikes as _dendra_level_spikes,
 )
 
 from dendra.models.mechanisms._mechanism import VoltageProcess as V
@@ -69,31 +75,26 @@ def _x_over_exp_x_over_s_minus_1(x, s: float):
     )
 
 
-def _roll(x, shift: int):
-    return torch.roll(x, shifts=int(shift), dims=-1)
+def _gather_index(x, index):
+    """Gather a fixed last-axis index vector/matrix without hot-path casting."""
+    return torch.gather(x, dim=-1, index=index.expand_as(x))
 
 
-def _sum_rolls(x, shifts: Iterable[int]):
-    out = torch.zeros_like(x)
-    for shift in shifts:
-        out = out + _roll(x, int(shift))
-    return out
+def _sum_gather_index(x, index):
+    """Sum several fixed ring-shift gathers.
+
+    ``index`` has shape ``(k, n)`` and is precomputed during initialization.
+    """
+    flat = index.reshape(-1)
+    y = x.index_select(-1, flat)
+    return y.reshape(*x.shape[:-1], index.shape[0], index.shape[1]).sum(dim=-2)
 
 
 def _gather_perm(x, perm):
-    """Gather ``x`` along the neuron axis with optional per-network permutations.
-
-    ``perm`` may be a single length-n permutation shared by every independent
-    network, or a tensor with the same leading dimensions as ``x`` and length n
-    along the last axis.  The latter is required when ``Population(N, 8*n)``
-    carries N independently randomized networks.
-    """
-    perm = perm.to(device=x.device, dtype=torch.long)
+    """Gather ``x`` along the neuron axis with initialized long permutations."""
     while perm.ndim < x.ndim:
         perm = perm.unsqueeze(0)
-    if perm.shape != x.shape:
-        perm = perm.expand_as(x)
-    return torch.gather(x, dim=-1, index=perm)
+    return torch.gather(x, dim=-1, index=perm.expand_as(x))
 
 
 # ---------------------------------------------------------------------------
@@ -349,6 +350,15 @@ class _Kumaravelu2016FusedBase(V):
         # Optional per-pathway delay queues used by delay_mode="circular_eager".
         "buf_th_ctx", "buf_stn_gpe", "buf_stn_gpi", "buf_gpe_stn", "buf_gpe_gpi", "buf_gpe_gpe",
         "buf_gpi_th", "buf_d2_gpe", "buf_d1_gpi", "buf_ctx_d2", "buf_ctx_d1", "buf_ctx_stn",
+        # Precomputed routing / threshold indices.
+        "idx_roll_p1", "idx_roll_m1", "idx_roll_p2", "idx_sum_10",
+        "spike_crossing_thresholds", "ctx_reset_thresholds",
+        # Synaptic filter coefficient vectors used by coalesced updates.
+        "alpha_const_streams",
+        "exp2_tau1_streams", "exp2_tau2_streams", "exp2_inc_streams",
+        "exp2_euler_decay1_streams", "exp2_euler_decay2_streams",
+        "exp2_be_decay1_streams", "exp2_be_decay2_streams",
+        "exp2_exact_decay1_streams", "exp2_exact_decay2_streams",
         # Realization buffers
         "gcorsna", "gcorsnn", "gcordrstr", "ggege", "gsngen", "gsngea", "gsngi",
         "perm_d2_0", "perm_d2_1", "perm_d2_2", "perm_d2_3",
@@ -416,8 +426,137 @@ class _Kumaravelu2016FusedBase(V):
             f"Cannot broadcast permutation with shape {tuple(x.shape)} to fused group shape {tuple(ref.shape)}."
         )
 
+    def _set_static_buffer(self, name: str, value: torch.Tensor):
+        if name in self._buffers:
+            setattr(self, name, value)
+        else:
+            self.register_buffer(name, value)
+        return getattr(self, name)
+
+    def _init_routing_indices(self, ref):
+        n = self._n()
+        base = torch.arange(n, device=ref.device, dtype=torch.long)
+        self._set_static_buffer("idx_roll_p1", ((base - 1) % n).reshape(1, n))
+        self._set_static_buffer("idx_roll_m1", ((base + 1) % n).reshape(1, n))
+        self._set_static_buffer("idx_roll_p2", ((base - 2) % n).reshape(1, n))
+        shifts = torch.arange(min(10, n), device=ref.device, dtype=torch.long)
+        self._set_static_buffer("idx_sum_10", ((base.unsqueeze(0) - shifts.unsqueeze(1)) % n))
+
+    def _init_spike_thresholds(self, ref):
+        """Precompute static threshold vectors used by coalesced spike detection."""
+        self._set_static_buffer(
+            "spike_crossing_thresholds",
+            torch.tensor((-10.0, -20.0), device=ref.device, dtype=ref.dtype),
+        )
+        self._set_static_buffer(
+            "ctx_reset_thresholds",
+            torch.tensor(
+                (float(self.cfg["ctx_rs"].get("v_peak", 30.0)), float(self.cfg["ctx_fs"].get("v_peak", 30.0))),
+                device=ref.device,
+                dtype=ref.dtype,
+            ),
+        )
+
+    def _precompute_synapse_constants(self, dt_value):
+        dt_f = float(dt_value)
+        syn = self.cfg.get("syn", {})
+        peak = float(syn.get("gpeak", 0.43))
+        peak1 = float(syn.get("gpeak1", 0.3))
+        tau_alpha = float(syn.get("tau_alpha", 5.0))
+
+        self._syn_peak = peak
+        self._syn_peak1 = peak1
+        self._alpha_const_peak = peak / (tau_alpha * math.exp(-1.0))
+        self._alpha_const_peak1 = peak1 / (tau_alpha * math.exp(-1.0))
+        h = dt_f / tau_alpha
+        self._alpha_dt = dt_f
+        self._alpha_h = h
+        self._alpha_decay = math.exp(-h)
+        self._alpha_dt_over_tau2 = dt_f / (tau_alpha * tau_alpha)
+
+        def exp2_coeffs(pk, tau1, tau2):
+            tp = (tau1 * tau2) / (tau2 - tau1) * math.log(tau2 / tau1)
+            factor = 1.0 / (-math.exp(-tp / tau1) + math.exp(-tp / tau2))
+            return (math.exp(-dt_f / tau1), math.exp(-dt_f / tau2), pk * factor)
+
+        self._exp2_exact_coeffs = {
+            (peak, 0.4, 2.5): exp2_coeffs(peak, 0.4, 2.5),
+            (peak, 2.0, 67.0): exp2_coeffs(peak, 2.0, 67.0),
+            (peak1, 0.4, 7.7): exp2_coeffs(peak1, 0.4, 7.7),
+            (peak, 0.5, 2.49): exp2_coeffs(peak, 0.5, 2.49),
+            (peak, 2.0, 90.0): exp2_coeffs(peak, 2.0, 90.0),
+        }
+
+        # Stream order for coalesced alpha updates:
+        #   S7, S2b, S3b, S3c, S4, S5, S9, S6a(ctx_d2),
+        #   S6a(ctx_d1), S1a, S1b.
+        alpha_consts = [
+            self._alpha_const_peak,
+            self._alpha_const_peak,
+            self._alpha_const_peak1,
+            self._alpha_const_peak1,
+            self._alpha_const_peak1,
+            self._alpha_const_peak1,
+            self._alpha_const_peak1,
+            self._alpha_const_peak,
+            self._alpha_const_peak,
+            self._alpha_const_peak,
+            self._alpha_const_peak,
+        ]
+
+        # Stream order for coalesced exp2 updates:
+        #   STN->GPe AMPA, STN->GPe NMDA, GPe->STN,
+        #   CTX->STN AMPA, CTX->STN NMDA.
+        tau1s = [0.4, 2.0, 0.4, 0.5, 2.0]
+        tau2s = [2.5, 67.0, 7.7, 2.49, 90.0]
+        incs = [
+            self._exp2_exact_coeffs[(peak, 0.4, 2.5)][2],
+            self._exp2_exact_coeffs[(peak, 2.0, 67.0)][2],
+            self._exp2_exact_coeffs[(peak1, 0.4, 7.7)][2],
+            self._exp2_exact_coeffs[(peak, 0.5, 2.49)][2],
+            self._exp2_exact_coeffs[(peak, 2.0, 90.0)][2],
+        ]
+        exact_decay1 = [
+            self._exp2_exact_coeffs[(peak, 0.4, 2.5)][0],
+            self._exp2_exact_coeffs[(peak, 2.0, 67.0)][0],
+            self._exp2_exact_coeffs[(peak1, 0.4, 7.7)][0],
+            self._exp2_exact_coeffs[(peak, 0.5, 2.49)][0],
+            self._exp2_exact_coeffs[(peak, 2.0, 90.0)][0],
+        ]
+        exact_decay2 = [
+            self._exp2_exact_coeffs[(peak, 0.4, 2.5)][1],
+            self._exp2_exact_coeffs[(peak, 2.0, 67.0)][1],
+            self._exp2_exact_coeffs[(peak1, 0.4, 7.7)][1],
+            self._exp2_exact_coeffs[(peak, 0.5, 2.49)][1],
+            self._exp2_exact_coeffs[(peak, 2.0, 90.0)][1],
+        ]
+
+        def stream_tensor(vals):
+            return torch.tensor(vals, device=self.dt.device, dtype=self.dt.dtype).reshape(1, -1, 1)
+
+        self.alpha_const_streams = stream_tensor(alpha_consts)
+        self.exp2_tau1_streams = stream_tensor(tau1s)
+        self.exp2_tau2_streams = stream_tensor(tau2s)
+        self.exp2_inc_streams = stream_tensor(incs)
+        self.exp2_euler_decay1_streams = stream_tensor([1.0 - dt_f / t for t in tau1s])
+        self.exp2_euler_decay2_streams = stream_tensor([1.0 - dt_f / t for t in tau2s])
+        self.exp2_be_decay1_streams = stream_tensor([1.0 / (1.0 + dt_f / t) for t in tau1s])
+        self.exp2_be_decay2_streams = stream_tensor([1.0 / (1.0 + dt_f / t) for t in tau2s])
+        self.exp2_exact_decay1_streams = stream_tensor(exact_decay1)
+        self.exp2_exact_decay2_streams = stream_tensor(exact_decay2)
+
+    def set_dt(self, dt):
+        super().set_dt(dt)
+        self._precompute_synapse_constants(float(dt))
+
     def _delay_mode(self) -> str:
         return str(self.cfg.get("delay_mode", "auto")).lower()
+
+    def _synapse_update_mode(self) -> str:
+        return str(self.cfg.get("synapse_update_mode", "uncoalesced")).lower()
+
+    def _spike_update_mode(self) -> str:
+        return str(self.cfg.get("spike_update_mode", "uncoalesced")).lower()
 
     def _delay_register_mode(self) -> str:
         """Return the backend used when registering delay buffers."""
@@ -444,6 +583,7 @@ class _Kumaravelu2016FusedBase(V):
             buffer_name="buf_pathway_delays",
             pointer_name="buf_pathway_delays_ptr",
             stream_axis=-2,
+            delay_axis=0,
             clear=True,
         )
 
@@ -661,8 +801,10 @@ class _Kumaravelu2016FusedBase(V):
         ):
             setattr(self, name, z.clone())
 
-        # Fixed-delay queues.
+        # Fixed-delay queues, static ring-routing indices, and threshold tensors.
         self._init_delay_buffers(self.v_th)
+        self._init_routing_indices(self.v_th)
+        self._init_spike_thresholds(self.v_th)
 
         # Realization arrays.
         r = cfg["realization"]
@@ -729,6 +871,25 @@ class _Kumaravelu2016FusedBase(V):
             ste_scale=self.ste_scale,
         )
 
+    def _crossing_spikes(self, v_old, v_new, thresholds):
+        """Broadcasted upward crossing events using Dendra's STE surrogate."""
+        return _dendra_crossing_spikes(
+            v_old,
+            v_new,
+            thresholds,
+            tau=self._surrogate_tau(),
+            ste_scale=self.ste_scale,
+        )
+
+    def _level_spikes(self, v, thresholds):
+        """Broadcasted above-threshold events using Dendra's STE surrogate."""
+        return _dendra_level_spikes(
+            v,
+            thresholds,
+            tau=self._surrogate_tau(),
+            ste_scale=self.ste_scale,
+        )
+
     # ------------------------------------------------------------------
     # Synaptic filter helpers
     # ------------------------------------------------------------------
@@ -781,7 +942,9 @@ class _Kumaravelu2016FusedBase(V):
         c = cfg["coupling"]
         syn = cfg["syn"]
         n = self._n()
-        dt = dt.to(dtype=self.v_th.dtype, device=self.v_th.device) if torch.is_tensor(dt) else torch.as_tensor(dt, device=self.v_th.device, dtype=self.v_th.dtype)
+        # ``set_dt`` has already normalized the timestep and precomputed all
+        # timestep-dependent filter constants.  Avoid hot-path casting.
+        dt = self.dt
 
         # Old voltages/states.
         V1, V2, V3, V4 = self.v_th, self.v_stn, self.v_gpe, self.v_gpi
@@ -799,19 +962,20 @@ class _Kumaravelu2016FusedBase(V):
         Iinj7 = self._group(Iinj_all, 6)
         Iinj8 = self._group(Iinj_all, 7)
 
-        # Routing aliases using current synaptic conductance states.
-        S21a = _roll(self.S2a, +1)
-        S21an = _roll(self.S2an, +1)
-        S21b = _roll(self.S2b, +1)
-        S31a = _roll(self.S3a, -1)
-        S31b = _roll(self.S3b, -1)
-        S31c = _roll(self.S3c, -1)
-        S32b = _roll(self.S3b, +2)
-        S32c = _roll(self.S3c, +2)
-        S61b = _roll(self.S6b, -1)
-        S61bn = _roll(self.S6bn, -1)
-        S5sum = _sum_rolls(self.S5, range(0, min(10, n)))
-        S9sum = _sum_rolls(self.S9, range(0, min(10, n)))
+        # Routing aliases using precomputed gather indices.  This avoids
+        # repeated torch.roll kernels in the timestep hot path.
+        S21a = _gather_index(self.S2a, self.idx_roll_p1)
+        S21an = _gather_index(self.S2an, self.idx_roll_p1)
+        S21b = _gather_index(self.S2b, self.idx_roll_p1)
+        S31a = _gather_index(self.S3a, self.idx_roll_m1)
+        S31b = _gather_index(self.S3b, self.idx_roll_m1)
+        S31c = _gather_index(self.S3c, self.idx_roll_m1)
+        S32b = _gather_index(self.S3b, self.idx_roll_p2)
+        S32c = _gather_index(self.S3c, self.idx_roll_p2)
+        S61b = _gather_index(self.S6b, self.idx_roll_m1)
+        S61bn = _gather_index(self.S6bn, self.idx_roll_m1)
+        S5sum = _sum_gather_index(self.S5, self.idx_sum_10)
+        S9sum = _sum_gather_index(self.S9, self.idx_sum_10)
 
         S11cr = _gather_perm(self.S1c, self.perm_d2_0)
         S12cr = _gather_perm(self.S1c, self.perm_d2_1)
@@ -951,36 +1115,23 @@ class _Kumaravelu2016FusedBase(V):
         fs = cfg["ctx_fs"]
         v_rs_euler = V7 + dt * (0.04 * V7 ** 2 + 5.0 * V7 + 140.0 - self.u_rs - Iie - Ithcor + Iappco + Iinj7)
         u_rs_euler = self.u_rs + dt * (float(rs["a"]) * (float(rs["b"]) * V7 - self.u_rs))
-        rs_reset_hard = V7 >= float(rs["v_peak"])
-        spk_rs_reset = self._level_spike(V7, float(rs["v_peak"]))
-        v_rs_new = torch.where(rs_reset_hard, torch.zeros_like(V7) + float(rs["c"]), v_rs_euler)
-        u_rs_new = torch.where(rs_reset_hard, self.u_rs + float(rs["d"]), u_rs_euler)
-
         v_fs_euler = V8 + dt * (0.04 * V8 ** 2 + 5.0 * V8 + 140.0 - self.u_fs - Iei + Iappco + Iinj8)
         u_fs_euler = self.u_fs + dt * (float(fs["a"]) * (float(fs["b"]) * V8 - self.u_fs))
-        fs_reset_hard = V8 >= float(fs["v_peak"])
-        spk_fs_reset = self._level_spike(V8, float(fs["v_peak"]))
+
+        rs_reset_hard, fs_reset_hard, spk_rs_reset, spk_fs_reset = self._compute_reset_events(V7, V8)
+        v_rs_new = torch.where(rs_reset_hard, torch.zeros_like(V7) + float(rs["c"]), v_rs_euler)
+        u_rs_new = torch.where(rs_reset_hard, self.u_rs + float(rs["d"]), u_rs_euler)
         v_fs_new = torch.where(fs_reset_hard, torch.zeros_like(V8) + float(fs["c"]), v_fs_euler)
         u_fs_new = torch.where(fs_reset_hard, self.u_fs + float(fs["d"]), u_fs_euler)
 
         # ---------------- Spike events ----------------
-        spk_th = self._crossing_spike(V1, v_th_new, -10.0)
-        spk_stn = self._crossing_spike(V2, v_stn_new, -10.0)
-        spk_gpe = self._crossing_spike(V3, v_gpe_new, -10.0)
-        spk_gpi = self._crossing_spike(V4, v_gpi_new, -10.0)
-        spk_d2 = self._crossing_spike(V5, v_d2_new, -10.0)
-        spk_d1 = self._crossing_spike(V6, v_d1_new, -10.0)
-        spk_rs_syn = self._crossing_spike(V7, v_rs_new, -10.0)
-        spk_fs_syn = self._crossing_spike(V8, v_fs_new, -10.0)
-
-        ap_th = self._crossing_spike(V1, v_th_new, -20.0)
-        ap_stn = self._crossing_spike(V2, v_stn_new, -20.0)
-        ap_gpe = self._crossing_spike(V3, v_gpe_new, -20.0)
-        ap_gpi = self._crossing_spike(V4, v_gpi_new, -20.0)
-        ap_d2 = self._crossing_spike(V5, v_d2_new, -20.0)
-        ap_d1 = self._crossing_spike(V6, v_d1_new, -20.0)
-        ap_rs = self._crossing_spike(V7, v_rs_new, -20.0)
-        ap_fs = self._crossing_spike(V8, v_fs_new, -20.0)
+        (
+            spk_th, spk_stn, spk_gpe, spk_gpi, spk_d2, spk_d1, spk_rs_syn, spk_fs_syn,
+            ap_th, ap_stn, ap_gpe, ap_gpi, ap_d2, ap_d1, ap_rs, ap_fs,
+        ) = self._compute_crossing_events(
+            V1, V2, V3, V4, V5, V6, V7, V8,
+            v_th_new, v_stn_new, v_gpe_new, v_gpi_new, v_d2_new, v_d1_new, v_rs_new, v_fs_new,
+        )
 
         # ---------------- Delays and synaptic filter updates ----------------
         (
@@ -1006,40 +1157,26 @@ class _Kumaravelu2016FusedBase(V):
             spk_rs_reset,
         )
 
-        peak = float(syn["gpeak"])
-        peak1 = float(syn["gpeak1"])
-        tau_alpha = float(syn["tau_alpha"])
-
-        S7_new, Z_th_ctx_new = self._alpha_step(self.S7, self.Z_th_ctx, d_th_ctx, peak, tau_alpha, dt)
-        S2b_new, Z_stn_gpi_new = self._alpha_step(self.S2b, self.Z_stn_gpi, d_stn_gpi, peak, tau_alpha, dt)
-        S3b_new, Z_gpe_gpi_new = self._alpha_step(self.S3b, self.Z_gpe_gpi, d_gpe_gpi, peak1, tau_alpha, dt)
-        S3c_new, Z_gpe_gpe_new = self._alpha_step(self.S3c, self.Z_gpe_gpe, d_gpe_gpe, peak1, tau_alpha, dt)
-        S4_new, Z_gpi_th_new = self._alpha_step(self.S4, self.Z_gpi_th, d_gpi_th, peak1, tau_alpha, dt)
-        S5_new, Z_d2_gpe_new = self._alpha_step(self.S5, self.Z_d2_gpe, d_d2_gpe, peak1, tau_alpha, dt)
-        S9_new, Z_d1_gpi_new = self._alpha_step(self.S9, self.Z_d1_gpi, d_d1_gpi, peak1, tau_alpha, dt)
-        S6a_d2_new, Z_ctx_d2_new = self._alpha_step(self.S6a, self.Z_ctx_d2, d_ctx_d2, peak, tau_alpha, dt)
-        # CTX_D1 has identical waveform/input but separate Z state for optional future divergence.
-        S6a_d1_new, Z_ctx_d1_new = self._alpha_step(self.S6a, self.Z_ctx_d1, d_ctx_d1, peak, tau_alpha, dt)
-        S6a_new = 0.5 * (S6a_d2_new + S6a_d1_new)
-
-        # Local cortical alpha ODEs: no axonal delay, threshold at -10 mV.
-        S1a_new, Z1a_new = self._alpha_step(self.S1a, self.Z1a, spk_rs_syn, peak, tau_alpha, dt)
-        S1b_new, Z1b_new = self._alpha_step(self.S1b, self.Z1b, spk_fs_syn, peak, tau_alpha, dt)
-
-        A_stn_gpe_a_new, B_stn_gpe_a_new, S2a_new = self._exp2_step(
-            self.A_stn_gpe_a, self.B_stn_gpe_a, d_stn_gpe, peak, 0.4, 2.5, dt
-        )
-        A_stn_gpe_n_new, B_stn_gpe_n_new, S2an_new = self._exp2_step(
-            self.A_stn_gpe_n, self.B_stn_gpe_n, d_stn_gpe, peak, 2.0, 67.0, dt
-        )
-        A_gpe_stn_new, B_gpe_stn_new, S3a_new = self._exp2_step(
-            self.A_gpe_stn, self.B_gpe_stn, d_gpe_stn, peak1, 0.4, 7.7, dt
-        )
-        A_ctx_stn_a_new, B_ctx_stn_a_new, S6b_new = self._exp2_step(
-            self.A_ctx_stn_a, self.B_ctx_stn_a, d_ctx_stn, peak, 0.5, 2.49, dt
-        )
-        A_ctx_stn_n_new, B_ctx_stn_n_new, S6bn_new = self._exp2_step(
-            self.A_ctx_stn_n, self.B_ctx_stn_n, d_ctx_stn, peak, 2.0, 90.0, dt
+        (
+            S7_new, Z_th_ctx_new,
+            S2b_new, Z_stn_gpi_new,
+            S3b_new, Z_gpe_gpi_new,
+            S3c_new, Z_gpe_gpe_new,
+            S4_new, Z_gpi_th_new,
+            S5_new, Z_d2_gpe_new,
+            S9_new, Z_d1_gpi_new,
+            S6a_new, Z_ctx_d2_new, Z_ctx_d1_new,
+            S1a_new, Z1a_new,
+            S1b_new, Z1b_new,
+            A_stn_gpe_a_new, B_stn_gpe_a_new, S2a_new,
+            A_stn_gpe_n_new, B_stn_gpe_n_new, S2an_new,
+            A_gpe_stn_new, B_gpe_stn_new, S3a_new,
+            A_ctx_stn_a_new, B_ctx_stn_a_new, S6b_new,
+            A_ctx_stn_n_new, B_ctx_stn_n_new, S6bn_new,
+        ) = self._update_synaptic_filters(
+            d_th_ctx, d_stn_gpe, d_stn_gpi, d_gpe_stn, d_gpe_gpi, d_gpe_gpe,
+            d_gpi_th, d_d2_gpe, d_d1_gpi, d_ctx_d2, d_ctx_d1, d_ctx_stn,
+            spk_rs_syn, spk_fs_syn, dt, syn,
         )
 
         # ---------------- Commit state updates ----------------
@@ -1079,6 +1216,265 @@ class _Kumaravelu2016FusedBase(V):
         )
 
 
+class _UncoalescedSpikeEventUpdates:
+    """Compute reset and crossing events as separate per-population operations."""
+
+    def _compute_reset_events(self, V7, V8):
+        rs_peak = float(self.cfg["ctx_rs"].get("v_peak", 30.0))
+        fs_peak = float(self.cfg["ctx_fs"].get("v_peak", 30.0))
+        rs_reset_hard = V7 >= rs_peak
+        fs_reset_hard = V8 >= fs_peak
+        spk_rs_reset = self._level_spike(V7, rs_peak)
+        spk_fs_reset = self._level_spike(V8, fs_peak)
+        return rs_reset_hard, fs_reset_hard, spk_rs_reset, spk_fs_reset
+
+    def _compute_crossing_events(
+        self,
+        V1, V2, V3, V4, V5, V6, V7, V8,
+        v_th_new, v_stn_new, v_gpe_new, v_gpi_new, v_d2_new, v_d1_new, v_rs_new, v_fs_new,
+    ):
+        spk_th = self._crossing_spike(V1, v_th_new, -10.0)
+        spk_stn = self._crossing_spike(V2, v_stn_new, -10.0)
+        spk_gpe = self._crossing_spike(V3, v_gpe_new, -10.0)
+        spk_gpi = self._crossing_spike(V4, v_gpi_new, -10.0)
+        spk_d2 = self._crossing_spike(V5, v_d2_new, -10.0)
+        spk_d1 = self._crossing_spike(V6, v_d1_new, -10.0)
+        spk_rs_syn = self._crossing_spike(V7, v_rs_new, -10.0)
+        spk_fs_syn = self._crossing_spike(V8, v_fs_new, -10.0)
+
+        ap_th = self._crossing_spike(V1, v_th_new, -20.0)
+        ap_stn = self._crossing_spike(V2, v_stn_new, -20.0)
+        ap_gpe = self._crossing_spike(V3, v_gpe_new, -20.0)
+        ap_gpi = self._crossing_spike(V4, v_gpi_new, -20.0)
+        ap_d2 = self._crossing_spike(V5, v_d2_new, -20.0)
+        ap_d1 = self._crossing_spike(V6, v_d1_new, -20.0)
+        ap_rs = self._crossing_spike(V7, v_rs_new, -20.0)
+        ap_fs = self._crossing_spike(V8, v_fs_new, -20.0)
+
+        return (
+            spk_th, spk_stn, spk_gpe, spk_gpi, spk_d2, spk_d1, spk_rs_syn, spk_fs_syn,
+            ap_th, ap_stn, ap_gpe, ap_gpi, ap_d2, ap_d1, ap_rs, ap_fs,
+        )
+
+
+class _CoalescedSpikeEventUpdates:
+    """Compute reset and threshold-crossing events with stacked population axes."""
+
+    def _thresholds_for(self, thresholds, stacked):
+        # ``stacked`` is shaped (..., n_streams, n).  Thresholds are static
+        # length-n_stream tensors registered during initialization.
+        return thresholds.reshape(*([1] * (stacked.ndim - 2)), thresholds.numel(), 1)
+
+    def _compute_reset_events(self, V7, V8):
+        v_ctx = torch.stack((V7, V8), dim=-2)
+        thresholds = self._thresholds_for(self.ctx_reset_thresholds, v_ctx)
+        reset_hard = v_ctx >= thresholds
+        reset_spikes = self._level_spikes(v_ctx, thresholds)
+        rs_reset_hard, fs_reset_hard = reset_hard.unbind(dim=-2)
+        spk_rs_reset, spk_fs_reset = reset_spikes.unbind(dim=-2)
+        return rs_reset_hard, fs_reset_hard, spk_rs_reset, spk_fs_reset
+
+    def _compute_crossing_events(
+        self,
+        V1, V2, V3, V4, V5, V6, V7, V8,
+        v_th_new, v_stn_new, v_gpe_new, v_gpi_new, v_d2_new, v_d1_new, v_rs_new, v_fs_new,
+    ):
+        v_old = torch.stack((V1, V2, V3, V4, V5, V6, V7, V8), dim=-2)
+        v_new = torch.stack((v_th_new, v_stn_new, v_gpe_new, v_gpi_new, v_d2_new, v_d1_new, v_rs_new, v_fs_new), dim=-2)
+        thresholds = self.spike_crossing_thresholds.reshape(
+            *([1] * (v_old.ndim - 2)), self.spike_crossing_thresholds.numel(), 1, 1
+        )
+        spikes_by_threshold = self._crossing_spikes(
+            v_old.unsqueeze(-3),
+            v_new.unsqueeze(-3),
+            thresholds,
+        )
+        syn_spikes = spikes_by_threshold.select(-3, 0)
+        ap_spikes = spikes_by_threshold.select(-3, 1)
+
+        (
+            spk_th, spk_stn, spk_gpe, spk_gpi,
+            spk_d2, spk_d1, spk_rs_syn, spk_fs_syn,
+        ) = syn_spikes.unbind(dim=-2)
+        ap_th, ap_stn, ap_gpe, ap_gpi, ap_d2, ap_d1, ap_rs, ap_fs = ap_spikes.unbind(dim=-2)
+        return (
+            spk_th, spk_stn, spk_gpe, spk_gpi, spk_d2, spk_d1, spk_rs_syn, spk_fs_syn,
+            ap_th, ap_stn, ap_gpe, ap_gpi, ap_d2, ap_d1, ap_rs, ap_fs,
+        )
+
+
+class _UncoalescedSynapseUpdates:
+    """Update each synaptic filter pathway separately.
+
+    This preserves the original fused implementation's call structure and can be
+    faster for some CPU/batch-size regimes where stacking/unbinding overhead is
+    not amortized.
+    """
+
+    def _update_synaptic_filters(
+        self,
+        d_th_ctx, d_stn_gpe, d_stn_gpi, d_gpe_stn, d_gpe_gpi, d_gpe_gpe,
+        d_gpi_th, d_d2_gpe, d_d1_gpi, d_ctx_d2, d_ctx_d1, d_ctx_stn,
+        spk_rs_syn, spk_fs_syn, dt, syn,
+    ):
+        peak = float(syn["gpeak"])
+        peak1 = float(syn["gpeak1"])
+        tau_alpha = float(syn["tau_alpha"])
+
+        S7_new, Z_th_ctx_new = self._alpha_step(self.S7, self.Z_th_ctx, d_th_ctx, peak, tau_alpha, dt)
+        S2b_new, Z_stn_gpi_new = self._alpha_step(self.S2b, self.Z_stn_gpi, d_stn_gpi, peak, tau_alpha, dt)
+        S3b_new, Z_gpe_gpi_new = self._alpha_step(self.S3b, self.Z_gpe_gpi, d_gpe_gpi, peak1, tau_alpha, dt)
+        S3c_new, Z_gpe_gpe_new = self._alpha_step(self.S3c, self.Z_gpe_gpe, d_gpe_gpe, peak1, tau_alpha, dt)
+        S4_new, Z_gpi_th_new = self._alpha_step(self.S4, self.Z_gpi_th, d_gpi_th, peak1, tau_alpha, dt)
+        S5_new, Z_d2_gpe_new = self._alpha_step(self.S5, self.Z_d2_gpe, d_d2_gpe, peak1, tau_alpha, dt)
+        S9_new, Z_d1_gpi_new = self._alpha_step(self.S9, self.Z_d1_gpi, d_d1_gpi, peak1, tau_alpha, dt)
+        S6a_d2_new, Z_ctx_d2_new = self._alpha_step(self.S6a, self.Z_ctx_d2, d_ctx_d2, peak, tau_alpha, dt)
+        # CTX_D1 has identical waveform/input but separate Z state for optional future divergence.
+        S6a_d1_new, Z_ctx_d1_new = self._alpha_step(self.S6a, self.Z_ctx_d1, d_ctx_d1, peak, tau_alpha, dt)
+        S6a_new = 0.5 * (S6a_d2_new + S6a_d1_new)
+
+        # Local cortical alpha ODEs: no axonal delay, threshold at -10 mV.
+        S1a_new, Z1a_new = self._alpha_step(self.S1a, self.Z1a, spk_rs_syn, peak, tau_alpha, dt)
+        S1b_new, Z1b_new = self._alpha_step(self.S1b, self.Z1b, spk_fs_syn, peak, tau_alpha, dt)
+
+        A_stn_gpe_a_new, B_stn_gpe_a_new, S2a_new = self._exp2_step(
+            self.A_stn_gpe_a, self.B_stn_gpe_a, d_stn_gpe, peak, 0.4, 2.5, dt
+        )
+        A_stn_gpe_n_new, B_stn_gpe_n_new, S2an_new = self._exp2_step(
+            self.A_stn_gpe_n, self.B_stn_gpe_n, d_stn_gpe, peak, 2.0, 67.0, dt
+        )
+        A_gpe_stn_new, B_gpe_stn_new, S3a_new = self._exp2_step(
+            self.A_gpe_stn, self.B_gpe_stn, d_gpe_stn, peak1, 0.4, 7.7, dt
+        )
+        A_ctx_stn_a_new, B_ctx_stn_a_new, S6b_new = self._exp2_step(
+            self.A_ctx_stn_a, self.B_ctx_stn_a, d_ctx_stn, peak, 0.5, 2.49, dt
+        )
+        A_ctx_stn_n_new, B_ctx_stn_n_new, S6bn_new = self._exp2_step(
+            self.A_ctx_stn_n, self.B_ctx_stn_n, d_ctx_stn, peak, 2.0, 90.0, dt
+        )
+
+        return (
+            S7_new, Z_th_ctx_new,
+            S2b_new, Z_stn_gpi_new,
+            S3b_new, Z_gpe_gpi_new,
+            S3c_new, Z_gpe_gpe_new,
+            S4_new, Z_gpi_th_new,
+            S5_new, Z_d2_gpe_new,
+            S9_new, Z_d1_gpi_new,
+            S6a_new, Z_ctx_d2_new, Z_ctx_d1_new,
+            S1a_new, Z1a_new,
+            S1b_new, Z1b_new,
+            A_stn_gpe_a_new, B_stn_gpe_a_new, S2a_new,
+            A_stn_gpe_n_new, B_stn_gpe_n_new, S2an_new,
+            A_gpe_stn_new, B_gpe_stn_new, S3a_new,
+            A_ctx_stn_a_new, B_ctx_stn_a_new, S6b_new,
+            A_ctx_stn_n_new, B_ctx_stn_n_new, S6bn_new,
+        )
+
+
+class _CoalescedSynapseUpdates:
+    """Update alpha and bi-exponential filters as pathway batches.
+
+    This reduces Python/torch dispatch overhead and often reduces GPU kernel
+    launch count by stacking the same filter family into stream dimensions.
+    The state layout is still committed back to the original named buffers so
+    recording and validation code remains unchanged.
+    """
+
+    def _update_synaptic_filters(
+        self,
+        d_th_ctx, d_stn_gpe, d_stn_gpi, d_gpe_stn, d_gpe_gpi, d_gpe_gpe,
+        d_gpi_th, d_d2_gpe, d_d1_gpi, d_ctx_d2, d_ctx_d1, d_ctx_stn,
+        spk_rs_syn, spk_fs_syn, dt, syn,
+    ):
+        # Alpha stream order:
+        #   S7, S2b, S3b, S3c, S4, S5, S9, S6a(ctx_d2),
+        #   S6a(ctx_d1), S1a, S1b.
+        s_alpha = torch.stack(
+            (
+                self.S7, self.S2b, self.S3b, self.S3c, self.S4, self.S5, self.S9,
+                self.S6a, self.S6a, self.S1a, self.S1b,
+            ),
+            dim=-2,
+        )
+        z_alpha = torch.stack(
+            (
+                self.Z_th_ctx, self.Z_stn_gpi, self.Z_gpe_gpi, self.Z_gpe_gpe,
+                self.Z_gpi_th, self.Z_d2_gpe, self.Z_d1_gpi, self.Z_ctx_d2,
+                self.Z_ctx_d1, self.Z1a, self.Z1b,
+            ),
+            dim=-2,
+        )
+        u_alpha = torch.stack(
+            (
+                d_th_ctx, d_stn_gpi, d_gpe_gpi, d_gpe_gpe, d_gpi_th, d_d2_gpe,
+                d_d1_gpi, d_ctx_d2, d_ctx_d1, spk_rs_syn, spk_fs_syn,
+            ),
+            dim=-2,
+        )
+        s_alpha_new, z_alpha_new = self._alpha_steps(s_alpha, z_alpha, u_alpha, dt)
+        (
+            S7_new, S2b_new, S3b_new, S3c_new, S4_new, S5_new, S9_new,
+            S6a_d2_new, S6a_d1_new, S1a_new, S1b_new,
+        ) = s_alpha_new.unbind(dim=-2)
+        (
+            Z_th_ctx_new, Z_stn_gpi_new, Z_gpe_gpi_new, Z_gpe_gpe_new,
+            Z_gpi_th_new, Z_d2_gpe_new, Z_d1_gpi_new, Z_ctx_d2_new,
+            Z_ctx_d1_new, Z1a_new, Z1b_new,
+        ) = z_alpha_new.unbind(dim=-2)
+        S6a_new = 0.5 * (S6a_d2_new + S6a_d1_new)
+
+        # Exp2 stream order:
+        #   STN->GPe AMPA, STN->GPe NMDA, GPe->STN,
+        #   CTX->STN AMPA, CTX->STN NMDA.
+        a_exp2 = torch.stack(
+            (
+                self.A_stn_gpe_a, self.A_stn_gpe_n, self.A_gpe_stn,
+                self.A_ctx_stn_a, self.A_ctx_stn_n,
+            ),
+            dim=-2,
+        )
+        b_exp2 = torch.stack(
+            (
+                self.B_stn_gpe_a, self.B_stn_gpe_n, self.B_gpe_stn,
+                self.B_ctx_stn_a, self.B_ctx_stn_n,
+            ),
+            dim=-2,
+        )
+        u_exp2 = torch.stack(
+            (d_stn_gpe, d_stn_gpe, d_gpe_stn, d_ctx_stn, d_ctx_stn),
+            dim=-2,
+        )
+        a_exp2_new, b_exp2_new, s_exp2_new = self._exp2_steps(a_exp2, b_exp2, u_exp2, dt)
+        (
+            A_stn_gpe_a_new, A_stn_gpe_n_new, A_gpe_stn_new,
+            A_ctx_stn_a_new, A_ctx_stn_n_new,
+        ) = a_exp2_new.unbind(dim=-2)
+        (
+            B_stn_gpe_a_new, B_stn_gpe_n_new, B_gpe_stn_new,
+            B_ctx_stn_a_new, B_ctx_stn_n_new,
+        ) = b_exp2_new.unbind(dim=-2)
+        S2a_new, S2an_new, S3a_new, S6b_new, S6bn_new = s_exp2_new.unbind(dim=-2)
+
+        return (
+            S7_new, Z_th_ctx_new,
+            S2b_new, Z_stn_gpi_new,
+            S3b_new, Z_gpe_gpi_new,
+            S3c_new, Z_gpe_gpe_new,
+            S4_new, Z_gpi_th_new,
+            S5_new, Z_d2_gpe_new,
+            S9_new, Z_d1_gpi_new,
+            S6a_new, Z_ctx_d2_new, Z_ctx_d1_new,
+            S1a_new, Z1a_new,
+            S1b_new, Z1b_new,
+            A_stn_gpe_a_new, B_stn_gpe_a_new, S2a_new,
+            A_stn_gpe_n_new, B_stn_gpe_n_new, S2an_new,
+            A_gpe_stn_new, B_gpe_stn_new, S3a_new,
+            A_ctx_stn_a_new, B_ctx_stn_a_new, S6b_new,
+            A_ctx_stn_n_new, B_ctx_stn_n_new, S6bn_new,
+        )
+
+
 class _EulerSynapseDiscretization:
     """Original explicit-Euler recursive synaptic filter update."""
 
@@ -1088,12 +1484,24 @@ class _EulerSynapseDiscretization:
         z_new = z + const * spike - dt * ((2.0 / tau) * z + (1.0 / (tau * tau)) * s_new)
         return s_new, z_new
 
+    def _alpha_steps(self, s, z, spike, dt):
+        tau = float(self.cfg["syn"].get("tau_alpha", 5.0))
+        s_new = s + dt * z
+        z_new = z + self.alpha_const_streams * spike - dt * ((2.0 / tau) * z + (1.0 / (tau * tau)) * s_new)
+        return s_new, z_new
+
     def _exp2_step(self, a, b, spike, peak: float, tau1: float, tau2: float, dt):
         tp = (tau1 * tau2) / (tau2 - tau1) * math.log(tau2 / tau1)
         factor = 1.0 / (-math.exp(-tp / tau1) + math.exp(-tp / tau2))
         inc = peak * factor * spike
         a_new = a + inc - dt * (a / tau1)
         b_new = b + inc - dt * (b / tau2)
+        return a_new, b_new, b_new - a_new
+
+    def _exp2_steps(self, a, b, spike, dt):
+        inc = self.exp2_inc_streams * spike
+        a_new = a * self.exp2_euler_decay1_streams + inc
+        b_new = b * self.exp2_euler_decay2_streams + inc
         return a_new, b_new, b_new - a_new
 
 
@@ -1109,6 +1517,15 @@ class _BackwardEulerSynapseDiscretization:
         z_new = z_h + const * spike
         return s_h, z_new
 
+    def _alpha_steps(self, s, z, spike, dt):
+        tau = float(self.cfg["syn"].get("tau_alpha", 5.0))
+        h = dt / tau
+        denom = (1.0 + h) * (1.0 + h)
+        z_h = (z - (dt / (tau * tau)) * s) / denom
+        s_h = s + dt * z_h
+        z_new = z_h + self.alpha_const_streams * spike
+        return s_h, z_new
+
     def _exp2_step(self, a, b, spike, peak: float, tau1: float, tau2: float, dt):
         tp = (tau1 * tau2) / (tau2 - tau1) * math.log(tau2 / tau1)
         factor = 1.0 / (-math.exp(-tp / tau1) + math.exp(-tp / tau2))
@@ -1117,31 +1534,44 @@ class _BackwardEulerSynapseDiscretization:
         b_new = b / (1.0 + dt / tau2) + inc
         return a_new, b_new, b_new - a_new
 
+    def _exp2_steps(self, a, b, spike, dt):
+        inc = self.exp2_inc_streams * spike
+        a_new = a * self.exp2_be_decay1_streams + inc
+        b_new = b * self.exp2_be_decay2_streams + inc
+        return a_new, b_new, b_new - a_new
+
 
 class _ExactSynapseDiscretization:
     """Exact homogeneous transition for linear alpha/bi-exponential filters.
 
-    Spike increments are applied after the homogeneous transition, matching the
-    current explicit-Euler event-order convention: an event changes the hidden
-    filter state at the end of the current step, and conductance appears on
-    subsequent steps rather than instantaneously.
+    All dt-dependent coefficients are computed once in ``set_dt``.  This keeps
+    the timestep hot path free of scalar ``torch.exp`` calls.
     """
 
     def _alpha_step(self, s, z, spike, peak: float, tau: float, dt):
-        const = peak / (tau * math.exp(-1.0))
-        h = dt / tau
-        decay = torch.exp(-h)
-        s_h = decay * ((1.0 + h) * s + dt * z)
-        z_h = decay * (-(dt / (tau * tau)) * s + (1.0 - h) * z)
+        const = self._alpha_const_peak1 if peak == self._syn_peak1 else self._alpha_const_peak
+        s_h = self._alpha_decay * ((1.0 + self._alpha_h) * s + self._alpha_dt * z)
+        z_h = self._alpha_decay * (-self._alpha_dt_over_tau2 * s + (1.0 - self._alpha_h) * z)
         z_new = z_h + const * spike
         return s_h, z_new
 
+    def _alpha_steps(self, s, z, spike, dt):
+        s_h = self._alpha_decay * ((1.0 + self._alpha_h) * s + self._alpha_dt * z)
+        z_h = self._alpha_decay * (-self._alpha_dt_over_tau2 * s + (1.0 - self._alpha_h) * z)
+        z_new = z_h + self.alpha_const_streams * spike
+        return s_h, z_new
+
     def _exp2_step(self, a, b, spike, peak: float, tau1: float, tau2: float, dt):
-        tp = (tau1 * tau2) / (tau2 - tau1) * math.log(tau2 / tau1)
-        factor = 1.0 / (-math.exp(-tp / tau1) + math.exp(-tp / tau2))
-        inc = peak * factor * spike
-        a_new = a * torch.exp(-dt / tau1) + inc
-        b_new = b * torch.exp(-dt / tau2) + inc
+        decay1, decay2, inc_factor = self._exp2_exact_coeffs[(peak, tau1, tau2)]
+        inc = inc_factor * spike
+        a_new = a * decay1 + inc
+        b_new = b * decay2 + inc
+        return a_new, b_new, b_new - a_new
+
+    def _exp2_steps(self, a, b, spike, dt):
+        inc = self.exp2_inc_streams * spike
+        a_new = a * self.exp2_exact_decay1_streams + inc
+        b_new = b * self.exp2_exact_decay2_streams + inc
         return a_new, b_new, b_new - a_new
 
 
@@ -1164,6 +1594,12 @@ class _Kumaravelu2016FusedHardSpikes(_Kumaravelu2016FusedBase):
     def _level_spike(self, v, threshold: float):
         return (v >= threshold).to(v.dtype)
 
+    def _crossing_spikes(self, v_old, v_new, thresholds):
+        return ((v_old < thresholds) & (v_new > thresholds)).to(v_new.dtype)
+
+    def _level_spikes(self, v, thresholds):
+        return (v >= thresholds).to(v.dtype)
+
 
 def make_kumaravelu_2016_fused(config: Mapping[str, Any]):
     """Return a configured fused VoltageProcess class.
@@ -1177,6 +1613,8 @@ def make_kumaravelu_2016_fused(config: Mapping[str, Any]):
     cfg = copy.deepcopy(dict(config))
     cfg.setdefault("differentiable_spikes", True)
     cfg.setdefault("synapse_discretization", "euler")
+    cfg.setdefault("synapse_update_mode", "uncoalesced")
+    cfg.setdefault("spike_update_mode", "uncoalesced")
     cfg.setdefault("delay_mode", "auto")
 
     spike_cls = (
@@ -1202,6 +1640,48 @@ def make_kumaravelu_2016_fused(config: Mapping[str, Any]):
     cfg["synapse_discretization"] = mode
     synapse_cls = synapse_cls_by_mode[mode]
 
+    update_mode = str(cfg.get("synapse_update_mode", "uncoalesced")).lower()
+    update_aliases = {
+        "separate": "uncoalesced",
+        "individual": "uncoalesced",
+        "batched": "coalesced",
+        "batch": "coalesced",
+        "stacked": "coalesced",
+    }
+    update_mode = update_aliases.get(update_mode, update_mode)
+    update_cls_by_mode = {
+        "uncoalesced": _UncoalescedSynapseUpdates,
+        "coalesced": _CoalescedSynapseUpdates,
+    }
+    if update_mode not in update_cls_by_mode:
+        raise ValueError(
+            "synapse_update_mode must be one of 'uncoalesced' or 'coalesced'; "
+            f"got {update_mode!r}."
+        )
+    cfg["synapse_update_mode"] = update_mode
+    update_cls = update_cls_by_mode[update_mode]
+
+    spike_update_mode = str(cfg.get("spike_update_mode", "uncoalesced")).lower()
+    spike_update_aliases = {
+        "separate": "uncoalesced",
+        "individual": "uncoalesced",
+        "batched": "coalesced",
+        "batch": "coalesced",
+        "stacked": "coalesced",
+    }
+    spike_update_mode = spike_update_aliases.get(spike_update_mode, spike_update_mode)
+    spike_update_cls_by_mode = {
+        "uncoalesced": _UncoalescedSpikeEventUpdates,
+        "coalesced": _CoalescedSpikeEventUpdates,
+    }
+    if spike_update_mode not in spike_update_cls_by_mode:
+        raise ValueError(
+            "spike_update_mode must be one of 'uncoalesced' or 'coalesced'; "
+            f"got {spike_update_mode!r}."
+        )
+    cfg["spike_update_mode"] = spike_update_mode
+    spike_update_cls = spike_update_cls_by_mode[spike_update_mode]
+
     delay_mode = str(cfg.get("delay_mode", "auto")).lower()
     delay_aliases = {
         "eval_circular": "auto",
@@ -1218,7 +1698,7 @@ def make_kumaravelu_2016_fused(config: Mapping[str, Any]):
         )
     cfg["delay_mode"] = delay_mode
 
-    class kumaravelu_2016_fused(synapse_cls, spike_cls):
+    class kumaravelu_2016_fused(spike_update_cls, update_cls, synapse_cls, spike_cls):
         CONFIG = cfg
         # Keep Dendra's rename cache local to this generated class.  The default
         # cache lives on the base mechanism class and is keyed only by alias,
