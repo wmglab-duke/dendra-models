@@ -109,6 +109,7 @@ Myelination scheme from Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 20
 |1 |`Yu2024`|
 |---|-----|
 ||Yu, Gene J., Federico Ranieri, Vincenzo Di Lazzaro, Marc A. Sommer, Angel V. Peterchev, and Warren M. Grill. “Circuits and Mechanisms for TMS-Induced Corticospinal Waves: Connecting Sensitivity Analysis to the Network Graph.” PLOS Computational Biology 20, no. 12 (2024): e1012640. https://doi.org/10.1371/journal.pcbi.1012640.
+
 |2 |`Kumaravelu2016`|
 |---|-----|
 ||Kumaravelu, Karthik, David T. Brocker, and Warren M. Grill. “A BIOPHYSICAL MODEL OF THE CORTEX-BASAL GANGLIA-THALAMUS NETWORK IN THE 6-OHDA LESIONED RAT MODEL OF PARKINSON’S DISEASE.” Journal of Computational Neuroscience 40, no. 2 (2016): 207–29. https://doi.org/10.1007/s10827-016-0593-9.
