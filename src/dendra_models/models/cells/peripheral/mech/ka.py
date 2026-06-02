@@ -42,7 +42,7 @@ class q(S):
     S.GLOBAL_SIGNED(
         shiftka=3.0,
         V0p5q=58.0,
-        S0p5q=7.9,
+        S0p5q=7.0,
         A_tauq=100.0,
         B_tauq=0.035,
         C_tauq=10.5,

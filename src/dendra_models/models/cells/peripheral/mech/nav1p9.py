@@ -106,7 +106,7 @@ class s(S):
         return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
 
     def alpha(self, v):
-        return self.A_as * sigmoid((v + self.B_as) / self.C_as)
+        return self.A_as * exp(-(v + self.B_as) / self.C_as)
 
     def beta(self, v):
         return self.A_bs * sigmoid((v + self.B_bs) / self.C_bs)
