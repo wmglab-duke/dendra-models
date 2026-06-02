@@ -6,7 +6,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class nacapump(M):
-    M.GLOBAL(
+    M.GLOBAL_SIGNED(
         KNaCa22=1.27324e-06,
         Q10NaCa=2.20,
         Q10TempA=22.85,

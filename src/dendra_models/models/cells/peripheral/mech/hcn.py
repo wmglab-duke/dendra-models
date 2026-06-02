@@ -8,7 +8,7 @@ class m(S):
     S.STATE("m")
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
-    S.GLOBAL(aq10=3.0)
+    S.GLOBAL_SIGNED(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
@@ -32,7 +32,7 @@ class n(S):
     S.STATE("n")
     S.DERIVATIVE("n' = (ninf - n) / taun")
     S.ASSIGNED("ninf", "taun")
-    S.GLOBAL(aq10=3.0)
+    S.GLOBAL_SIGNED(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
@@ -53,29 +53,47 @@ class n(S):
 
 class hcn(M):
     M.STATE(m, n)
-    M.GLOBALP(gbar=0.0001)
-    M.GLOBALN(ekna=-30.0)
+    M.GLOBAL_SIGNED(gbar=0.0001)
+    M.GLOBAL_SIGNED(ekna=-30.0)
 
     M.USEION("k", read=["ek"], write=["ik"])
     M.USEION("na", read=["ena"], write=["ina"])
 
+    def _g(self):
+        return self.gbar * (0.25 * self.n**3 + 0.75 * self.m**3)
+
     def ik(self, v):
-        g = self.gbar * (0.25 * self.n + 0.75 * self.m)
+        g = self._g()
         return (self.ekna - self.ena) * g * (v - self.ek) / (self.ek - self.ena)
 
     def ina(self, v):
-        g = self.gbar * (0.25 * self.n + 0.75 * self.m)
+        g = self._g()
         return (self.ekna - self.ek) * g * (v - self.ena) / (self.ena - self.ek)
-    
+
 
 class hcn_augmented(hcn):
-    hcn.GLOBAL(ik_aug=1.0, ina_aug=1.0)
+    hcn.GLOBAL_SIGNED(ik_aug=1.0, ina_aug=1.0)
+
+    def _g(self):
+        return self.gbar * (0.25 * self.n**3 + 0.75 * self.m**3)
 
     def ik(self, v):
-        g = self.gbar * (0.25 * self.n + 0.75 * self.m)
-        return (self.ekna - self.ena) * g * self.ik_aug * (v - self.ek) / (self.ek - self.ena)
-    
+        g = self._g()
+        return (
+            (self.ekna - self.ena)
+            * g
+            * self.ik_aug
+            * (v - self.ek)
+            / (self.ek - self.ena)
+        )
+
     def ina(self, v):
-        g = self.gbar * (0.25 * self.n + 0.75 * self.m)
-        return (self.ekna - self.ek) * g * self.ina_aug * (v - self.ena) / (self.ena - self.ek)
+        g = self._g()
+        return (
+            (self.ekna - self.ek)
+            * g
+            * self.ina_aug
+            * (v - self.ena)
+            / (self.ena - self.ek)
+        )
     

@@ -12,7 +12,7 @@ from dendra.models.mechanisms.ops import *
 class mh(S):
     has_q10 = True
     S.STATE("m", "h")
-    S.GLOBALP(aq10=2.3, bq10=21.0, cq10=10.0, celsius_const=34.0)
+    S.GLOBAL_SIGNED(aq10=2.3, bq10=21.0, cq10=10.0, celsius_const=34.0)
 
     S.DERIVATIVE(
         "m' = (minf - m) / taum",

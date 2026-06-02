@@ -3,7 +3,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class exp2NMDA(exp2syn):
-    exp2syn.GLOBAL(eta=0.2801, gamma=0.062, tau1=0.6, tau2=55.0, Mg=1.0)
+    exp2syn.GLOBAL_SIGNED(eta=0.2801, gamma=0.062, tau1=0.6, tau2=55.0, Mg=1.0)
     exp2syn.EXPLICIT("i")
     exp2syn.SAVE("i")
 

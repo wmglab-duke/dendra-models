@@ -16,7 +16,7 @@ def Exp(x):
 class m(S):
     has_q10 = True
     S.STATE("m")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         amA=1.86,
         amB=21.4,
         amC=10.3,
@@ -65,7 +65,7 @@ class m(S):
 class p(S):
     has_q10 = True
     S.STATE("p")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         ampA=0.01,
         ampB=27.0,
         ampC=10.2,
@@ -114,7 +114,7 @@ class p(S):
 class h(S):
     has_q10 = True
     S.STATE("h")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         ahA=0.062,
         ahB=114.0,
         ahC=11.0,
@@ -161,7 +161,7 @@ class h(S):
 class s(S):
     has_q10 = True
     S.STATE("s")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         asA=0.3,
         asB=-27.0,
         asC=-5.0,
@@ -206,7 +206,7 @@ class s(S):
 
 class axnode_myel(M):
     M.STATE(m, p, h, s)
-    M.GLOBAL(
+    M.GLOBAL_SIGNED(
         gnabar=3.0, gnapbar=0.01, gkbar=0.08, gl=0.007, ena=50.0, ek=-90.0, el=-90.0
     )
 

@@ -8,7 +8,7 @@ from dendra.models.mechanisms.ops import *
 class mh(S):
     has_q10 = True
     S.STATE("m", "h")
-    S.GLOBAL(aq10=2.3, bq10=22.0, cq10=10.0, vhalfm=-43.0, vhalfh=-67.0, km=8.0, kh=7.3)
+    S.GLOBAL_SIGNED(aq10=2.3, bq10=22.0, cq10=10.0, vhalfm=-43.0, vhalfh=-67.0, km=8.0, kh=7.3)
     S.PARAMETER(taum=0.6, tauh=1500.0)
 
     S.DERIVATIVE("m' = (minf - m) / taum", "h' = (hinf - h) / tauh")

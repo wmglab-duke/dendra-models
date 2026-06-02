@@ -10,7 +10,7 @@ class n(S):
     has_q10 = True
 
     S.STATE("n")
-    S.GLOBAL(aq10=3.3, bq10=22.0, cq10=10.0, k1=15.4, vh=35.0)
+    S.GLOBAL_SIGNED(aq10=3.3, bq10=22.0, cq10=10.0, k1=15.4, vh=35.0)
     S.DERIVATIVE("n' = (ninf - n) / ntau")
     S.ASSIGNED("ninf", "ntau")
 
@@ -32,7 +32,7 @@ class n(S):
 
 class kdrTiger(M):
     M.STATE(n)
-    M.GLOBAL(gbar=0.0001)
+    M.GLOBAL_SIGNED(gbar=0.0001)
     M.USEION("k", read=["ek"], write=["ik"])
 
     def ik(self, v):

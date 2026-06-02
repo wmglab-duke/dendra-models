@@ -3,7 +3,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class pas(M):
-    M.GLOBAL(e=-70.0)
+    M.GLOBAL_SIGNED(e=-70.0)
     M.RANGEP(g=0.001)
     M.NONSPECIFIC_CURRENT("i")
 

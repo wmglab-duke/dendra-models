@@ -8,7 +8,7 @@ class m(S):
     S.STATE("m")
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
-    S.GLOBAL(aq10=3.0)
+    S.GLOBAL_SIGNED(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
@@ -32,7 +32,7 @@ class h(S):
     S.STATE("h")
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
-    S.GLOBAL(aq10=3.0)
+    S.GLOBAL_SIGNED(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
@@ -53,7 +53,7 @@ class h(S):
 
 class cav12(M):
     M.STATE(m, h)
-    M.GLOBALP(gbar=0.0001)
+    M.GLOBAL_SIGNED(gbar=0.0001)
 
     M.USEION("ca", read=["eca"], write=["ica"])
 
@@ -62,7 +62,7 @@ class cav12(M):
 
 
 class cav12_augmented(cav12):
-    cav12.GLOBAL(aug=1.0)
+    cav12.GLOBAL_SIGNED(aug=1.0)
 
     def ica(self, v):
         return self.gbar * self.m**3 * self.h * (v - self.eca) * self.aug

@@ -8,7 +8,7 @@ class m(S):
     S.STATE("m")
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
-    S.GLOBAL(aq10=3.0)
+    S.GLOBAL_SIGNED(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 21.0) / 10.0)
@@ -17,7 +17,7 @@ class m(S):
         taum = (
             0.07 / (exp((v - 11.4) / 14) + exp(-1 * (v + 61) / 9.4))
             + 0.1 / (1 + exp(-1 * (v + 5.5) / 8))
-        ) / 2
+        )
         return taum / self.q10() / 2
     
     def minf(self, v):
@@ -35,7 +35,7 @@ class h(S):
     S.STATE("h")
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
-    S.GLOBAL(aq10=3.0)
+    S.GLOBAL_SIGNED(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 21.0) / 10.0)
@@ -56,7 +56,7 @@ class h(S):
 
 class nav7(M):
     M.STATE(m, h)
-    M.GLOBALP(gbar=0.12)
+    M.GLOBAL_SIGNED(gbar=0.12)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):
@@ -64,7 +64,7 @@ class nav7(M):
     
 
 class nav7_augmented(nav7):
-    nav7.GLOBAL(aug=1.0)
+    nav7.GLOBAL_SIGNED(aug=1.0)
     def ina(self, v):
         return self.gbar * self.m**3 * self.h * (v - self.ena) * self.aug
     

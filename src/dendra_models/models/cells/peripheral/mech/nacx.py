@@ -4,8 +4,8 @@ from dendra.models.mechanisms.ops import *
 
 
 class nacx(M):
-    M.GLOBALP(gbar=316.0)
-    M.GLOBAL(F=96500.0, R=8314.0, knaca=36e-9, dnaca=0.0036)
+    M.GLOBAL_SIGNED(gbar=316.0)
+    M.GLOBAL_SIGNED(F=96500.0, R=8314.0, knaca=36e-9, dnaca=0.0036)
     M.USEION("na", read=["nai", "nao"], write=["ina"])
     M.USEION("ca", read=["cai", "cao"], write=["ica"])
 
@@ -32,7 +32,7 @@ class nacx(M):
 
 
 class nacx_augmented(nacx):
-    nacx.GLOBAL(ina_aug=1.0, ica_aug=1.0)
+    nacx.GLOBAL_SIGNED(ina_aug=1.0, ica_aug=1.0)
 
     def ina(self, v):
         return 3 * self.inaca * self.ina_aug

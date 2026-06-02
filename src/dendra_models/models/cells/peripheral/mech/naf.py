@@ -9,7 +9,7 @@ class m(S):
     has_q10 = True
 
     S.STATE("m")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10nafm=2.30,
         Q10TempA=22.85,
         Q10TempB=10.0,
@@ -43,7 +43,7 @@ class h(S):
     has_q10 = True
 
     S.STATE("h")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10nafh=1.50,
         Q10TempA=22.85,
         Q10TempB=10.0,
@@ -75,7 +75,7 @@ class h(S):
 
 class l(S):
     S.STATE("l")
-    S.GLOBAL(V0p5l=40.0, S0p5l=1.5, A_taul=25.0, B_taul=4.5, C_taul=0.01, Vpl=-20.0)
+    S.GLOBAL_SIGNED(V0p5l=40.0, S0p5l=1.5, A_taul=25.0, B_taul=4.5, C_taul=0.01, Vpl=-20.0)
 
     S.DERIVATIVE("l' = (linf - l) / taul")
     S.ASSIGNED("linf", "taul")
@@ -91,7 +91,7 @@ class l(S):
 
 class naf(M):
     M.STATE(m, h, l)
-    M.GLOBAL(gbar=0.068967142)
+    M.GLOBAL_SIGNED(gbar=0.068967142)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):

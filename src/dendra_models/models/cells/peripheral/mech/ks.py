@@ -14,7 +14,7 @@ class s(S):
     has_q10 = True
 
     S.STATE("s")
-    S.GLOBAL(aq10=3.3, bq10=21.0, cq10=10.0)
+    S.GLOBAL_SIGNED(aq10=3.3, bq10=21.0, cq10=10.0)
     S.DERIVATIVE("s' = (sinf - s) / taus")
     S.ASSIGNED("sinf", "taus")
 
@@ -34,7 +34,7 @@ class f(S):
     has_q10 = True
 
     S.STATE("f")
-    S.GLOBAL(aq10=3.3, bq10=21.0, cq10=10.0)
+    S.GLOBAL_SIGNED(aq10=3.3, bq10=21.0, cq10=10.0)
     S.DERIVATIVE("f' = (finf - f) / tauf")
     S.ASSIGNED("finf", "tauf")
 
@@ -60,7 +60,7 @@ class f(S):
 
 class ks(M):
     M.STATE(s, f)
-    M.GLOBAL(gbar=0.0001)
+    M.GLOBAL_SIGNED(gbar=0.0001)
     M.USEION("k", read=["ek"], write=["ik"])
 
     def ik(self, v):

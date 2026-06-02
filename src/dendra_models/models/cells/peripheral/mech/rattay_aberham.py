@@ -7,7 +7,7 @@ class m(S):
     has_q10 = True
 
     S.STATE("m")
-    S.GLOBAL(amA=1.0, aq10=2.24659524757)
+    S.GLOBAL_SIGNED(amA=1.0, aq10=2.24659524757)
     S.DERIVATIVE("m' = (minf - m) / mtau")
     S.ASSIGNED("minf", "mtau")
 
@@ -36,7 +36,7 @@ class m(S):
 class h(S):
     has_q10 = True
     S.STATE("h")
-    S.GLOBAL(aq10=2.24659524757)
+    S.GLOBAL_SIGNED(aq10=2.24659524757)
     S.DERIVATIVE("h' = (hinf - h) / htau")
     S.ASSIGNED("hinf", "htau")
 
@@ -65,7 +65,7 @@ class h(S):
 class n(S):
     has_q10 = True
     S.STATE("n")
-    S.GLOBAL(anA=1.0, aq10=2.24659524757)
+    S.GLOBAL_SIGNED(anA=1.0, aq10=2.24659524757)
     S.DERIVATIVE("n' = (ninf - n) / ntau")
     S.ASSIGNED("ninf", "ntau")
 
@@ -93,7 +93,7 @@ class n(S):
 
 class rattay_aberham(M):
     M.STATE(m, h, n)
-    M.GLOBAL(gnabar=0.12, gkbar=0.036, gl=0.0003, el=-59.4)
+    M.GLOBAL_SIGNED(gnabar=0.12, gkbar=0.036, gl=0.0003, el=-59.4)
 
     M.USEION("na", read=["ena"], write=["ina"])
     M.USEION("k", read=["ek"], write=["ik"])

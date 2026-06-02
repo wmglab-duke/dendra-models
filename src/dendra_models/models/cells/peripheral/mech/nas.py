@@ -9,7 +9,7 @@ class m(S):
     has_q10 = True
 
     S.STATE("m")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10nasm=2.30,
         Q10TempA=22.85,
         Q10TempB=10.0,
@@ -43,7 +43,7 @@ class h(S):
     has_q10 = True
 
     S.STATE("h")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10nash=1.50,
         Q10TempA=22.85,
         Q10TempB=10.0,
@@ -75,7 +75,7 @@ class h(S):
 
 class nas(M):
     M.STATE(m, h)
-    M.GLOBAL(gbar=0.001043349)
+    M.GLOBAL_SIGNED(gbar=0.001043349)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):

@@ -8,7 +8,7 @@ class n(S):
     S.STATE("n")
     S.DERIVATIVE("n' = (ninf - n) / taun")
     S.ASSIGNED("ninf", "taun")
-    S.GLOBAL(aq10=3.0)
+    S.GLOBAL_SIGNED(aq10=3.0)
 
     def calc_q10(self):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
@@ -26,7 +26,7 @@ class n(S):
 
 class sk(M):
     M.STATE(n)
-    M.GLOBALP(gbar=0.0001)
+    M.GLOBAL_SIGNED(gbar=0.0001)
 
     M.USEION("k", read=["ek"], write=["ik"])
     M.USEION("ca", read=["cai"])
@@ -36,7 +36,7 @@ class sk(M):
 
 
 class sk_augmented(sk):
-    sk.GLOBAL(aug=1.0)
+    sk.GLOBAL_SIGNED(aug=1.0)
 
     def ik(self, v):
         return self.gbar * self.n * (v - self.ek) * self.aug

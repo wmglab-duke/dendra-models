@@ -9,7 +9,7 @@ class c(S):
     has_q10 = True
 
     S.STATE("c")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10kcac=2.30,
         Q10TempA=22.85,
         Q10TempB=10.0,
@@ -47,7 +47,7 @@ class c(S):
 
 class kca(M):
     M.STATE(c)
-    M.GLOBAL(gbar=0.000141471)
+    M.GLOBAL_SIGNED(gbar=0.000141471)
     M.USEION("k", read=["ek"], write=["ik"])
     M.USEION("ca", read=["cai"])
 

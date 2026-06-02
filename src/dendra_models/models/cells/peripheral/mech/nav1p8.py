@@ -11,7 +11,7 @@ class m(S):
     has_q10 = True
 
     S.STATE("m")
-    S.GLOBAL(aq10=2.5, bq10=22.0, cq10=10.0)
+    S.GLOBAL_SIGNED(aq10=2.5, bq10=22.0, cq10=10.0)
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
@@ -36,7 +36,7 @@ class h(S):
     has_q10 = True
 
     S.STATE("h")
-    S.GLOBAL(aq10=2.5, bq10=22.0, cq10=10.0)
+    S.GLOBAL_SIGNED(aq10=2.5, bq10=22.0, cq10=10.0)
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
 
@@ -56,7 +56,7 @@ class s(S):
     has_q10 = True
 
     S.STATE("s")
-    S.GLOBAL(aq10=2.5, bq10=22.0, cq10=10.0)
+    S.GLOBAL_SIGNED(aq10=2.5, bq10=22.0, cq10=10.0)
     S.DERIVATIVE("s' = (sinf - s) / taus")
     S.ASSIGNED("sinf", "taus")
 
@@ -84,7 +84,7 @@ class u(S):
     has_q10 = True
 
     S.STATE("u")
-    S.GLOBAL(aq10=2.5, bq10=22.0, cq10=10.0)
+    S.GLOBAL_SIGNED(aq10=2.5, bq10=22.0, cq10=10.0)
     S.DERIVATIVE("u' = (uinf - u) / tauu")
     S.ASSIGNED("uinf", "tauu")
 
@@ -110,7 +110,7 @@ class u(S):
 
 class nav1p8(M):
     M.STATE(m, h, s, u)
-    M.GLOBAL(gbar=0.0)
+    M.GLOBAL_SIGNED(gbar=0.001)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):

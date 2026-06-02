@@ -1,6 +1,7 @@
 from dendra.models.core import Unmyelinated
 from dendra.units import mm
 
+import torch
 
 from ..mech import (
     nav7,
@@ -22,9 +23,9 @@ from ..mech import (
     koi,
     nakpumpSchild,
     extrapump,
+    leak,
     get_mechanism,
 )
-
 
 import math
 
@@ -34,11 +35,52 @@ def pre_init(model):
     model.mech.extrapump.pumpik_param.zero_()
     model.mech.extrapump.pumpica_param.zero_()
 
+    model.mech.leak.gnaleak_param.zero_()
+    model.mech.leak.gkleak_param.zero_()
+    model.mech.leak.gcaleak_param.zero_()
+
+
+def _balance_one_ion(current, v_rest, erev, leak_param, pump_param):
+    # Reference logic:
+    # g = -i_ion / (v_rest - E_ion)
+    # if g is positive, use leak conductance;
+    # if g is negative, use fixed extrapump current.
+    g = -current / (v_rest - erev)
+
+    if torch.as_tensor(g).flatten()[0] < 0:
+        pump_param.copy_(-current)
+        leak_param.zero_()
+    else:
+        leak_param.copy_(g)
+        pump_param.zero_()
+
 
 def balance(model):
-    model.mech.extrapump.pumpina_param.copy_(-model.mech.na_ion.ina.flatten()[0])
-    model.mech.extrapump.pumpik_param.copy_(-model.mech.k_ion.ik.flatten()[0])
-    model.mech.extrapump.pumpica_param.copy_(-model.mech.ca_ion.ica.flatten()[0])
+    v_rest = model.v_init
+
+    _balance_one_ion(
+        model.mech.na_ion.ina.flatten()[0],
+        v_rest,
+        model.mech.na_ion.ena.flatten()[0],
+        model.mech.leak.gnaleak_param,
+        model.mech.extrapump.pumpina_param,
+    )
+
+    _balance_one_ion(
+        model.mech.k_ion.ik.flatten()[0],
+        v_rest,
+        model.mech.k_ion.ek.flatten()[0],
+        model.mech.leak.gkleak_param,
+        model.mech.extrapump.pumpik_param,
+    )
+
+    _balance_one_ion(
+        model.mech.ca_ion.ica.flatten()[0],
+        v_rest,
+        model.mech.ca_ion.eca.flatten()[0],
+        model.mech.leak.gcaleak_param,
+        model.mech.extrapump.pumpica_param,
+    )
 
 
 class ThioAutonomic2024(Unmyelinated):
@@ -89,9 +131,10 @@ class ThioAutonomic2024(Unmyelinated):
         self.insert(ka14, gbar=0.000024)
         self.insert(sk, gbar=0.000006)
         self.insert(nacx, gbar=0.000210)
-        self.insert(nakpumpSchild, INaKmax22=0.056316)
+        self.insert(nakpumpSchild, gbar_INaKmax22=0.056316)
         self.insert(naoi)
         self.insert(koi)
+        self.insert(leak)
         self.insert(extrapump)
 
         self.equilibria(ena=ena, ek=ek)
@@ -156,6 +199,7 @@ class ThioCutaneous2024(Unmyelinated):
         self.insert(nakpumpSchild, gbar_INaKmax22=0.000456)
         self.insert(naoi)
         self.insert(koi)
+        self.insert(leak)
         self.insert(extrapump)
 
         self.equilibria(ena=ena, ek=ek)

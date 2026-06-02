@@ -8,7 +8,7 @@ from dendra.models.mechanisms.ops import *
 class m(S):
     has_q10 = True
     S.STATE("m")
-    S.GLOBALP(
+    S.GLOBAL_SIGNED(
         aq10=2.3,
         bq10=21.0,
         cq10=10.0,
@@ -17,7 +17,7 @@ class m(S):
         mb1=0.124,
         mb2=6.0,
     )
-    S.GLOBALN(mshift=-38.0)
+    S.GLOBAL_SIGNED(mshift=-38.0)
 
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
@@ -56,14 +56,14 @@ class m(S):
 class h(S):
     has_q10 = True
     S.STATE("h")
-    S.GLOBALP(
+    S.GLOBAL_SIGNED(
         aq10=2.3,
         bq10=21.0,
         cq10=10.0,
         ha2=6.0,
         hb2=6.0,
     )
-    S.GLOBALN(
+    S.GLOBAL_SIGNED(
         hshift=-66.0,
         ha1=-0.015,
         hb1=-0.015,

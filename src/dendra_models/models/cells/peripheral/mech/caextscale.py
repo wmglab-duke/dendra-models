@@ -9,7 +9,7 @@ from dendra.models.mechanisms.ops import *
 
 class cao(S):
     S.STATE("cao")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         lseg=1.0,
         txfer=4511.0,
         FARADAY=96500.0,
@@ -29,7 +29,7 @@ class cao(S):
 
 class cao_augmented(S):
     S.STATE("cao")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         lseg=1.0,
         txfer=4511.0,
         FARADAY=96500.0,

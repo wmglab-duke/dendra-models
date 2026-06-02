@@ -9,7 +9,7 @@ class x(S):
     has_q10 = True
 
     S.STATE("x")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10kds=1.93,
         Q10TempA=22.85,
         Q10TempB=10,
@@ -44,7 +44,7 @@ class y(S):
     has_q10 = True
 
     S.STATE("y")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10kds=1.93,
         Q10TempA=22.85,
         Q10TempB=10,
@@ -71,7 +71,7 @@ class y(S):
 
 class kds(M):
     M.STATE(x, y)
-    M.GLOBAL(gbar=0.000106103)
+    M.GLOBAL_SIGNED(gbar=0.000106103)
     M.USEION("k", read=["ek"], write=["ik"])
 
     def ik(self, v):

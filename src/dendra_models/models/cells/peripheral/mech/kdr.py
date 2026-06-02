@@ -10,7 +10,7 @@ class l(S):
 
     S.STATE("l")
 
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         zetal=2.0,
         gml=1.0,
         vhalfl=-61.0,
@@ -62,7 +62,7 @@ class n(S):
 
     S.STATE("n")
 
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         zetan=-5.0,
         gmn=0.4,
         vhalfn=-32.0,
@@ -112,7 +112,7 @@ class n(S):
 class kdr(M):
     M.STATE(l, n)
 
-    M.GLOBAL(gkbar=0.003)
+    M.GLOBAL_SIGNED(gkbar=0.003)
 
     M.USEION("k", read=["ek"], write=["ik"])
 

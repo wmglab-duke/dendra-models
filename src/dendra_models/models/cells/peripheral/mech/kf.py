@@ -11,7 +11,7 @@ class h(S):
     has_q10 = True
 
     S.STATE("h")
-    S.GLOBAL(aq10=3.3, bq10=23, cq10=10, vhh=-49.9, kh=4.6, shift=-15.0)
+    S.GLOBAL_SIGNED(aq10=3.3, bq10=23, cq10=10, vhh=-49.9, kh=4.6, shift=-15.0)
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
 
@@ -32,7 +32,7 @@ class m(S):
     has_q10 = True
 
     S.STATE("m")
-    S.GLOBAL(aq10=3.3, bq10=23.0, cq10=10.0, vhm=-5.4, km=16.4, shift=-15.0)
+    S.GLOBAL_SIGNED(aq10=3.3, bq10=23.0, cq10=10.0, vhm=-5.4, km=16.4, shift=-15.0)
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
@@ -50,7 +50,7 @@ class m(S):
 
 class kf(M):
     M.STATE(m, h)
-    M.GLOBAL(gbar=0.0001)
+    M.GLOBAL_SIGNED(gbar=0.0001)
     M.USEION("k", read=["ek"], write=["ik"])
 
     def ik(self, v):

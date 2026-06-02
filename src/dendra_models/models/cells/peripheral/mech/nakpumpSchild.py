@@ -6,14 +6,14 @@ from dendra.models.mechanisms.ops import *
 
 
 class nakpumpSchild(M):
-    M.GLOBAL(
+    M.GLOBAL_SIGNED(
         Kmnai=5.46,
         Kmko=0.621,
         Q10NaK=1.16,
         Q10TempA=22.85,
         Q10TempB=10.0,
     )
-    M.GLOBALP(gbar_INaKmax22=0.009726135)
+    M.GLOBAL_SIGNED(gbar_INaKmax22=0.009726135)
 
     M.USEION("k", read=["ko"], write=["ik"])
     M.USEION("na", read=["nai"], write=["ina"])
@@ -44,7 +44,7 @@ class nakpumpSchild(M):
 
 
 class nakpumpSchild_augmented(nakpumpSchild):
-    nakpumpSchild.GLOBAL(ina_aug=1.0, ik_aug=1.0)
+    nakpumpSchild.GLOBAL_SIGNED(ina_aug=1.0, ik_aug=1.0)
 
     def ina(self, v):
         return 3 * self.ink * self.ina_aug

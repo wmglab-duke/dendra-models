@@ -4,7 +4,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class z(S):
-    S.GLOBAL(ztau=1.0)
+    S.GLOBAL_SIGNED(ztau=1.0)
     S.STATE("z")
     S.DERIVATIVE("z' = (zinf - z) / ztau")
     S.ASSIGNED("zinf")

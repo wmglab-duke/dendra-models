@@ -9,7 +9,7 @@ class m(S):
     has_q10 = True
 
     S.STATE("m")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10nafm=2.30,
         Q10TempA=22.0,
         Q10TempB=10.0,
@@ -42,7 +42,7 @@ class h(S):
     has_q10 = True
 
     S.STATE("h")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10nafh=1.50,
         Q10TempA=22.0,
         Q10TempB=10.0,
@@ -73,7 +73,7 @@ class h(S):
 
 class naf97mean(M):
     M.STATE(m, h)
-    M.GLOBAL(gbar=0.068967142)
+    M.GLOBAL_SIGNED(gbar=0.068967142)
     M.USEION("na", read=["ena"], write=["ina"])
 
     def ina(self, v):

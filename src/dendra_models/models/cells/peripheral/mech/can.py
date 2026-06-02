@@ -9,7 +9,7 @@ class d(S):
     has_q10 = True
 
     S.STATE("d")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10can=4.30,
         Q10TempA=22.85,
         Q10TempB=10.0,
@@ -43,7 +43,7 @@ class f1(S):
     has_q10 = True
 
     S.STATE("f1")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10can=4.30,
         Q10TempA=22.85,
         Q10TempB=10.0,
@@ -78,7 +78,7 @@ class f2(S):
     has_q10 = True
 
     S.STATE("f2")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         Q10can=4.30,
         Q10TempA=22.85,
         Q10TempB=10.0,
@@ -116,7 +116,7 @@ class f2(S):
 
 class can(M):
     M.STATE(d, f1, f2)
-    M.GLOBAL(gbar=0.000106103, R=8314.0, z=2, ecaoffset=78.7, F=96500)
+    M.GLOBAL_SIGNED(gbar=0.000106103, R=8314.0, z=2, ecaoffset=78.7, F=96500)
     M.USEION("ca", read=["cao", "cai"], write=["ica"])
 
     @property

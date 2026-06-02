@@ -126,3 +126,7 @@ venv/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+*.zip
+*.tar.gz
+*.tar.bz2

@@ -9,7 +9,7 @@ class m(S):
     has_q10 = True
 
     S.STATE("m")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         aq10=3.0,
         bq10=20.0,
         cq10=10.0,
@@ -52,7 +52,7 @@ class h(S):
     has_q10 = True
 
     S.STATE("h")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         aq10=3.0,
         bq10=20.0,
         cq10=10.0,
@@ -95,7 +95,7 @@ class n(S):
     has_q10 = True
 
     S.STATE("n")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         aq10=3.0,
         bq10=20.0,
         cq10=10.0,
@@ -138,7 +138,7 @@ class p(S):
     has_q10 = True
 
     S.STATE("p")
-    S.GLOBAL(
+    S.GLOBAL_SIGNED(
         aq10=3.0,
         bq10=20.0,
         cq10=10.0,
@@ -180,7 +180,7 @@ class p(S):
 class fh(M):
     M.STATE(m, h, n, p)
 
-    M.GLOBAL(
+    M.GLOBAL_SIGNED(
         pnabar=8e-3,
         ppbar=0.54e-3,
         pkbar=1.2e-3,

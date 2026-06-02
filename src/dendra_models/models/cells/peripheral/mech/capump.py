@@ -6,7 +6,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class capump(M):
-    M.GLOBAL(
+    M.GLOBAL_SIGNED(
         ICaPmax22=0.000859437, KmCa=0.0005, Q10CaP=2.30, Q10TempA=22.0, Q10TempB=10.0
     )
     M.USEION("ca", read=["cai"], write=["ica"])
