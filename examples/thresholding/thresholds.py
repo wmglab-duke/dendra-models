@@ -29,6 +29,12 @@ parser.add_argument(
     help="Plot predicted thresholds & error histogram.",
 )
 
+parser.add_argument(
+    "--cuda",
+    action="store_true",
+    help="Use CUDA for computation.",
+)
+
 args = parser.parse_args()
 
 
@@ -51,12 +57,14 @@ if __name__ == "__main__":
         shape=(n, 1000, n_comp),
     )
     if args.preload:
-        fp = np.array(fp)
+        fp = np.array(fp).transpose(1, 0, 2)
 
     nrn_thresh_path = f"{directory}/example_thresholds_{field}.npy"
     thresh_nrn = np.load(nrn_thresh_path).flatten()
 
-    mrg = SMF(diameters=diams, n_node=n_comp).cuda()
+    mrg = SMF(diameters=diams, n_node=n_comp)
+    if args.cuda:
+        mrg = mrg.cuda()
 
     dt = 0.005
     active = Active(dt=dt)

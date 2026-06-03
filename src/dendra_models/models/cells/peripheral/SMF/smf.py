@@ -5,7 +5,7 @@ import torch
 from dendra.models.core import Myelinated
 from dendra.models.integrators import eulerv1
 
-from ..mech import axnode_myel
+from .mech import axnode_myel
 
 
 ic = {"m": 0.0732093, "h": 0.62069505, "p": 0.20260409, "s": 0.04302994}
