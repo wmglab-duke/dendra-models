@@ -2,7 +2,7 @@
 Izhikevich cortical mechanisms for the Kumaravelu et al. CTX-BG-TH model.
 
 These are Dendra VoltageProcess mechanisms intended for use in a Population
-constructed with ax.scnv(). The physical membrane voltage is stored in the
+constructed with dn.scnv(). The physical membrane voltage is stored in the
 mechanism state ``v_izh`` and returned by update_v(), matching the Esser-style
 pattern in the supplied yu_2024 implementation.
 """

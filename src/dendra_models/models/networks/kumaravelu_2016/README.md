@@ -29,16 +29,16 @@ p["corstim"] = 0.0  # used for the MATLAB GPe baseline-current modulation
 net = Kumaravelu2016(p)
 ```
 
-The builder returns a single `ax.Network` with two populations:
+The builder returns a single `dn.Network` with two populations:
 
 - `net.hh`: TH, STN, GPe, GPi, StrD2, StrD1; standard Dendra membrane-voltage integration.
-- `net.ctx`: CTX_RS and CTX_FS; `ax.scnv()` integration because the cortical voltage is stored as the mechanism state `v_izh` and returned by `update_v()`.
+- `net.ctx`: CTX_RS and CTX_FS; `dn.scnv()` integration because the cortical voltage is stored as the mechanism state `v_izh` and returned by `update_v()`.
 
 ## Key design choices
 
-1. The network builder labels subranges, inserts renamed mechanisms on those labels, constructs `ax.Network`, and only then binds cross-mechanism references using `setreference`.
+1. The network builder labels subranges, inserts renamed mechanisms on those labels, constructs `dn.Network`, and only then binds cross-mechanism references using `setreference`.
 
-2. **Cortical Izhikevich cells use `setreference` for synaptic currents.** Because `ax.scnv()` bypasses ordinary `model.v` updates, the RS and FS voltage-state equations explicitly read saved synaptic currents:
+2. **Cortical Izhikevich cells use `setreference` for synaptic currents.** Because `dn.scnv()` bypasses ordinary `model.v` updates, the RS and FS voltage-state equations explicitly read saved synaptic currents:
 
 ```python
 mc.ctx_rs.DE["regular_spiking_cortex_states"].setreference("i_ie", lambda: mc.FS_RS.i_)
@@ -86,7 +86,7 @@ You do not need to force the HH compartments to have area 1. The HH intrinsic an
 The HH population is intentionally constructed with one initial voltage per compartment/cell:
 
 ```python
-hh_pop = ax.Population(C=len(hh_v_init), v_init=hh_v_init)
+hh_pop = dn.Population(C=len(hh_v_init), v_init=hh_v_init)
 ```
 
 This requires Dendra `Population` / `Integrator.init_v` support for scalar or length-`model.nc` `v_init`. The companion `dendra_vinit_patch.zip` adds that support. With the patch, the sampled MATLAB-style initial voltages are broadcast/reshaped at initialization time rather than flattened into a scalar workaround.
@@ -123,7 +123,7 @@ model.initialize()
 model.run(tstop=2000.0, dt=0.01, progressbar=False)
 ```
 
-The fused builder returns a single `ax.Population`, not an `ax.Network`.  The
+The fused builder returns a single `dn.Population`, not a `dn.Network`.  The
 population has `C = 8*n` exposed voltage entries and labels:
 
 ```text
@@ -131,7 +131,7 @@ TH, STN, GPe, GPi, StrD2, StrD1, CTX_RS, CTX_FS
 ```
 
 All dynamics are implemented in one `VoltageProcess` inserted on this population
-and run with `ax.scnv()`.  The mechanism owns the actual voltage states, all HH
+and run with `dn.scnv()`.  The mechanism owns the actual voltage states, all HH
 and Izhikevich state variables, synaptic conductance/filter variables, delay
 queues, routing permutations, and spike indicators.  This removes Dendra
 `NetCon`, per-synapse event queues, point-process area scaling, and current-map
