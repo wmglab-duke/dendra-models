@@ -1,3 +1,4 @@
+from types import MethodType
 import numpy as np
 
 import dendra as dn
@@ -71,11 +72,19 @@ def eliminate_self_connections(pre_idx: np.ndarray, post_idx: np.ndarray, *, ret
         return pre_idx[keep], post_idx[keep], keep
     return pre_idx[keep], post_idx[keep]
 
+def set_references(net):
+    m = net.cells.mech
+    m.esser_mech.DE['esser_states'].setreference('i_ampa', lambda: m.AMPA.i_)
+    m.esser_mech.DE['esser_states'].setreference('i_nmda', lambda: m.NMDA.i_)
+    m.esser_mech.DE['esser_states'].setreference('i_gaba_a', lambda: m.GABAA.i_)
+    m.esser_mech.DE['esser_states'].setreference('i_gaba_b', lambda: m.GABAB.i_)
+
 # network builder
 
-def yu_2024(params=None, rng=None):
+def yu_2024(params=None, rng=None, **kwargs) -> dn.Network:
     if params is None:
-        params = parameters
+        params = parameters.copy()
+    params.update(kwargs)
     if rng is None:
         rng = np.random.default_rng(params["seed"])
 
@@ -188,12 +197,10 @@ def yu_2024(params=None, rng=None):
     else:
         net = dn.Network({'cells':p}, netstim=ns).double()
 
+    net.set_references = MethodType(set_references, net)
+
     # set references
-    m = net.cells.mech
-    m.esser_mech.DE['esser_states'].setreference('i_ampa', lambda: m.AMPA.i_)
-    m.esser_mech.DE['esser_states'].setreference('i_nmda', lambda: m.NMDA.i_)
-    m.esser_mech.DE['esser_states'].setreference('i_gaba_a', lambda: m.GABAA.i_)
-    m.esser_mech.DE['esser_states'].setreference('i_gaba_b', lambda: m.GABAB.i_)
+    net.set_references()
 
     # connect noise netstims
 
