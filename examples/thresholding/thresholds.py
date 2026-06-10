@@ -1,5 +1,7 @@
 import argparse
 
+import dendra as dn
+
 import numpy as np
 import torch
 
