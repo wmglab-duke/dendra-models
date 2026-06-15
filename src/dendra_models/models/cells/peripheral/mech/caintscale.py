@@ -9,6 +9,7 @@ from dendra.models.mechanisms.ops import *
 
 class oc_cai(S):
     S.STATE("oc", "cai")
+    S.METHOD("bufferimplicit", bound="oc", free="cai")
     S.GLOBAL_SIGNED(lseg=1e-3, ku=100.0, kr=0.238, nb=4.0, Bi=0.001, FARADAY=96500.0)
     S.BUFFER("SA", "Vol")
 
@@ -24,6 +25,7 @@ class oc_cai(S):
 
 class oc_cai_augmented(S):
     S.STATE("oc", "cai")
+    S.METHOD("bufferimplicit", bound="oc", free="cai")
     S.GLOBAL_SIGNED(
         lseg=1e-3,
         ku=100.0,

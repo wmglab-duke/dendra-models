@@ -193,9 +193,9 @@ def yu_2024(params=None, rng=None, **kwargs) -> dn.Network:
 
     fp32 = params.get("fp32", False)
     if fp32:
-        net = dn.Network({'cells':p}, netstim=ns).float()
+        net = dn.Network({'cells':p}, netstim=ns, netcon_delay_backend=params["netcon_delay_backend"]).float()
     else:
-        net = dn.Network({'cells':p}, netstim=ns).double()
+        net = dn.Network({'cells':p}, netstim=ns, netcon_delay_backend=params["netcon_delay_backend"]).double()
 
     net.set_references = MethodType(set_references, net)
 

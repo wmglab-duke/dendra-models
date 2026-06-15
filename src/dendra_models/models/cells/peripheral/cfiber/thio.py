@@ -110,8 +110,8 @@ class ThioAutonomic2024(Unmyelinated):
         ena = ((R * (celsius + 273.15)) / F) * math.log(nao / nai)
         nai_real = 11.4
 
-        self.ion_style("na", 3, 2, 1, 1, 0)
-        self.ion_style("k", 3, 2, 1, 1, 0)
+        self.ion_style("na", 1, 1)
+        self.ion_style("k", 1, 1)
 
         self.register_pre_initialize_hook(pre_init)
         self.register_post_initialize_hook(balance)
@@ -175,8 +175,8 @@ class ThioCutaneous2024(Unmyelinated):
         ena = ((R * (celsius + 273.15)) / F) * math.log(nao / nai)
         nai_real = 11.4
 
-        self.ion_style("na", 3, 2, 1, 1, 0)
-        self.ion_style("k", 3, 2, 1, 1, 0)
+        self.ion_style("na", 1, 1)
+        self.ion_style("k", 1, 1)
 
         self.register_pre_initialize_hook(pre_init)
         self.register_post_initialize_hook(balance)
@@ -241,8 +241,8 @@ class ThioCutaneousAugmented2024(Unmyelinated):
         ena = ((R * (celsius + 273.15)) / F) * math.log(nao / nai)
         nai_real = 11.4
 
-        self.ion_style("na", 3, 2, 1, 1, 0)
-        self.ion_style("k", 3, 2, 1, 1, 0)
+        self.ion_style("na", 1, 1)
+        self.ion_style("k", 1, 1)
 
         self.register_pre_initialize_hook(pre_init)
         self.register_post_initialize_hook(balance)
@@ -305,8 +305,8 @@ class ThioCutaneousReduced(Unmyelinated):
         ena = ((R * (celsius + 273.15)) / F) * math.log(nao / nai)
         nai_real = 11.4
 
-        self.ion_style("na", 3, 2, 1, 1, 0)
-        self.ion_style("k", 3, 2, 1, 1, 0)
+        self.ion_style("na", 1, 1)
+        self.ion_style("k", 1, 1)
 
         self.register_pre_initialize_hook(pre_init)
         self.register_post_initialize_hook(balance)

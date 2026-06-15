@@ -1,5 +1,8 @@
 params = {}
 
+# network synapse configuration
+params["netcon_delay_backend"] = "dense" # options: "dense", "sparse_calendar"
+
 # globals
 params["syn_delay"] = 0.5
 params["conduction_velocity"] = 570 # units: microns/ms

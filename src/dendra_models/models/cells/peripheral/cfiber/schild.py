@@ -47,8 +47,8 @@ class Schild1997(Unmyelinated):
         nai = 8.9
         ena = ((R * (celsius + 273.15)) / F) * math.log(nao / nai)
 
-        self.ion_style("na", 1, 2, 0, 0, 0)
-        self.ion_style("k", 1, 2, 0, 0, 0)
+        self.ion_style("na", 0, 0)
+        self.ion_style("k", 0, 0)
 
         self.insert(leakSchild, gbna=1.8261e-05, gbca=9.13049e-06)
         self.insert(kd, gbar=0.001956534)
@@ -93,8 +93,8 @@ class Schild1994(Unmyelinated):
         nai = 8.9
         ena = ((R * (celsius + 273.15)) / F) * math.log(nao / nai)
 
-        self.ion_style("na", 1, 2, 0, 0, 0)
-        self.ion_style("k", 1, 2, 0, 0, 0)
+        self.ion_style("na", 0, 0)
+        self.ion_style("k", 0, 0)
 
         self.insert(leakSchild)
         self.insert(kd)
