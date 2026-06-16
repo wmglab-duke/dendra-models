@@ -91,6 +91,9 @@ def yu_2024(params=None, rng=None, **kwargs) -> dn.Network:
     else:
         params = deepcopy(params)
 
+    device = params.get("device", "cpu")
+    dtype = params.get("dtype", "float32")
+
     params.update(kwargs)
 
     if rng is None:
@@ -145,6 +148,7 @@ def yu_2024(params=None, rng=None, **kwargs) -> dn.Network:
     # instantiate pop & biophysics
 
     idx = 0
+
     p = dn.Population(C=n_cells_total, v_init=-77.5, integrator=dn.scnv())
 
     for name, n in params['cells']['n_total'].items():
@@ -200,9 +204,7 @@ def yu_2024(params=None, rng=None, **kwargs) -> dn.Network:
     p.insert(GABAA, **params['syn']['GABAA'])
     p.insert(GABAB, **params['syn']['GABAB'])
 
-    dtype = getattr(torch, params.get("dtype", "float32"))
-    net = dn.Network({'cells':p}, netstim=ns, netcon_delay_backend=params["netcon_delay_backend"]).to(dtype)
-
+    net = dn.Network({'cells':p}, netstim=ns, netcon_delay_backend=params["netcon_delay_backend"])
     net.set_references = MethodType(set_references, net)
 
     # set references

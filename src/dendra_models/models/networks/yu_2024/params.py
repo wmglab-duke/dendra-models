@@ -10,7 +10,6 @@ params["pscale"] = 1.0
 params["seed"] = 1234
 params["forbid_autapses"] = True
 params["scale"] = 1 # scale the whole network
-params["dtype"] = "float32"
 
 # geometry & number
 
