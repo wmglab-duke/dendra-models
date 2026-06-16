@@ -1,6 +1,8 @@
 from types import MethodType
 import numpy as np
 
+from copy import deepcopy
+
 import dendra as dn
 from dendra.models.mod import exp2syn
 
@@ -83,8 +85,12 @@ def set_references(net):
 
 def yu_2024(params=None, rng=None, **kwargs) -> dn.Network:
     if params is None:
-        params = parameters.copy()
+        params = deepcopy(parameters)
+    else:
+        params = deepcopy(params)
+
     params.update(kwargs)
+
     if rng is None:
         rng = np.random.default_rng(params["seed"])
 
