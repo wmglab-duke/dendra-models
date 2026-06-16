@@ -11,6 +11,8 @@ from .mechanisms.synapses import exp2NMDA
 from .params import params as parameters
 from .utils import PairwiseDistanceStore, Delay
 
+import torch
+
 # alias synapses
 class exp2syn_r(exp2syn): 
     exp2syn.SAVE('i')
@@ -198,11 +200,8 @@ def yu_2024(params=None, rng=None, **kwargs) -> dn.Network:
     p.insert(GABAA, **params['syn']['GABAA'])
     p.insert(GABAB, **params['syn']['GABAB'])
 
-    fp32 = params.get("fp32", False)
-    if fp32:
-        net = dn.Network({'cells':p}, netstim=ns, netcon_delay_backend=params["netcon_delay_backend"]).float()
-    else:
-        net = dn.Network({'cells':p}, netstim=ns, netcon_delay_backend=params["netcon_delay_backend"]).double()
+    dtype = getattr(torch, params.get("dtype", "float32"))
+    net = dn.Network({'cells':p}, netstim=ns, netcon_delay_backend=params["netcon_delay_backend"]).to(dtype)
 
     net.set_references = MethodType(set_references, net)
 
