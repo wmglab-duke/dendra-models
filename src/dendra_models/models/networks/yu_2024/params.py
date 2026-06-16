@@ -10,6 +10,7 @@ params["pscale"] = 1.0
 params["seed"] = 1234
 params["fp32"] = False
 params["forbid_autapses"] = True
+params["scale"] = 1 # scale the whole network
 
 # geometry & number
 

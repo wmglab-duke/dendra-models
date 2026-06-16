@@ -92,8 +92,9 @@ def yu_2024(params=None, rng=None, **kwargs) -> dn.Network:
     n_columns = len(locs)
 
     for name, npc in params['cells']['n_per_column'].items():
-        n_total = n_columns * npc
+        n_total = int(n_columns * npc * params['scale'])
         params['cells'].setdefault('n_total', {}).update({name: n_total})
+        params['cells']['n_per_column'][name] = int(npc * params['scale'])
 
     for name, npc in params['cells']['n_per_column'].items():
         cell_locs = np.repeat(locs, npc, axis=0)
