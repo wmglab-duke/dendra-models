@@ -80,19 +80,21 @@ class esser_mech_h(V, Syn):
         ena = self.DE["esser_states"].ena_iaf
 
         # ----- gating -----
-        vaux = v - th
-        gate = torch.sigmoid(vaux / self.tau_gate.clamp_min(1e-3))   # continuous [0,1]
-        old_h = self.h_prev                                          # must use OLD value
+        # vaux = v - th
+        tau_on = self.tau_gate.clamp_min(1e-3)
+        gate = torch.sigmoid((v - th) / tau_on)
+        old_h = self.h_prev
         eligible = (self.time_left <= 0)
 
-        # Hard onset (forward 0/1):
         rising = (gate > 0.5) & (old_h <= 0.5) & eligible
 
-        # Soft onset surrogate (for gradients), concentrate grads at edges:
-        rise_soft = torch.relu(gate - old_h) * eligible.to(gate.dtype)
+        # Soft threshold-crossing detector:
+        above_now = torch.sigmoid((gate - 0.5) / tau_on)
+        below_prev = torch.sigmoid((0.5 - old_h) / tau_on)
+        rise_prob = above_now * below_prev * eligible.to(gate.dtype)
 
-        # Straight-through: forward==hard, backward==soft
-        self.spikes = rising.to(v.dtype) + self.ste_scale * (rise_soft - rise_soft.detach())
+        # self.spike_gate = rise_prob
+        self.spikes = rising.to(v.dtype) + self.ste_scale * (rise_prob - rise_prob.detach())
 
         # Update memory AFTER computing rising/rise_soft
         self.h_prev = gate

@@ -113,3 +113,8 @@ Myelination scheme from Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 20
 |2 |`Kumaravelu2016`|
 |---|-----|
 ||Kumaravelu, Karthik, David T. Brocker, and Warren M. Grill. “A BIOPHYSICAL MODEL OF THE CORTEX-BASAL GANGLIA-THALAMUS NETWORK IN THE 6-OHDA LESIONED RAT MODEL OF PARKINSON’S DISEASE.” Journal of Computational Neuroscience 40, no. 2 (2016): 207–29. https://doi.org/10.1007/s10827-016-0593-9.
+
+|3 |`Zhang2014`|
+|---|-----|
+||Zhang, Tianhe C., John J. Janik, and Warren M. Grill. “Modeling Effects of Spinal Cord Stimulation on Wide-Dynamic Range Dorsal Horn Neurons: Influence of Stimulation Frequency and GABAergic Inhibition.” Journal of Neurophysiology 112, no. 3 (2014): 552–67. https://doi.org/10.1152/jn.00254.2014.
+

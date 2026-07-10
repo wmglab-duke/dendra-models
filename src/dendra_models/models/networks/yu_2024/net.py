@@ -91,9 +91,6 @@ def yu_2024(params=None, rng=None, **kwargs) -> dn.Network:
     else:
         params = deepcopy(params)
 
-    device = params.get("device", "cpu")
-    dtype = params.get("dtype", "float32")
-
     params.update(kwargs)
 
     if rng is None:
