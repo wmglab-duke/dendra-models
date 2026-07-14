@@ -1,15 +1,27 @@
-import argparse
+import os
 
-import torch
-from tqdm import tqdm
-import numpy as np
+os.environ["DENDRA_INDUCTOR_CACHE_POLICY"] = "shared"
+os.environ["TORCHINDUCTOR_CACHE_DIR"] = (
+    "/hpc/group/wmglab/mah148/dendra_cache/torchinductor/"
+    "torch212_cuda130_py312"
+)
+os.environ["TORCHINDUCTOR_FX_GRAPH_CACHE"] = "1"
+os.environ["TORCHINDUCTOR_AUTOGRAD_CACHE"] = "1"
+os.environ["DENDRA_INDUCTOR_DISABLE_PCH"] = "1"
+os.environ["TORCHINDUCTOR_COMPILE_THREADS"] = "16"
+
+import argparse
 
 import dendra as dn
 from dendra.units import nA, Hz, ms
 from dendra_models.models.cells.peripheral import SMF
 
+import torch
+from tqdm import tqdm
+import numpy as np
 
-torch.set_default_dtype(torch.float32)
+torch._logging.set_logs(recompiles=True, recompiles_verbose=True)
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--chunks", type=int, default=1000)
@@ -31,15 +43,17 @@ field_x = np.load("./fields/fiber_zs.npy")
 
 
 # -- generate field bases --
-# machinery
-interpolator = dn.precomputed_interpolate_1d(FIELD_DATA[s_idx] * 1000, field_x)
+# -- machinery --
+interpolator = dn.precomputed_interpolate_1d(
+    FIELD_DATA[s_idx] * 1000, field_x
+).float()
 
 
 def make_ve_at_nodes(diameter, a_idx, nodes=nodes, offset=37500):
     start = (deltax(diameter) * (nodes - 1)) / 2
-    interp_at = np.linspace(-start, start, nodes) + offset
-    b = interpolator._interpolate(interpolator.get(a_idx), interpolator.x[0], interp_at)
-    return b
+    interp_at = torch.linspace(-start, start, nodes) + offset
+    b = interpolator.interp(interp_at, indices=[a_idx])
+    return b.detach().cpu().numpy()
 
 
 diam_amp_dict = {
@@ -86,18 +100,18 @@ frequencies = [1, 2, 5, 10]
 input_diams = []
 for _ in frequencies:
     input_diams.append(torch.tensor(diam, device="cuda").float())
-input_diams = torch.cat(input_diams)
+input_diams = torch.cat(input_diams).float()
 
 stim = dn.sin(
     amp=1.0, freq=np.repeat(frequencies, len(field_stack))[:, None], delay=0.5
-)
-field_stack = torch.tensor(field_stack).repeat(len(frequencies), 1)
+).float()
+field_stack = torch.tensor(field_stack, device="cuda").repeat(len(frequencies), 1).float()
 
 tstop = 100
 dt = 0.001
 
 # fiber model
-mrg = SMF(input_diams, nodes).cuda()
+mrg = SMF(diameters=input_diams, n_node=nodes).cuda().float()
 
 # intracellular stim to generate activity
 intra = dn.mono_rect(amp=2.0 * nA, pw=0.1 * ms).repeat(100.0 * Hz, delay=50.0 * ms)
@@ -111,6 +125,7 @@ mrg.longrun(
     extra=(field_stack, stim),
     chunklength=int(tstop / dt / args.chunks),
     callbacks=[count],
+    progressbar=True
 )
 all_n = count.numpy()
 
