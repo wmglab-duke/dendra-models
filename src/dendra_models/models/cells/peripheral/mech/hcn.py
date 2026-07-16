@@ -66,9 +66,19 @@ class hcn(M):
         g = self._g()
         return (self.ekna - self.ena) * g * (v - self.ek) / (self.ek - self.ena)
 
+    def ik_with_conductance(self, v):
+        g = self._g()
+        conductance = (self.ekna - self.ena) * g / (self.ek - self.ena)
+        return conductance * (v - self.ek), conductance
+
     def ina(self, v):
         g = self._g()
         return (self.ekna - self.ek) * g * (v - self.ena) / (self.ena - self.ek)
+
+    def ina_with_conductance(self, v):
+        g = self._g()
+        conductance = (self.ekna - self.ek) * g / (self.ena - self.ek)
+        return conductance * (v - self.ena), conductance
 
 
 class hcn_augmented(hcn):
@@ -87,6 +97,16 @@ class hcn_augmented(hcn):
             / (self.ek - self.ena)
         )
 
+    def ik_with_conductance(self, v):
+        g = self._g()
+        conductance = (
+            (self.ekna - self.ena)
+            * g
+            * self.ik_aug
+            / (self.ek - self.ena)
+        )
+        return conductance * (v - self.ek), conductance
+
     def ina(self, v):
         g = self._g()
         return (
@@ -96,4 +116,13 @@ class hcn_augmented(hcn):
             * (v - self.ena)
             / (self.ena - self.ek)
         )
-    
+
+    def ina_with_conductance(self, v):
+        g = self._g()
+        conductance = (
+            (self.ekna - self.ek)
+            * g
+            * self.ina_aug
+            / (self.ena - self.ek)
+        )
+        return conductance * (v - self.ena), conductance

@@ -18,7 +18,7 @@ class nakpumpSchild(M):
     M.USEION("k", read=["ko"], write=["ik"])
     M.USEION("na", read=["nai"], write=["ina"])
 
-    M.ASSIGNED("ink", "INaKmax")
+    M.BUFFER("ink", "INaKmax")
     M.EXPLICIT("ina", "ik")
 
     def initial(self, v):

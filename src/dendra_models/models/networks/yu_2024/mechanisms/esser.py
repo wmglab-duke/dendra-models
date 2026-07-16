@@ -55,7 +55,7 @@ class esser_mech_h(V, Syn):
     V.STATE(esser_states)
     V.RANGE(tspike=2.0)
     V.PARAMETER(tau_gate=0.5, ste_scale=1.0)
-    V.ASSIGNED("factor", "spikes", "h_prev", "time_left")
+    V.BUFFER("factor", "spikes", "h_prev", "time_left")
 
     def update_v(self, v):
         return self.v_iaf
@@ -113,7 +113,7 @@ class esser_mech_s(V, Syn):
     V.STATE(esser_states)
     V.RANGE(tspike=2.0)
     V.PARAMETER(tau_gate=0.5, alpha_peak=1.0)
-    V.ASSIGNED("factor", "spikes", "g_prev", "time_left")
+    V.BUFFER("factor", "spikes", "g_prev", "time_left")
 
     def update_v(self, v):
         return self.v_iaf
@@ -125,7 +125,7 @@ class esser_mech_s(V, Syn):
         factor = -exp(-tp / tau1) + exp(-tp / tau2)
         self.factor = 1 / factor
         self.spikes = torch.zeros_like(v)
-        self.h_prev = torch.zeros_like(v)
+        self.g_prev = torch.zeros_like(v)
         self.time_left = torch.zeros_like(v)
 
     def net_receive(self, weights, netcon):

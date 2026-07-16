@@ -462,14 +462,45 @@ class iCaL(M):
     M.USEION("ca", read=["cai", "cao"], write=["ica"])
     M.RANGE(pcabar=0.000276)
 
-    def _ghk(self, v):
+    def _ghk_with_conductance(self, v):
         z = 2.0
-        w = v * 0.001 * z * FARADAY / (R_GAS * (self.celsius + 273.16))
-        e = torch.where(torch.abs(w) > 1.0e-4, w / (exp(w) - 1.0), 1.0 - w / 2.0)
-        return -0.001 * z * FARADAY * (self.cao - self.cai * exp(w)) * e
+        voltage_scale = 0.001 * z * FARADAY / (
+            R_GAS * (self.celsius + 273.16)
+        )
+        w = voltage_scale * v
+        exp_w = exp(w)
+        use_exact = torch.abs(w) > 1.0e-4
+        denominator = exp_w - 1.0
+        safe_denominator = torch.where(
+            use_exact, denominator, torch.ones_like(denominator)
+        )
+        factor = torch.where(
+            use_exact, w / safe_denominator, 1.0 - w / 2.0
+        )
+        factor_derivative = torch.where(
+            use_exact,
+            (denominator - w * exp_w) / safe_denominator**2,
+            -0.5,
+        )
+        concentration_term = self.cao - self.cai * exp_w
+        scale = -0.001 * z * FARADAY
+        ghk = scale * concentration_term * factor
+        conductance = scale * voltage_scale * (
+            -self.cai * exp_w * factor
+            + concentration_term * factor_derivative
+        )
+        return ghk, conductance
+
+    def _ghk(self, v):
+        return self._ghk_with_conductance(v)[0]
 
     def ica(self, v):
         return self.pcabar * self.m**2 * self._ghk(v)
+
+    def ica_with_conductance(self, v):
+        ghk, ghk_conductance = self._ghk_with_conductance(v)
+        permeability = self.pcabar * self.m**2
+        return permeability * ghk, permeability * ghk_conductance
 
 
 class iNaP_mh(S):
@@ -551,6 +582,10 @@ class _DynSynMixin:
 
     def _g(self):
         return self.B - self.A
+
+    def i_with_conductance(self, v):
+        conductance = self._g()
+        return conductance * (v - self.e), conductance
 
     def _netcon_global_step(self, netcon):
         if netcon is None or not hasattr(netcon, "global_step"):
@@ -647,7 +682,7 @@ NK1_B = _make_B_state("NK1", 3000.0)
 class AMPA_DynSyn(_DynSynMixin, PP, Syn):
     PP.STATE(AMPA_A, AMPA_B)
     PP.RANGE(e=0.0, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.ASSIGNED("factor", "P", "Use")
+    PP.BUFFER("factor", "P", "Use")
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -657,7 +692,7 @@ class AMPA_DynSyn(_DynSynMixin, PP, Syn):
 class GABAa_DynSyn(_DynSynMixin, PP, Syn):
     PP.STATE(GABAa_A, GABAa_B)
     PP.RANGE(e=-70.0, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.ASSIGNED("factor", "P", "Use")
+    PP.BUFFER("factor", "P", "Use")
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -667,7 +702,7 @@ class GABAa_DynSyn(_DynSynMixin, PP, Syn):
 class GABAb_DynSyn(_DynSynMixin, PP, Syn):
     PP.STATE(GABAb_A, GABAb_B)
     PP.RANGE(e=-90.0, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.ASSIGNED("factor", "P", "Use")
+    PP.BUFFER("factor", "P", "Use")
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -677,7 +712,7 @@ class GABAb_DynSyn(_DynSynMixin, PP, Syn):
 class Glycine_DynSyn(_DynSynMixin, PP, Syn):
     PP.STATE(Glycine_A, Glycine_B)
     PP.RANGE(e=-70.0, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.ASSIGNED("factor", "P", "Use")
+    PP.BUFFER("factor", "P", "Use")
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -688,7 +723,7 @@ class NMDA_DynSyn(_DynSynMixin, PP, Syn):
     PP.STATE(NMDA_A, NMDA_B)
     PP.USEION("ca", write=["ica"])
     PP.RANGE(e=0.0, mgo=1.0, ca_ratio=0.1, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.ASSIGNED("factor", "P", "Use")
+    PP.BUFFER("factor", "P", "Use")
     PP.NONSPECIFIC_CURRENT("inon")
 
     def mgblock(self, v):
@@ -697,18 +732,37 @@ class NMDA_DynSyn(_DynSynMixin, PP, Syn):
     def _itotal(self, v):
         return self._g() * self.mgblock(v) * (v - self.e)
 
+    def _itotal_with_conductance(self, v):
+        base_conductance = self._g()
+        block = self.mgblock(v)
+        block_derivative = 0.062 * block * (1.0 - block)
+        current = base_conductance * block * (v - self.e)
+        conductance = base_conductance * (
+            block + block_derivative * (v - self.e)
+        )
+        return current, conductance
+
     def ica(self, v):
         return self.ca_ratio * self._itotal(v)
 
+    def ica_with_conductance(self, v):
+        current, conductance = self._itotal_with_conductance(v)
+        return self.ca_ratio * current, self.ca_ratio * conductance
+
     def inon(self, v):
         return (1.0 - self.ca_ratio) * self._itotal(v)
+
+    def inon_with_conductance(self, v):
+        current, conductance = self._itotal_with_conductance(v)
+        scale = 1.0 - self.ca_ratio
+        return scale * current, scale * conductance
 
 
 class NK1_DynSyn(_DynSynMixin, PP, Syn):
     PP.STATE(NK1_A, NK1_B)
     PP.USEION("ca", write=["ica"])
     PP.RANGE(e=0.0, ca_ratio=0.1, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.ASSIGNED("factor", "P", "Use")
+    PP.BUFFER("factor", "P", "Use")
     PP.NONSPECIFIC_CURRENT("iNK1R")
 
     def _itotal(self, v):
@@ -717,8 +771,16 @@ class NK1_DynSyn(_DynSynMixin, PP, Syn):
     def ica(self, v):
         return self.ca_ratio * self._itotal(v)
 
+    def ica_with_conductance(self, v):
+        conductance = self.ca_ratio * self._g()
+        return conductance * (v - self.e), conductance
+
     def iNK1R(self, v):
         return (1.0 - self.ca_ratio) * self._itotal(v)
+
+    def iNK1R_with_conductance(self, v):
+        conductance = (1.0 - self.ca_ratio) * self._g()
+        return conductance * (v - self.e), conductance
 
 
 INTRINSIC_MECHANISMS = (

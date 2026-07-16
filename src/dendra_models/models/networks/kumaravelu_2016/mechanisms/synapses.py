@@ -85,7 +85,7 @@ class alpha_syn_current(Syn):
 
     Syn.STATE(alpha_state)
     Syn.RANGE(e=0.0, current_scale=1.0)
-    Syn.ASSIGNED("factor")
+    Syn.BUFFER("factor")
     Syn.NONSPECIFIC_CURRENT("i")
 
     def initial(self, v):
@@ -114,7 +114,7 @@ class alpha_syn_event(Syn):
 
     Syn.STATE(alpha_state)
     Syn.RANGE(e=0.0, current_scale=1.0)
-    Syn.ASSIGNED("factor")
+    Syn.BUFFER("factor")
 
     def initial(self, v):
         tau = self.DE["alpha_state"].tau
@@ -137,7 +137,7 @@ class exp2syn_current(Syn):
 
     Syn.STATE(A_state, B_state)
     Syn.RANGE(e=0.0, current_scale=1.0)
-    Syn.ASSIGNED("factor")
+    Syn.BUFFER("factor")
     Syn.NONSPECIFIC_CURRENT("i")
 
     def initial(self, v):
@@ -199,11 +199,20 @@ class striatal_recurrent_gaba(M):
     M.STATE(striatal_recurrent_gaba_refs)
     M.NONSPECIFIC_CURRENT("i")
 
-    def i(self, v):
+    def _conductance(self, v):
         p = self.DE["striatal_recurrent_gaba_refs"]
         total = torch.zeros_like(v)
         for k in range(16):
             ref = getattr(p, f"s{k}", None)
             if ref is not None:
                 total = total + ref
-        return p.current_scale * p.g * (v - p.e) * total
+        return p.current_scale * p.g * total
+
+    def i(self, v):
+        p = self.DE["striatal_recurrent_gaba_refs"]
+        return self._conductance(v) * (v - p.e)
+
+    def i_with_conductance(self, v):
+        p = self.DE["striatal_recurrent_gaba_refs"]
+        conductance = self._conductance(v)
+        return conductance * (v - p.e), conductance

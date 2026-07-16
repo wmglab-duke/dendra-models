@@ -215,7 +215,13 @@ def test_public_synapse_slots_address_banked_zhang_targets(cellular_network_unin
     slots = net.synapse_slots(net.T_Cell, synapse, slots=[first_slot])
     assert len(slots) == 1
     assert slots.local_index.tolist() == [first_slot]
-    assert slots.flat_index.tolist() == [bank["flat_indices"][0]]
+    target = net.T_Cell.slice(bank["section"], loc=bank["loc"])
+    flat_grid = torch.arange(
+        net.T_Cell.v.numel(), device=net.T_Cell.device(), dtype=torch.long
+    ).reshape(net.T_Cell.shape)
+    expected_flat = flat_grid[target.index].reshape(-1)
+    assert expected_flat.numel() == 1
+    assert slots.flat_index.tolist() == expected_flat.tolist()
 
     # Physical compartment targeting is ambiguous for a banked point process;
     # the public slot object is the intended endpoint for NetCon construction.
@@ -460,8 +466,9 @@ def test_external_and_biological_event_delivery_paths(full_network_uninitialized
     # The one-step-early NetStim schedule plus one-step bridge delay must land
     # on the original NEURON NetCon.event(tdeliver) delivery step.
     reset_runtime()
-    desired_delivery_ms = 3 * EVENT_TEST_DT_MS
-    net.netstim.schedule(0, [desired_delivery_ms - EVENT_TEST_DT_MS])
+    source_step = 2
+    desired_delivery_ms = (source_step + 1) * EVENT_TEST_DT_MS
+    net.netstim.schedule(0, [source_step * EVENT_TEST_DT_MS])
     net.netstim.initialize()
 
     sg_ampa = net.SG.mech.AMPA_DynSyn

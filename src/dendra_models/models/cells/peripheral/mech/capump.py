@@ -10,7 +10,7 @@ class capump(M):
         ICaPmax22=0.000859437, KmCa=0.0005, Q10CaP=2.30, Q10TempA=22.0, Q10TempB=10.0
     )
     M.USEION("ca", read=["cai"], write=["ica"])
-    M.ASSIGNED("ICaPmax")
+    M.BUFFER("ICaPmax")
     M.EXPLICIT("ica")
 
     def initial(self, v):

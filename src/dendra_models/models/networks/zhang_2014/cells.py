@@ -238,7 +238,7 @@ def _tree_from_hoc_cell(
                 f"Could not find Zhang morphology group {group!r}. "
                 "This package requires Dendra's token-aware Population.find API."
             )
-        section.label(group)
+        section.label(group, replace=True)
     return tree
 
 

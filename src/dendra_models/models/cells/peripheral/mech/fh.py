@@ -194,6 +194,9 @@ class fh(M):
     M.USEION("na", read=["nai", "nao"], write=["ina"])
 
     M.NONSPECIFIC_CURRENT("il")
+    # GHK currents are nonlinear but deterministic, side-effect-free, and
+    # pointwise in membrane voltage, so numerical conductance is safe here.
+    M.NUMERICAL("ina", "ik")
 
     def ina(self, v):
         z = 1e-3 * self.FARADAY * v / (self.R * (self.celsius + 273.15))

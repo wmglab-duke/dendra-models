@@ -41,3 +41,8 @@ dendra_models = [
   "models/**/*.pt",
   "models/**/*.gml"
 ]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+  "error:Mechanism[.]ASSIGNED.*:DeprecationWarning",
+]

@@ -34,7 +34,7 @@ def L4_SBC_bNAC(ID, N, integrator=None):
 
     cell = dn.Tree.from_graph(g, integrator=integrator, N=N, v_init=-70.0)
     for group in ["soma", "apic", "dend", "axon", "myelin", "unmyelin", "node"]:
-        cell.slice(group).label(group)
+        cell.slice(group).label(group, replace=True)
 
     # insert mechanisms
 

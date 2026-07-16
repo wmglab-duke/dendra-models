@@ -83,7 +83,7 @@ class cortical_spike_router(M):
         router.setreference("fs_syn_spikes_local", lambda: mc.ctx_fs.syn_spikes)
     """
 
-    M.ASSIGNED("rs_spikes", "rs_syn_spikes", "fs_spikes", "fs_syn_spikes")
+    M.BUFFER("rs_spikes", "rs_syn_spikes", "fs_spikes", "fs_syn_spikes")
 
     def initial(self, v):
         z = torch.zeros_like(v)
@@ -151,7 +151,7 @@ class regular_spiking_cortex(_IzhikevichResetMixin, V, Syn):
     V.STATE(regular_spiking_cortex_states)
     V.RANGE(v_peak=30.0, c=-65.0, d=8.0, syn_threshold=-10.0)
     V.PARAMETER(tau_gate=0.5, ste_scale=1.0)
-    V.ASSIGNED("spikes", "syn_spikes", "v_prev")
+    V.BUFFER("spikes", "syn_spikes", "v_prev")
     _state_name = "regular_spiking_cortex_states"
 
 
@@ -159,5 +159,5 @@ class fast_spiking_interneuron(_IzhikevichResetMixin, V, Syn):
     V.STATE(fast_spiking_interneuron_states)
     V.RANGE(v_peak=30.0, c=-65.0, d=2.0, syn_threshold=-10.0)
     V.PARAMETER(tau_gate=0.5, ste_scale=1.0)
-    V.ASSIGNED("spikes", "syn_spikes", "v_prev")
+    V.BUFFER("spikes", "syn_spikes", "v_prev")
     _state_name = "fast_spiking_interneuron_states"

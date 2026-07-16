@@ -21,7 +21,7 @@ class nacapump(M):
     M.USEION("ca", read=["cao", "cai"], write=["ica"])
     M.USEION("na", read=["nai", "nao"], write=["ina"])
 
-    M.ASSIGNED("inca", "KNaCa", "DFin", "DFout")
+    M.BUFFER("inca", "KNaCa", "DFin", "DFout")
     M.EXPLICIT("ina", "ica")
 
     def initial(self, v):

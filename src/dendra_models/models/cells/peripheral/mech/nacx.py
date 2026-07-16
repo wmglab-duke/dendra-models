@@ -9,7 +9,7 @@ class nacx(M):
     M.USEION("na", read=["nai", "nao"], write=["ina"])
     M.USEION("ca", read=["cai", "cao"], write=["ica"])
 
-    M.ASSIGNED("inaca", "q10", "FRT")
+    M.BUFFER("inaca", "q10", "FRT")
     M.EXPLICIT("ina", "ica")
 
     def breakpoint(self, v):

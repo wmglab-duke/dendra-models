@@ -35,7 +35,7 @@ def L5_TTPC_cADpyr(ID, N, integrator=None, v_init=-70.0):
 
     cell = dn.Tree.from_graph(g, integrator=integrator, N=N, v_init=v_init)
     for group in ["soma", "apic", "dend", "axon", "myelin", "unmyelin", "node"]:
-        cell.slice(group).label(group)
+        cell.slice(group).label(group, replace=True)
 
     # insert mechanisms
 

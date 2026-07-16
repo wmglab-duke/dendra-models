@@ -319,9 +319,9 @@ class _Kumaravelu2016FusedBase(V):
 
     CONFIG: Dict[str, Any] = {}
 
-    # All mutable simulation state is assigned at the mechanism level so Dendra's
+    # All mutable simulation state is buffered at the mechanism level so Dendra's
     # checkpointing path can save/restore it through MechanismHandler.mutable_state_dict().
-    V.ASSIGNED(
+    V.BUFFER(
         # exposed voltage/state summaries
         "v_all", "spikes", "syn_spikes", "ap_spikes", "i_inj",
         # voltages

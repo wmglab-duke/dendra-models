@@ -93,6 +93,7 @@ class thalamic_states(S):
 class thalamic(M):
     M.STATE(thalamic_states)
     M.NONSPECIFIC_CURRENT("il", "ina", "ik", "it", "istim")
+    M.EXPLICIT("istim")
 
     def _p(self):
         return self.DE["thalamic_states"]
@@ -101,17 +102,53 @@ class thalamic(M):
         p = self._p()
         return p.current_scale * p.gl * (v - p.el)
 
+    def il_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.gl
+        return conductance * (v - p.el), conductance
+
     def ina(self, v):
         p = self._p()
         return p.current_scale * p.gna * th_minf(v) ** 3 * self.h * (v - p.ena)
+
+    def ina_with_conductance(self, v):
+        p = self._p()
+        activation = th_minf(v)
+        activation_derivative = activation * (1.0 - activation) / 7.0
+        prefactor = p.current_scale * p.gna * self.h
+        current = prefactor * activation**3 * (v - p.ena)
+        conductance = prefactor * (
+            activation**3
+            + 3.0 * activation**2 * activation_derivative * (v - p.ena)
+        )
+        return current, conductance
 
     def ik(self, v):
         p = self._p()
         return p.current_scale * p.gk * (0.75 * (1.0 - self.h)) ** 4 * (v - p.ek)
 
+    def ik_with_conductance(self, v):
+        p = self._p()
+        conductance = (
+            p.current_scale * p.gk * (0.75 * (1.0 - self.h)) ** 4
+        )
+        return conductance * (v - p.ek), conductance
+
     def it(self, v):
         p = self._p()
         return p.current_scale * p.gt * th_pinf(v) ** 2 * self.r * (v - p.et)
+
+    def it_with_conductance(self, v):
+        p = self._p()
+        activation = th_pinf(v)
+        activation_derivative = activation * (1.0 - activation) / 6.2
+        prefactor = p.current_scale * p.gt * self.r
+        current = prefactor * activation**2 * (v - p.et)
+        conductance = prefactor * (
+            activation**2
+            + 2.0 * activation * activation_derivative * (v - p.et)
+        )
+        return current, conductance
 
     def istim(self, v):
         p = self._p()
@@ -279,6 +316,7 @@ class stn_states(S):
 class stn(M):
     M.STATE(stn_states)
     M.NONSPECIFIC_CURRENT("ina", "ik", "ia", "ilca", "it", "icak", "il", "istim")
+    M.EXPLICIT("istim")
 
     def _p(self):
         return self.DE["stn_states"]
@@ -291,29 +329,68 @@ class stn(M):
         p = self._p()
         return p.current_scale * p.gna * self.m ** 3 * self.h * (v - p.ena)
 
+    def ina_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.gna * self.m**3 * self.h
+        return conductance * (v - p.ena), conductance
+
     def ik(self, v):
         p = self._p()
         return p.current_scale * p.gk * self.n ** 4 * (v - p.ek)
+
+    def ik_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.gk * self.n**4
+        return conductance * (v - p.ek), conductance
 
     def ia(self, v):
         p = self._p()
         return p.current_scale * p.ga * self.a ** 2 * self.b * (v - p.ek)
 
+    def ia_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.ga * self.a**2 * self.b
+        return conductance * (v - p.ek), conductance
+
     def ilca(self, v):
         p = self._p()
         return p.current_scale * p.gL_Ca * self.c ** 2 * self.d1 * self.d2 * (v - self._eca())
+
+    def ilca_with_conductance(self, v):
+        p = self._p()
+        reversal = self._eca()
+        conductance = (
+            p.current_scale * p.gL_Ca * self.c**2 * self.d1 * self.d2
+        )
+        return conductance * (v - reversal), conductance
 
     def it(self, v):
         p = self._p()
         return p.current_scale * p.gt * self.p ** 2 * self.q * (v - self._eca())
 
+    def it_with_conductance(self, v):
+        p = self._p()
+        reversal = self._eca()
+        conductance = p.current_scale * p.gt * self.p**2 * self.q
+        return conductance * (v - reversal), conductance
+
     def icak(self, v):
         p = self._p()
         return p.current_scale * p.gcak * self.r ** 2 * (v - p.ek)
 
+    def icak_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.gcak * self.r**2
+        return conductance * (v - p.ek), conductance
+
     def il(self, v):
         p = self._p()
         return p.current_scale * p.gl * (v - p.el)
+
+    def il_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.gl
+        return conductance * (v - p.el), conductance
 
     def istim(self, v):
         p = self._p()
@@ -410,6 +487,7 @@ class pallidal_states(S):
 class gpe(M):
     M.STATE(pallidal_states)
     M.NONSPECIFIC_CURRENT("il", "ik", "ina", "it", "ica", "iahp", "istim")
+    M.EXPLICIT("istim")
 
     def _p(self):
         return self.DE["pallidal_states"]
@@ -418,25 +496,78 @@ class gpe(M):
         p = self._p()
         return p.current_scale * p.gl * (v - p.el)
 
+    def il_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.gl
+        return conductance * (v - p.el), conductance
+
     def ik(self, v):
         p = self._p()
         return p.current_scale * p.gk * self.n ** 4 * (v - p.ek)
+
+    def ik_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.gk * self.n**4
+        return conductance * (v - p.ek), conductance
 
     def ina(self, v):
         p = self._p()
         return p.current_scale * p.gna * gpe_minf(v) ** 3 * self.h * (v - p.ena)
 
+    def ina_with_conductance(self, v):
+        p = self._p()
+        activation = gpe_minf(v)
+        activation_derivative = activation * (1.0 - activation) / 10.0
+        prefactor = p.current_scale * p.gna * self.h
+        current = prefactor * activation**3 * (v - p.ena)
+        conductance = prefactor * (
+            activation**3
+            + 3.0 * activation**2 * activation_derivative * (v - p.ena)
+        )
+        return current, conductance
+
     def it(self, v):
         p = self._p()
         return p.current_scale * p.gt * gpe_ainf(v) ** 3 * self.r * (v - p.eca)
+
+    def it_with_conductance(self, v):
+        p = self._p()
+        activation = gpe_ainf(v)
+        activation_derivative = activation * (1.0 - activation) / 2.0
+        prefactor = p.current_scale * p.gt * self.r
+        current = prefactor * activation**3 * (v - p.eca)
+        conductance = prefactor * (
+            activation**3
+            + 3.0 * activation**2 * activation_derivative * (v - p.eca)
+        )
+        return current, conductance
 
     def ica(self, v):
         p = self._p()
         return p.current_scale * p.gca * gpe_sinf(v) ** 2 * (v - p.eca)
 
+    def ica_with_conductance(self, v):
+        p = self._p()
+        activation = gpe_sinf(v)
+        activation_derivative = activation * (1.0 - activation) / 2.0
+        prefactor = p.current_scale * p.gca
+        current = prefactor * activation**2 * (v - p.eca)
+        conductance = prefactor * (
+            activation**2
+            + 2.0 * activation * activation_derivative * (v - p.eca)
+        )
+        return current, conductance
+
     def iahp(self, v):
         p = self._p()
         return p.current_scale * p.gahp * (v - p.ek) * (self.ca / (self.ca + p.k1))
+
+    def iahp_with_conductance(self, v):
+        p = self._p()
+        conductance = (
+            p.current_scale * p.gahp * (self.ca / (self.ca + p.k1))
+        )
+        return conductance * (v - p.ek), conductance
 
     def istim(self, v):
         p = self._p()
@@ -538,6 +669,7 @@ class striatal_msn_states(S):
 class striatal_msn(M):
     M.STATE(striatal_msn_states)
     M.NONSPECIFIC_CURRENT("ina", "ik", "il", "im", "istim")
+    M.EXPLICIT("istim")
 
     def _p(self):
         return self.DE["striatal_msn_states"]
@@ -546,18 +678,39 @@ class striatal_msn(M):
         p = self._p()
         return p.current_scale * p.gna * self.m ** 3 * self.h * (v - p.ena)
 
+    def ina_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.gna * self.m**3 * self.h
+        return conductance * (v - p.ena), conductance
+
     def ik(self, v):
         p = self._p()
         return p.current_scale * p.gk * self.n ** 4 * (v - p.ek)
+
+    def ik_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.gk * self.n**4
+        return conductance * (v - p.ek), conductance
 
     def il(self, v):
         p = self._p()
         return p.current_scale * p.gl * (v - p.el)
 
+    def il_with_conductance(self, v):
+        p = self._p()
+        conductance = p.current_scale * p.gl
+        return conductance * (v - p.el), conductance
+
     def im(self, v):
         p = self._p()
         gm_eff = (p.gm_base - p.gm_pd_reduction * p.pd) * p.gm
         return p.current_scale * gm_eff * self.p * (v - p.em)
+
+    def im_with_conductance(self, v):
+        p = self._p()
+        gm_eff = (p.gm_base - p.gm_pd_reduction * p.pd) * p.gm
+        conductance = p.current_scale * gm_eff * self.p
+        return conductance * (v - p.em), conductance
 
     def istim(self, v):
         p = self._p()

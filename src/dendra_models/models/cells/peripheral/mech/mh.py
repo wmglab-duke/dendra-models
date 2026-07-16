@@ -61,7 +61,7 @@ class mh(M):
     M.GLOBAL_SIGNED(gbar=0.0001)
     M.USEION("k", read=["ek"], write=["ik"])
     M.USEION("na", read=["ena"], write=["ina"])
-    M.ASSIGNED("g")
+    M.BUFFER("g")
 
     def initial(self, v):
         self.breakpoint(v)

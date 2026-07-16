@@ -9,7 +9,7 @@ from dendra.models.mechanisms._mechanism import Mechanism as M
 class nakpump(M):
     M.GLOBAL_SIGNED(smalla=0.0, b1=1.0)
 
-    M.ASSIGNED("pump")
+    M.BUFFER("pump")
     M.USEION("na", read=["nai"], write=["ina"])
     M.USEION("k", read=["ko"], write=["ik"])
     M.EXPLICIT("ina", "ik")

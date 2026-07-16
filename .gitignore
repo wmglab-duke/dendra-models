@@ -130,3 +130,5 @@ Thumbs.db
 *.zip
 *.tar.gz
 *.tar.bz2
+
+.codex/*
