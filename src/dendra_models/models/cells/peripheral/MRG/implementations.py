@@ -39,7 +39,7 @@ class MRG(ExtCellAxon):
     This model is based on the MRG model by McIntyre et al. (2002).
     """
 
-    ExtCellAxon.PARAMETER(cm=2.0, rhoa=70.0)
+    ExtCellAxon.RANGEP(cm=2.0, rhoa=70.0)
 
     def __init__(
         self,
@@ -106,8 +106,15 @@ class MRG(ExtCellAxon):
         secd[:, self.find("mysa")] = nodeD
         secd[:, self.find("stin")] = axonD
 
-        self.register_parametrization("cm", mrg_cm(secd, fd))
-        self.register_parametrization("rhoa", mrg_rhoa(secd, fd))
+        self._mrg_cm_transform = mrg_cm(secd, fd)
+        self._mrg_rhoa_transform = mrg_rhoa(secd, fd)
+
+        self.register_parametrization_in_graph(
+            "cm", self._mrg_cm_transform
+        )
+        self.register_parametrization_in_graph(
+            "rhoa", self._mrg_rhoa_transform
+        )
 
         xc = (0.1 / (nl * 2)).expand(n_ax, n_c).clone()
         xc[:, self.find("node")] = 0.0
