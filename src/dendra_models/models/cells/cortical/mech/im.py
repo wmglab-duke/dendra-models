@@ -19,9 +19,8 @@ class m(S):
         return self.q10() * 3.3e-3 * exp(-2.5 * 0.04 * (v - -35))
 
     def breakpoint(self, v, states):
-        q10 = self.q10()
-        a = q10 * self.alpha(v)
-        b = q10 * self.beta(v)
+        a = self.alpha(v)
+        b = self.beta(v)
         taum = 1 / (a + b)
         minf = a * taum
         return {"taum": taum, "minf": minf}
@@ -35,7 +34,7 @@ class im(M):
     M.STATE(m)
     M.USEION("k", read=["ek"], write=["ik"])
 
-    M.RANGEP(gbar=0.0001)
+    M.RANGEP(gbar=0.00001)
 
     def ik(self, v):
         return self.gbar * self.m * (v - self.ek)

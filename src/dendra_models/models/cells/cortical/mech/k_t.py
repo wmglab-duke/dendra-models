@@ -12,7 +12,7 @@ from dendra.models.mechanisms.ops import *
 class mh(S):
     has_q10 = True
     S.STATE("m", "h")
-    S.GLOBAL_SIGNED(aq10=2.3, bq10=21.0, cq10=10.0, celsius_const=34.0)
+    S.GLOBAL_SIGNED(aq10=2.3, bq10=21.0, cq10=10.0)
 
     S.DERIVATIVE(
         "m' = (minf - m) / taum",
@@ -21,7 +21,7 @@ class mh(S):
     S.ASSIGNED("minf", "taum", "hinf", "tauh")
 
     def calc_q10(self):
-        return self.aq10 ** ((self.celsius_const - self.bq10) / self.cq10)
+        return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
 
     def breakpoint(self, v, states):
         v = v + 10.0

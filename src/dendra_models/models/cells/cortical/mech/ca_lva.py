@@ -41,7 +41,7 @@ class ca_lva(M):
     M.STATE(mh)
     M.USEION("ca", read=["eca"], write=["ica"])
 
-    M.RANGEP(gbar=0.0001)
+    M.RANGEP(gbar=0.00001)
 
     def ica(self, v):
         return self.gbar * self.m**2 * self.h * (v - self.eca)

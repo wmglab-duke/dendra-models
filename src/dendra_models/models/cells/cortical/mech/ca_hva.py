@@ -12,9 +12,7 @@ class mh(S):
     S.ASSIGNED("minf", "taum", "hinf", "tauh")
 
     def breakpoint(self, v, states):
-        guard = torch.tensor(-27.0, device=v.device, dtype=v.dtype)
-        v = torch.where(torch.isin(v, guard), v + 0.0001, v)
-        mAlpha = (0.055 * (-27 - v)) / (exp((-27 - v) / 3.8) - 1)
+        mAlpha = 0.055 * vtrap(-(v + 27), 3.8)
         mBeta = 0.94 * exp((-75 - v) / 17)
         mInf = mAlpha / (mAlpha + mBeta)
         mTau = 1 / (mAlpha + mBeta)
@@ -39,7 +37,7 @@ class mh(S):
 
 class ca_hva(M):
     M.STATE(mh)
-    M.RANGEP(gbar=0.0001)
+    M.RANGEP(gbar=0.00001)
     M.USEION("ca", read=["eca"], write=["ica"])
 
     def ica(self, v):

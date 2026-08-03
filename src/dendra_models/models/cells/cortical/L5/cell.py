@@ -5,7 +5,7 @@ import torch
 import networkx as nx
 
 import dendra as dn
-from dendra.models.utils import distance
+from .._utils import distance_from_soma_0
 from dendra.models.mod import pas
 
 from ..mech import *
@@ -46,7 +46,7 @@ def L5_TTPC_cADpyr(ID, N, integrator=None, v_init=-70.0):
     cell.insert(pas, e=-75.0, g=g[None, :])
 
     # ih
-    d = distance(cell, cell.find("soma"), cell.find("apic"))
+    d = distance_from_soma_0(cell, cell.find("apic"))
     gbar_ih = (-0.869600 + 2.087000 * torch.exp((d) * 0.003100)) * 0.000080
 
     cell.apic.insert(ih, alias="apical", gbar=gbar_ih[None, :])

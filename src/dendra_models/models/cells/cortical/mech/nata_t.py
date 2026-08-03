@@ -8,6 +8,7 @@ from dendra.models.mechanisms.ops import *
 class m(S):
     has_q10 = True
     S.STATE("m")
+    S.GLOBALP(mtau_scale=0.4)
     S.GLOBAL_SIGNED(
         aq10=2.3,
         bq10=21.0,
@@ -45,8 +46,8 @@ class m(S):
         v = torch.where(torch.isin(v, self.mshift), v + 0.0001, v)
         a = self.alpha(v)
         b = self.beta(v)
-        taum = 1 / (a + b)
-        minf = a * taum
+        taum = self.mtau_scale / (a + b)
+        minf = a / (a + b)
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
@@ -56,6 +57,7 @@ class m(S):
 class h(S):
     has_q10 = True
     S.STATE("h")
+    S.GLOBALP(htau_scale=0.4)
     S.GLOBAL_SIGNED(
         aq10=2.3,
         bq10=21.0,
@@ -95,8 +97,8 @@ class h(S):
         v = torch.where(torch.isin(v, self.hshift), v + 0.0001, v)
         a = self.alpha(v)
         b = self.beta(v)
-        tauh = 1 / (a + b)
-        hinf = a * tauh
+        tauh = self.htau_scale / (a + b)
+        hinf = a / (a + b)
         return {"tauh": tauh, "hinf": hinf}
 
     def inf(self, v):

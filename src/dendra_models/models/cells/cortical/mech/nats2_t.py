@@ -6,6 +6,7 @@ from dendra.models.mechanisms.ops import *
 class m(S):
     has_q10 = True
     S.STATE("m")
+    S.GLOBALP(mtau_scale=0.4)
     S.GLOBAL_SIGNED(
         aq10=2.3,
         bq10=21.0,
@@ -24,27 +25,16 @@ class m(S):
         return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
 
     def alpha(self, v):
-        return (
-            self.q10()
-            * self.ma1
-            * (v - self.mshift)
-            / (1 - exp(-(v - self.mshift) / self.ma2))
-        )
+        return self.q10() * self.ma1 * vtrap(-(v - self.mshift), self.ma2)
 
     def beta(self, v):
-        return (
-            self.q10()
-            * self.mb1
-            * (-v + self.mshift)
-            / (1 - exp(-(-v + self.mshift) / self.mb2))
-        )
+        return self.q10() * self.mb1 * vtrap(v - self.mshift, self.mb2)
 
     def breakpoint(self, v, states):
-        v = torch.where(torch.isin(v, self.mshift), v + 0.0001, v)
         a = self.alpha(v)
         b = self.beta(v)
-        taum = 1 / (a + b)
-        minf = a * taum
+        taum = self.mtau_scale / (a + b)
+        minf = a / (a + b)
         return {"taum": taum, "minf": minf}
 
     def inf(self, v):
@@ -54,6 +44,7 @@ class m(S):
 class h(S):
     has_q10 = True
     S.STATE("h")
+    S.GLOBALP(htau_scale=0.4)
     S.GLOBAL_SIGNED(
         aq10=2.3,
         bq10=21.0,
@@ -70,27 +61,16 @@ class h(S):
         return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
 
     def alpha(self, v):
-        return (
-            self.q10()
-            * self.ha1
-            * (v - self.hshift)
-            / (1 - exp((v - self.hshift) / self.ha2))
-        )
+        return self.q10() * (-self.ha1) * vtrap(v - self.hshift, self.ha2)
 
     def beta(self, v):
-        return (
-            self.q10()
-            * self.hb1
-            * (-v + self.hshift)
-            / (1 - exp((-v + self.hshift) / self.hb2))
-        )
+        return self.q10() * (-self.hb1) * vtrap(-(v - self.hshift), self.hb2)
 
     def breakpoint(self, v, states):
-        v = torch.where(torch.isin(v, self.hshift), v + 0.0001, v)
         a = self.alpha(v)
         b = self.beta(v)
-        tauh = 1 / (a + b)
-        hinf = a * tauh
+        tauh = self.htau_scale / (a + b)
+        hinf = a / (a + b)
         return {"tauh": tauh, "hinf": hinf}
 
     def inf(self, v):

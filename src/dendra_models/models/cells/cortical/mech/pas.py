@@ -1,11 +1,5 @@
-from dendra.models.mechanisms._mechanism import Mechanism as M
-from dendra.models.mechanisms.ops import *
+"""Compatibility import for Dendra's canonical passive mechanism."""
 
+from dendra.models.mod import pas
 
-class pas(M):
-    M.GLOBAL_SIGNED(e=-70.0)
-    M.RANGEP(g=0.001)
-    M.NONSPECIFIC_CURRENT("i")
-
-    def i(self, v):
-        return self.g * (v - self.e)
+__all__ = ["pas"]

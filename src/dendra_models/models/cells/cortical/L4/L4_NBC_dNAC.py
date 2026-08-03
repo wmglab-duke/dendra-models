@@ -5,7 +5,7 @@ import torch
 import networkx as nx
 
 import dendra as dn
-from dendra.models.utils import distance
+from .._utils import distance_from_soma_0
 from dendra.models.mod import pas
 
 from ..mech import *
@@ -57,7 +57,7 @@ def L4_NBC_dNAC(ID, N, integrator=None):
     cell.apic.insert(nats2_t, alias="apical", gbar=0.000010)
     cell.apic.insert(nap_et2, alias="apical", gbar=0.000001)
     cell.apic.insert(skv3_1, alias="apical", gbar=0.004399)
-    d_apic = distance(cell, cell.find("soma"), cell.find("apic"))
+    d_apic = distance_from_soma_0(cell, cell.find("apic"))
     gbar_ih_apic = (-0.869600 + 2.087000 * torch.exp((d_apic) * 0.003)) * 0.000052
     cell.apic.insert(ih, alias="apical", gbar=gbar_ih_apic[None, :])
     cell.apic.insert(im, alias="apical", gbar=0.000008)
@@ -70,7 +70,7 @@ def L4_NBC_dNAC(ID, N, integrator=None):
     cell.dend.insert(nats2_t, alias="basal", gbar=0.000010)
     cell.dend.insert(nap_et2, alias="basal", gbar=0.000001)
     cell.dend.insert(skv3_1, alias="basal", gbar=0.004399)
-    d_dend = distance(cell, cell.find("soma"), cell.find("dend"))
+    d_dend = distance_from_soma_0(cell, cell.find("dend"))
     gbar_ih_dend = (-0.869600 + 2.087000 * torch.exp((d_dend) * 0.003)) * 0.000023
     cell.dend.insert(ih, alias="basal", gbar=gbar_ih_dend[None, :])
     cell.dend.insert(im, alias="basal", gbar=0.000008)

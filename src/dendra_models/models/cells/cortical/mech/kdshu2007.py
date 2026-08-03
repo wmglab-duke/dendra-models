@@ -30,7 +30,7 @@ class mh(S):
 class kdshu2007(M):
     M.STATE(mh)
     M.USEION("k", write=["ik"])
-    M.PARAMETER(ek=-100.0)
+    M.RANGE(ek=-100.0)
     M.RANGE(gbar=0.1)
 
     def ik(self, v):
