@@ -1,1 +1,1 @@
-from .cell import L5_TTPC_cADpyr
+from .L5_TTPC2_cADpyr import L5_TTPC2_cADpyr

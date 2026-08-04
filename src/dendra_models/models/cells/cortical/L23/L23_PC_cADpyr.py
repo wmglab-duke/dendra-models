@@ -1,12 +1,11 @@
 import re
 from importlib.resources import files, as_file
 
-from dendra_models.models.cells.cortical.L5 import cell
 import torch
 import networkx as nx
 
 import dendra as dn
-from .._utils import distance_from_soma_0
+from .._utils import distance_from_soma_0, myelin_g
 from dendra.models.mod import pas
 
 from ..mech import *
@@ -25,7 +24,7 @@ def valid_ids():
     return sorted(ids)
 
 
-def L23_PC_cADpyr(ID, N, integrator=None):
+def L23_PC_cADpyr(ID, N=1, integrator=None):
     target = _MORPH / f"L23_PC_cADpyr_{ID}.gml"
     if not target.is_file():
         raise FileNotFoundError(f"Missing morphology: {target}. Valid IDs: {valid_ids()}")
@@ -50,60 +49,8 @@ def L23_PC_cADpyr(ID, N, integrator=None):
     # insert mechanisms
 
     # pas
-    myelin_idx = cell.find("myelin")
-
-    g = torch.full_like(cell.diam[0], 3e-5)
-    diam = cell.myelin.diam[0]
-    g_ratio = 0.58112771 + 0.08340535 * torch.log(diam[0])
-
-    myelin_membrane_g_pas = 1.659e-3
-
-    segment_radius = diam / 2
-    segment_myelin_thickness = (diam * (1 / g_ratio) - diam) / 2
-
-    layer_thickness = diam.new_tensor(0.005)
-
-    n_layers = torch.floor(
-        segment_myelin_thickness / layer_thickness
-    ).long()
-
-    if (n_layers < 1).any().item():
-        raise ValueError("Every myelinated segment must contain at least one layer")
-
-    # Construct enough columns for the segment with the most layers.
-    layer_idx = torch.arange(
-        int(n_layers.max().item()),
-        device=diam.device,
-    )
-
-    layer_radii = (
-        segment_radius[:, None]
-        + (layer_idx.to(diam.dtype)[None, :] + 0.5) * layer_thickness
-    )
-
-    # Ignore padded layer positions.
-    valid = layer_idx[None, :] < n_layers[:, None]
-
-    reciprocal_sum = (
-        layer_radii.reciprocal()
-        .masked_fill(~valid, 0)
-        .sum(dim=1)
-    )
-
-    hm = n_layers.to(diam.dtype) / reciprocal_sum
-
-    factor = (
-        g_ratio
-        / (1 - g_ratio)
-        * (layer_thickness / segment_radius.square())
-        * hm
-    )
-
-    myelin_g_pas = myelin_membrane_g_pas * factor
-    axon_g_pas = diam.new_tensor(3e-5)
-    g[myelin_idx] = (myelin_g_pas * axon_g_pas) / (myelin_g_pas + axon_g_pas)
-
-    cell.insert(pas, e=-75.0, g=g[None, :])
+    g = myelin_g(cell)
+    cell.insert(pas, e=-75.0, g=g)
 
     # basal dendrites
     cell.dend.insert(ih, alias="basal", gbar=0.00008)

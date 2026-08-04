@@ -94,7 +94,7 @@ Myelination scheme from Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 20
 | |Class|N||
 |-|-----|-|-------|
 |1|`L23_PC_cADpyr`|44|Layer 2/3 pyramidal cell, continuous adapting (pyramidal) e-type|
-|2|`L5_TTPC_cADpyr`|37|Layer 5 thick-tufted pyramidal cell, continuous adapting (pyramidal) e-type|
+|2|`L5_TTPC2_cADpyr`|37|Layer 5 thick-tufted pyramidal cell, continuous adapting (pyramidal) e-type|
 |3|`L4_LBC_cACint`|35|Layer 4 large basket interneuron, continuous accommodating e-type|
 |4|`L4_LBC_dNAC`|35|Layer 4 large basket interneuron, delayed non-accommodating e-type|
 |5|`L4_NBC_cACint`|35|Layer 4 nest basket interneuron, continuous accommodating e-type|

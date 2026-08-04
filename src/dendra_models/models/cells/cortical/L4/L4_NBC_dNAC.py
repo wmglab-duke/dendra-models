@@ -5,7 +5,7 @@ import torch
 import networkx as nx
 
 import dendra as dn
-from .._utils import distance_from_soma_0
+from .._utils import distance_from_soma_0, myelin_g
 from dendra.models.mod import pas
 
 from ..mech import *
@@ -23,7 +23,7 @@ def valid_ids():
     return sorted(ids)
 
 
-def L4_NBC_dNAC(ID, N, integrator=None):
+def L4_NBC_dNAC(ID, N=1, integrator=None):
     target = _MORPH / f"L4_NBC_dNAC_{ID}.gml"
     if not target.is_file():
         raise FileNotFoundError(f"Missing morphology: {target}. Valid IDs: {valid_ids()}")
@@ -33,8 +33,17 @@ def L4_NBC_dNAC(ID, N, integrator=None):
         g = nx.read_gml(p, destringizer=int)
 
     cell = dn.Tree.from_graph(g, integrator=integrator, N=N, v_init=-70.0)
-    for group in ["soma", "apic", "dend", "axon", "myelin", "unmyelin", "node"]:
-        cell.slice(group).label(group, replace=True)
+    exclude = ["branchpoint"]
+    for group, exc, name in [
+        ("soma", [], "soma"), 
+        ("apic", [], "apic"), 
+        ("dend", [], "dend"), 
+        ("axon_initial_segment", [], "ais"), 
+        ("axon", ["axon_initial_segment"], "axon"), 
+        ("myelin", [], "myelin"),
+        ("node", [], "node")
+    ]:
+        cell.slice(group, exclude=exclude+exc).label(name, replace=True)
 
     # insert mechanisms
 
@@ -51,6 +60,18 @@ def L4_NBC_dNAC(ID, N, integrator=None):
     cell.soma.insert(k_p, alias="soma", gbar=0.156376)
     cell.soma.insert(k_t, alias="soma", gbar=0.092965)
     cell.soma.insert(cadynamics, alias="soma", gamma=0.000511, decay=731.707637)
+
+    # axon initial segment
+    cell.ais.insert(pas, e=-60.216510, g=0.000094)
+    cell.ais.insert(skv3_1, alias="ais", gbar=0.317363)
+    cell.ais.insert(ca_hva, alias="ais", gbar=0.000003)
+    cell.ais.insert(sk_e2, alias="ais", gbar=0.003442)
+    cell.ais.insert(cadynamics, alias="ais", gamma=0.010353, decay=64.277990)
+    cell.ais.insert(im, alias="ais", gbar=0.000999)
+    cell.ais.insert(k_p, alias="ais", gbar=0.004729)
+    cell.ais.insert(k_t, alias="ais", gbar=0.098908)
+    cell.ais.insert(ca_lva, alias="ais", gbar=0.000015)
+    cell.ais.insert(nata_t, alias="ais", gbar=3.959764)
 
     # apic
     cell.apic.insert(pas, e=-79.315740, g=1e-6)
@@ -91,14 +112,9 @@ def L4_NBC_dNAC(ID, N, integrator=None):
     cell.axon.insert(nata_t, alias="axon", gbar=3.959764)
 
     # myelin
-    cell.myelin.insert(pas, e=-60.216510, g=1 / 1.125e6)
-
-    # unmyelin
-    cell.unmyelin.insert(pas, e=-60.216510, g=0.000094)
-    cell.unmyelin.insert(skv3_1, alias="unmyelin", gbar=0.317363)
-    cell.unmyelin.insert(k_p, alias="unmyelin", gbar=0.004729)
-    cell.unmyelin.insert(k_t, alias="unmyelin", gbar=0.098908)
-    cell.unmyelin.insert(nata_t, alias="unmyelin", gbar=3.959764)
+    g = myelin_g(cell, cell.find("myelin")).squeeze()
+    g_myelin = g[cell.find("myelin")]
+    cell.myelin.insert(pas, e=-60.216510, g=g_myelin[None, :])
 
     # node
     cell.node.insert(pas, e=-60.216510, g=0.000094)
@@ -106,6 +122,13 @@ def L4_NBC_dNAC(ID, N, integrator=None):
     cell.node.insert(k_p, alias="node", gbar=0.004729)
     cell.node.insert(k_t, alias="node", gbar=0.098908)
     cell.node.insert(nata_t, alias="node", gbar=3.959764 * 2)
+
+    # axon
+    cell.axon.insert(pas, e=-60.216510, g=0.000094)
+    cell.axon.insert(skv3_1, alias="axon", gbar=0.317363)
+    cell.axon.insert(k_p, alias="axon", gbar=0.004729)
+    cell.axon.insert(k_t, alias="axon", gbar=0.098908)
+    cell.axon.insert(nata_t, alias="axon", gbar=3.959764)
 
     cell.equilibria(ek=-85.0, ena=50.0)
 
