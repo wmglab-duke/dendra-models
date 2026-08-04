@@ -100,7 +100,7 @@ def L4_LBC_dNAC(ID, N=1, integrator=None):
     cell.dend.insert(k_t, alias="basal", gbar=0.009500)
 
     # myelin
-    g = myelin_g(cell, cell.find("myelin")).squeeze()
+    g = myelin_g(cell).squeeze()
     g_myelin = g[cell.find("myelin")]
     cell.myelin.insert(pas, e=-60.216510, g=g_myelin[None, :])
 

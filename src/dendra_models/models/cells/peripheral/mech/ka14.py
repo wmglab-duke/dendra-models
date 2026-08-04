@@ -42,7 +42,7 @@ class h(S):
         return self.aq10 ** ((self.celsius - 22.0) / 10.0)
     
     def hinf(self, v):
-        return 0.073 + 0.927 / (1 + exp((v + 60) / 5))
+        return 0.073 + 0.924 / (1 + exp((v + 47) / 4.75))
     
     def tauh(self, v):
         tauh = 35 + 11.22 / (exp((v + 21.4) / 9.48) + exp(-1 * (v + 155.3) / 16.4))

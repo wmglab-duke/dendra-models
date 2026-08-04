@@ -17,7 +17,7 @@ class m(S):
         taum = 104 / (exp((v - 7) / 20) + exp(-1 * (v + 32) / 20)) + 30 / (
             1 + exp((-1 * (v + 40) / 80))
         )
-        return taum / self.q10()
+        return taum / self.q10() / 2
     
     def minf(self, v):
         return (1 / (1 + exp((-1 * (v + 44) / 6.4)))) ** (1 / 3)
@@ -45,7 +45,7 @@ class n(S):
             + 62 / (exp((v - 13) / 20) + exp(-1 * (v + 90) / 20))
             + 50 / (1 + exp((-1 * (v + 50) / 8)))
         )
-        return taun / self.q10()
+        return taun / self.q10() / 2
     
     def ninf(self, v):
         return (1 / (1 + exp((-1 * (v + 32) / 9.2)))) ** (1 / 3)

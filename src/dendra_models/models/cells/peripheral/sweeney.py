@@ -62,6 +62,10 @@ class Sweeney1987(Myelinated):
     """
 
     Myelinated.RANGE(cm=2.5, rhoa=54.7)
+    Myelinated.GLOBAL(
+        node_d={"noded1": 0.0, "noded2": 0.6, "noded3": 0.0},
+        axon_d={"axond1": 0.0, "axond2": 0.6, "axond3": 0.0},
+    )
 
     def __init__(
         self,

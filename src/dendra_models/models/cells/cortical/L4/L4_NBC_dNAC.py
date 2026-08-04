@@ -102,17 +102,12 @@ def L4_NBC_dNAC(ID, N=1, integrator=None):
     # axon
     cell.axon.insert(pas, e=-60.216510, g=0.000094)
     cell.axon.insert(skv3_1, alias="axon", gbar=0.317363)
-    cell.axon.insert(ca_hva, alias="axon", gbar=0.000003)
-    cell.axon.insert(sk_e2, alias="axon", gbar=0.003442)
-    cell.axon.insert(cadynamics, alias="axon", gamma=0.010353, decay=64.277990)
-    cell.axon.insert(im, alias="axon", gbar=0.000999)
     cell.axon.insert(k_p, alias="axon", gbar=0.004729)
     cell.axon.insert(k_t, alias="axon", gbar=0.098908)
-    cell.axon.insert(ca_lva, alias="axon", gbar=0.000015)
     cell.axon.insert(nata_t, alias="axon", gbar=3.959764)
 
     # myelin
-    g = myelin_g(cell, cell.find("myelin")).squeeze()
+    g = myelin_g(cell).squeeze()
     g_myelin = g[cell.find("myelin")]
     cell.myelin.insert(pas, e=-60.216510, g=g_myelin[None, :])
 
@@ -122,13 +117,6 @@ def L4_NBC_dNAC(ID, N=1, integrator=None):
     cell.node.insert(k_p, alias="node", gbar=0.004729)
     cell.node.insert(k_t, alias="node", gbar=0.098908)
     cell.node.insert(nata_t, alias="node", gbar=3.959764 * 2)
-
-    # axon
-    cell.axon.insert(pas, e=-60.216510, g=0.000094)
-    cell.axon.insert(skv3_1, alias="axon", gbar=0.317363)
-    cell.axon.insert(k_p, alias="axon", gbar=0.004729)
-    cell.axon.insert(k_t, alias="axon", gbar=0.098908)
-    cell.axon.insert(nata_t, alias="axon", gbar=3.959764)
 
     cell.equilibria(ek=-85.0, ena=50.0)
 

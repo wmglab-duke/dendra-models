@@ -91,14 +91,14 @@ class MRG(ExtCellAxon):
         diam[:, self.find("node")] = nodeD
         self.diam[:] = diam
 
-        dx = torch.zeros(n_ax, n_c)
+        dx = torch.zeros(n_ax, n_c, dtype=self.dtype(), device=self.device())
         dx[:, self.find("node")] = nodelength0
         dx[:, self.find("mysa")] = paralength1
         dx[:, self.find("flut")] = paralength2
         dx[:, self.find("stin")] = interlength
         self.dx[:] = dx
 
-        scale = torch.full((n_ax, n_c), 0.0001)
+        scale = torch.full((n_ax, n_c), 0.0001, dtype=self.dtype(), device=self.device())
         scale[:, self.find("mysa")] = 0.001
 
         secd = fd.expand(n_ax, n_c).clone()
@@ -122,7 +122,7 @@ class MRG(ExtCellAxon):
         xg = (0.001 / (nl * 2)).expand(n_ax, n_c).clone()
         xg[:, self.find("node")] = 1e10
 
-        xraxial = torch.empty(n_ax, n_c).to(dtype=self.dtype(), device=self.device())
+        xraxial = torch.empty(n_ax, n_c, dtype=self.dtype(), device=self.device())
         xraxial[:, self.find("node")] = rpn0
         xraxial[:, self.find("flut")] = rpn2
         xraxial[:, self.find("stin")] = rpx
@@ -137,8 +137,8 @@ class MRG(ExtCellAxon):
         n = len(locs)
         return [locs[round((n - 1) * arg)] for arg in args]
 
-    def steady_state(self, dt=1.0, tstop=200):
-        return super().steady_state(dt, tstop)
+    def steady_state(self, dt=1.0, tstop=200, **kwargs):
+        return super().steady_state(dt, tstop, **kwargs)
 
 
 class bigMRG(MRG):

@@ -17,6 +17,7 @@ from dendra_models.models.cells.cortical import (
     L4_SBC_bNAC,
     L4_SBC_cACint,
     L5_TTPC_cADpyr,
+    L5_TTPC2_cADpyr,
 )
 
 
@@ -69,11 +70,11 @@ CASES = (
         L23_L5_PROFILES,
     ),
     CorticalCase(
-        "L5_TTPC_cADpyr",
-        L5_TTPC_cADpyr,
+        "L5_TTPC2_cADpyr",
+        L5_TTPC2_cADpyr,
         1,
         "dendra_models.models.cells.cortical.L5",
-        ("morphologies", "L5_1.gml"),
+        ("L5_TTPC2_cADpyr", "L5_TTPC2_cADpyr_1.gml"),
         L23_L5_PROFILES,
     ),
     CorticalCase(
@@ -198,3 +199,11 @@ def test_cortical_distance_profile_handles_an_empty_apical_region():
 
     assert cell.find("apic", as_list=True) == []
     assert cell.find("dend", as_list=True)
+
+
+def test_l5_legacy_name_aliases_the_canonical_public_model():
+    from dendra_models import models
+
+    assert L5_TTPC_cADpyr is L5_TTPC2_cADpyr
+    assert models.L5_TTPC2_cADpyr is L5_TTPC2_cADpyr
+    assert models.L5_TTPC_cADpyr is L5_TTPC2_cADpyr

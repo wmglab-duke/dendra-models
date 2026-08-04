@@ -100,7 +100,7 @@ def L4_LBC_cACint(ID, N=1, integrator=None):
     cell.axon.insert(nata_t, alias="axon", gbar=3.993125)
 
     # myelin
-    g = myelin_g(cell, cell.find("myelin")).squeeze()
+    g = myelin_g(cell).squeeze()
     g_myelin = g[cell.find("myelin")]
     cell.myelin.insert(pas, e=-64.601696, g=g_myelin[None, :])
 
