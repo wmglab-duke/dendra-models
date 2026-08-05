@@ -353,6 +353,8 @@ class _Kumaravelu2016FusedBase(V):
         # Precomputed routing / threshold indices.
         "idx_roll_p1", "idx_roll_m1", "idx_roll_p2", "idx_sum_10",
         "spike_crossing_thresholds", "ctx_reset_thresholds",
+        # Optional exact MATLAB stimulus samples, shaped (network, time).
+        "stim_idbs", "stim_iappco",
         # Synaptic filter coefficient vectors used by coalesced updates.
         "alpha_const_streams",
         "exp2_tau1_streams", "exp2_tau2_streams", "exp2_inc_streams",
@@ -369,6 +371,18 @@ class _Kumaravelu2016FusedBase(V):
 
     # Spike-surrogate settings are trainable/tunable Dendra parameters.
     V.PARAMETER(tau_gate=0.5, ste_scale=1.0)
+
+    def _install_monomorphic_advance(self):
+        """Keep the hand-written fused state transition on Dendra proxies.
+
+        Dendra normally replaces a concrete mechanism proxy's inherited
+        ``_advance`` method with a generated fast path for mechanisms whose
+        differential states live in ``DE`` modules.  Kumaravelu's fused process
+        instead owns one explicit transition for every voltage, gate, synapse,
+        delay queue, and spike flag.  Replacing it with the generic (empty)
+        ``DE`` transition silently freezes the network at initialization.
+        """
+        return None
 
     # ------------------------------------------------------------------
     # Configuration helpers
@@ -451,11 +465,37 @@ class _Kumaravelu2016FusedBase(V):
         self._set_static_buffer(
             "ctx_reset_thresholds",
             torch.tensor(
-                (float(self.cfg["ctx_rs"].get("v_peak", 30.0)), float(self.cfg["ctx_fs"].get("v_peak", 30.0))),
+                (
+                    float(self.cfg["ctx_rs"].get("v_peak", 30.0)),
+                    float(self.cfg["ctx_fs"].get("v_peak", 30.0)),
+                ),
                 device=ref.device,
                 dtype=ref.dtype,
             ),
         )
+
+    def _init_stimulus_samples(self, ref):
+        samples = self.cfg.get("stim_samples", {})
+        for buffer_name, key in (
+            ("stim_idbs", "Idbs"),
+            ("stim_iappco", "Iappco"),
+        ):
+            values = samples.get(key)
+            if values is None:
+                value = torch.empty(0, device=ref.device, dtype=ref.dtype)
+            else:
+                value = torch.as_tensor(values, device=ref.device, dtype=ref.dtype)
+                if value.ndim != 2:
+                    raise ValueError(
+                        f"Configured {key} samples must have shape (network, time); "
+                        f"got {tuple(value.shape)}."
+                    )
+                if value.shape[0] != ref.shape[0]:
+                    raise ValueError(
+                        f"Configured {key} samples have {value.shape[0]} networks, "
+                        f"but the fused state has {ref.shape[0]}."
+                    )
+            self._set_static_buffer(buffer_name, value)
 
     def _precompute_synapse_constants(self, dt_value):
         dt_f = float(dt_value)
@@ -805,6 +845,7 @@ class _Kumaravelu2016FusedBase(V):
         self._init_delay_buffers(self.v_th)
         self._init_routing_indices(self.v_th)
         self._init_spike_thresholds(self.v_th)
+        self._init_stimulus_samples(self.v_th)
 
         # Realization arrays.
         r = cfg["realization"]
@@ -909,6 +950,9 @@ class _Kumaravelu2016FusedBase(V):
         return a_new, b_new, b_new - a_new
 
     def _dbs_current(self, ref, dt):
+        sampled = self._sampled_current(self.stim_idbs, ref)
+        if sampled is not None:
+            return sampled
         dbs = self.cfg.get("dbs", {})
         freq = float(dbs.get("freq_hz", 0.0))
         amp = float(dbs.get("amplitude", 0.0))
@@ -921,6 +965,9 @@ class _Kumaravelu2016FusedBase(V):
         return torch.zeros_like(ref) + amp * in_pulse
 
     def _ctx_stim_current(self, ref, dt):
+        sampled = self._sampled_current(self.stim_iappco, ref)
+        if sampled is not None:
+            return sampled
         stim = self.cfg.get("ctx_stim", {})
         enabled = bool(stim.get("enabled", False))
         amp = float(stim.get("amplitude", 0.0))
@@ -931,6 +978,17 @@ class _Kumaravelu2016FusedBase(V):
         stop = start + float(stim.get("duration_ms", 0.3))
         on = ((t_ms >= start) & (t_ms <= stop)).to(ref.dtype)
         return torch.zeros_like(ref) + amp * on
+
+    def _sampled_current(self, samples, ref):
+        """Return the MATLAB sample used for the pending Euler transition."""
+        if samples.numel() == 0:
+            return None
+        # MATLAB advances from column i-1 to i using stimulus sample i.  Dendra
+        # enters this method at the old time, so select (t + dt) / dt.
+        index = torch.round((self.t + self.dt) / self.dt).to(torch.long)
+        index = index.clamp(0, samples.shape[-1] - 1)
+        value = samples[:, index]
+        return value.reshape(value.shape[0], 1).expand_as(ref)
 
     # ------------------------------------------------------------------
     # Fused explicit Euler step

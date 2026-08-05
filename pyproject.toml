@@ -15,19 +15,19 @@ dependencies = [
   "dendra"
 ]
 
-[project.optional-dependencies]
-pyfibers-validation = [
-  "pyfibers==0.9.0",
-  "matplotlib>=3.8",
-  "numpy>=1.24",
-]
-
 # Optional but nice-to-have
 keywords = ["neuroscience", "models", "dendra"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+pyfibers-validation = [
+  "pyfibers==0.9.0",
+  "matplotlib>=3.8",
+  "numpy>=1.24",
 ]
 
 [tool.setuptools]

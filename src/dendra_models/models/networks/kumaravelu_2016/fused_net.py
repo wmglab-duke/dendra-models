@@ -387,6 +387,20 @@ def _fused_config(
     ctx_stim.setdefault("duration_ms", 0.3)
     ctx_stim.setdefault("amplitude", 350.0)
 
+    stim_samples = {}
+    for name, values in params.get("stim_samples", {}).items():
+        array = np.asarray(values, dtype=float)
+        if array.ndim == 1:
+            array = np.broadcast_to(array.reshape(1, -1), (N, array.size)).copy()
+        elif array.ndim == 2 and array.shape[0] == 1 and N > 1:
+            array = np.broadcast_to(array, (N, array.shape[1])).copy()
+        elif array.ndim != 2 or array.shape[0] != N:
+            raise ValueError(
+                f"stim_samples[{name!r}] must be length time or shape (N, time); "
+                f"got {tuple(array.shape)} for N={N}."
+            )
+        stim_samples[str(name)] = array
+
     if synapse_discretization is None:
         synapse_discretization = params.get("synapse_discretization", "euler")
     if synapse_update_mode is None:
@@ -420,6 +434,7 @@ def _fused_config(
         "ctx_fs": ctx_fs,
         "dbs": dbs,
         "ctx_stim": ctx_stim,
+        "stim_samples": stim_samples,
     }
 
 

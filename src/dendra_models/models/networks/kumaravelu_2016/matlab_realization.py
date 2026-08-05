@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any, Mapping
 
 import numpy as np
-from scipy.io import loadmat
 
 try:
     from .params import params as default_parameter_dict
@@ -160,6 +159,13 @@ def _extract_realization(validation: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def load_matlab_validation(path: str | Path) -> dict[str, Any]:
+    try:
+        from scipy.io import loadmat
+    except ImportError as exc:  # keep scipy optional for normal model imports
+        raise ImportError(
+            "SciPy is required only to load Kumaravelu MATLAB validation files. "
+            "Install dendra-models[kumaravelu-validation]."
+        ) from exc
     raw = loadmat(path, simplify_cells=True)
     raw = _as_dict(raw)
     if "validation" in raw:
@@ -202,5 +208,28 @@ def params_from_matlab_validation(path: str | Path, base_params: Mapping[str, An
     pattern_hz = _optional_field(meta, "pattern_hz")
     if pattern_hz is not None:
         params.setdefault("dbs", {})["freq_hz"] = float(_scalar(pattern_hz))
+
+    # Prefer the exact sampled MATLAB waveforms when they are available.  This
+    # avoids one-step boundary differences between MATLAB array indexing and an
+    # analytically regenerated Dendra pulse, and is especially important for
+    # the 0.3-ms cortical and DBS stimuli.
+    stim = validation.get("stim", {})
+    if isinstance(stim, Mapping):
+        samples = {}
+        for canonical, *aliases in (
+            ("Idbs", "idbs", "dbs"),
+            ("Iappco", "iappco", "cortical"),
+        ):
+            value = _optional_field(stim, canonical, *aliases)
+            if value is not None:
+                sampled = _vec(value, dtype=float)
+                # The canonical unstimulated protocol exports two full-length
+                # zero vectors.  Their analytic Dendra currents are also
+                # identically zero, so retaining them would only multiply
+                # memory use across a large realization batch.
+                if np.any(sampled != 0.0):
+                    samples[canonical] = sampled
+        if samples:
+            params["stim_samples"] = samples
 
     return params

@@ -4,7 +4,7 @@ from .params import default_params, params
 from .fused_net import Kumaravelu2016Fused, kumaravelu_2016_fused
 from .matlab_realization import params_from_matlab_validation
 
-# Backwards-compatible alias for the modular network builder.
+# Public model alias uses the fused production builder.
 Kumaravelu2016 = kumaravelu_2016_fused
 
 __all__ = [

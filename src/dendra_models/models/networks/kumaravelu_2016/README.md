@@ -26,10 +26,14 @@ p["n"] = 10
 p["pd"] = 0.0       # 0 healthy, 1 PD
 p["corstim"] = 0.0  # used for the MATLAB GPe baseline-current modulation
 
-net = Kumaravelu2016(p)
+model = Kumaravelu2016(p, dt=0.01)
 ```
 
-The builder returns a single `dn.Network` with two populations:
+The public builder returns the fused single-`Population` implementation
+described below. The older modular builder remains in `net.py` for development
+and mechanism-level inspection; it is not the public `Kumaravelu2016` alias.
+
+The modular builder contains two populations:
 
 - `net.hh`: TH, STN, GPe, GPi, StrD2, StrD1; standard Dendra membrane-voltage integration.
 - `net.ctx`: CTX_RS and CTX_FS; `dn.scnv()` integration because the cortical voltage is stored as the mechanism state `v_izh` and returned by `update_v()`.
@@ -77,9 +81,10 @@ You do not need to force the HH compartments to have area 1. The HH intrinsic an
 
 ## Current limitations / next steps
 
-- The package syntax-compiles in this environment, but Dendra itself is not installed here, so I could not instantiate or run the network locally.
-- The exact time-varying DBS pulse train (`Idbs`) and cortical stimulus pulse (`Iappco`) are not yet wired in as Dendra current-clamp processes. The static baseline currents and the MATLAB `corstim`-dependent GPe baseline-current modulation are included. For full protocol parity, add a small time-indexed or analytic pulse-current mechanism on STN and cortex.
 - The current builder assumes the same `n` in every nucleus, matching the MATLAB implementation.
+- Analytic DBS and cortical pulses are available for ordinary runs. Exact MATLAB
+  validation replay additionally imports the sampled `Idbs` and `Iappco`
+  arrays through `params_from_matlab_validation(...)`.
 
 ## Dendra `v_init` compatibility
 
@@ -111,14 +116,25 @@ mechanism convention avoids unintended area scaling and CTX scnv shape mismatch.
 The package also includes a fused backend:
 
 ```python
-from kumaravelu_2016 import Kumaravelu2016Fused, default_params
+import dendra as dn
+from dendra_models.models.networks.kumaravelu_2016 import (
+    Kumaravelu2016Fused,
+    default_params,
+)
 
 p = default_params()
 p["n"] = 100
 p["pd"] = 0.0
 p["corstim"] = 0.0
 
-model = Kumaravelu2016Fused(p, dt=0.01, pick_dbs_freq=1, differentiable_spikes=True)
+dn.set_jit_enabled(True)
+model = Kumaravelu2016Fused(
+    p,
+    dt=0.01,
+    pick_dbs_freq=1,
+    differentiable_spikes=True,
+    delay_mode="circular_eager",
+)
 model.initialize()
 model.run(tstop=2000.0, dt=0.01, progressbar=False)
 ```
@@ -140,7 +156,7 @@ bookkeeping from the runtime hot path.
 Useful exposed mechanism buffers after `initialize()`:
 
 ```python
-m = model.mech.kumaravelu_fused
+m = model.mech.kumaravelu
 m.v_all       # full exposed voltage vector, shape (..., 8*n)
 m.spikes      # synaptic driver events: HH -10 mV crossings; CTX reset spikes
 m.syn_spikes  # -10 mV crossings for all groups, including cortical local E/I
@@ -170,7 +186,12 @@ standard HH voltage solver.  Therefore the `params["units"]["hh_current_scale"]`
 bridge used by the modular HH population is intentionally not applied in the
 fused mechanism.
 
-Current caveat: MATLAB's spike-history lookup-table synapses are represented as
-state-space alpha or double-exponential filters with fixed delay queues.  This is
-much faster and differentiable, and it matches the intended waveform equations,
-but it will not be bitwise identical to the MATLAB precomputed lookup-table sums.
+The exact-realization MATLAB comparison, including the Chronux-compatible GPi
+spectrum endpoint and paired statistical design, lives in
+`validation/kumaravelu_matlab/README.md`. The fused state-space synaptic filters
+and MATLAB's spike-history lookup-table sums agree before synaptic events but
+are not bitwise-identical realizations afterward. Small numerical differences
+are amplified over long horizons by the recurrent network, so validation
+reports a pre-event voltage conformance window alongside paired population
+rates and GPi 7--35 Hz power rather than requiring bitwise-identical two-second
+traces.
