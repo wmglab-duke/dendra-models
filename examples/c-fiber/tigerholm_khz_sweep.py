@@ -1,177 +1,181 @@
-import itertools
+#!/usr/bin/env python3
+"""Run a kHz-frequency/amplitude sweep with the Tigerholm 2014 C-fiber model."""
 
-import torch
-import numpy as np
-import pandas as pd
+from __future__ import annotations
+
+import itertools
+from pathlib import Path
 
 import dendra as dn
-from dendra.models.parametric import distributed
-from dendra.units import mm, um, nA, Hz, ms
+from dendra.units import Hz, kHz, mA, mm, ms, nA, um
+from dendra_models.models import Tigerholm2014
+
+import numpy as np
+import pandas as pd
+import torch
 
 
-# decide if you want to retry with slower numerical methods if some
-# of the simulations fail. Default = False (won't rerun).
-rerun_anomalies = False
+# Set this to True to record selected membrane voltages to HDF5. Voltage
+# recording adds runtime and can produce a large file.
+RECORD_VOLTAGE = False
 
-# record voltage? This will slow down the simulation by ~15%.
-# it will also generate a large datafile so run it in /work
-# it will write a file model_name_voltage.h5 that you can read
-# with dendra.data.H5Reader
-record_v = False
+FREQUENCIES_KHZ = (1, 2, 5, 10, 20, 30, 40, 50, 60, 80, 100)
+AMPLITUDES_MA = tuple(np.arange(0.0, 26.1, 1.0))
 
-# declare the parameters you're going to sweep
-frequencies = [1, 2, 5, 10, 20, 30, 40, 50, 60, 80, 100]
-amps = np.arange(0, 26.1).tolist()
-all_params = list(
-    itertools.product(frequencies, amps)
-)  # in Dendra, we run everything at once
-total = len(all_params)
+MODEL_NAME = "tigerholm2014"
+DIAMETER = 1.0 * um
+LENGTH = 40.0 * mm
+DX = 10.0 * um
 
-# choose model
-model_type = dn.Tigerholm2014
-model_name = "tigerholm2014"
-steady_state = False
-L = 40.0
+TSTOP = 2000 * ms
+DT = 0.001 * ms
+STIM_START = 200 * ms
+STIM_STOP = 610 * ms
+CHUNK_LENGTH = 1000
 
-# global parameters
-tstop = 2000 * ms
-dt = 0.001 * ms
-
-pre = 200 * ms
-off = 610 * ms
-
-# fastest is 32-bit with default (Dufort-Frankel) integrator so try that first
-model = model_type([1.0 * um] * total, L=L * mm, dx=10.0 * um)
+TEST_PULSE_FREQUENCY = 10 * Hz
+TEST_PULSE_START = 15 * ms
 
 
-# define simulation
-def run(model, params, rec_suffix="", steady_state=False):
-    # only necessary for Schild
-    if steady_state:
-        model.steady_state()
+def make_parameter_grid() -> list[tuple[float, float]]:
+    """Return ``(frequency_kHz, amplitude_mA)`` pairs for the sweep."""
+    return list(itertools.product(FREQUENCIES_KHZ, AMPLITUDES_MA))
 
-    t = torch.arange(0, tstop, dt)
 
-    f_s, a_s = map(list, zip(*params))
-    f_s = distributed(f_s, over="a", kind="stim")
-    a_s = distributed(a_s, over="a", kind="stim")
-    stim = dn.sin(amp=a_s, freq=f_s, delay=pre, off=off)
+def make_model(n_simulations: int) -> Tigerholm2014:
+    """Create one identical fiber per sweep point."""
+    return Tigerholm2014(
+        [DIAMETER] * n_simulations,
+        L=LENGTH,
+        dx=DX,
+    )
 
-    # deliver intracellular current pulses (1 nA, 1 ms pw) @ 10 Hz after 15 ms
-    # fastest is to precompute i_intra(t) and add to IntraStim object
 
-    testpulse_fs = 10 * Hz
-    testpulse_start = 15 * ms
-    intra = dn.IntraStim(model)
-    i_stim = dn.mono_rect(amp=1 * nA, pw=1 * ms).repeat(
-        testpulse_fs, delay=testpulse_start
-    )(t)
-    intra.insert(i_stim, nodes=model.c(0.1))
-
-    # ve from point source
-    ve_s = dn.isotropic_point(z=200.0, rhoe=100 / 1.79)(model)
-
-    # setup callbacks
-    # models will not terminate if they encounter numerical error, so use
-    # AnomalyDetector to determine which results are valid
-
-    anom = dn.callbacks.AnomalyDetector()
-    rec = dn.callbacks.Raster(node_check=model.c(0.9), dt=dt)
-
-    if record_v:
-        indices = model.c(
-            0.1, 0.4, 0.5, 0.501, 0.502, 0.505, 0.51, 0.55, 0.6, 0.65, 0.7, 0.9
+def run_sweep(
+    model: Tigerholm2014,
+    parameters: list[tuple[float, float]],
+    *,
+    record_voltage: bool = RECORD_VOLTAGE,
+) -> np.ndarray:
+    """Run the sweep and return a ``[time, simulation, site]`` spike raster."""
+    if len(parameters) != model.n_ax:
+        raise ValueError(
+            f"Expected one parameter pair per fiber ({model.n_ax}); "
+            f"received {len(parameters)}."
         )
-        v_rec = dn.callbacks.Recorder(["v"], node_indices=indices).set_hdf5(
-            f"{model_name}_voltage{rec_suffix}.h5", cache_every=10000
+
+    # This is an inference workload; keep autograd disabled during the long run.
+    model.eval()
+
+    sweep = torch.as_tensor(
+        parameters,
+        device=model.device(),
+        dtype=model.dtype(),
+    )
+
+    # A final singleton component axis is important here. Modern dn.sin treats
+    # a 1-D tensor as oscillator components to sum; [simulation, 1] creates one
+    # independent sinusoid per fiber instead.
+    extracellular_stimulus = dn.sin(
+        freq=sweep[:, 0:1] * kHz,
+        amp=sweep[:, 1:2] * mA,
+        delay=STIM_START,
+        off=STIM_STOP,
+    )
+
+    test_pulse = dn.mono_rect(amp=1 * nA, pw=1 * ms).repeat(
+        TEST_PULSE_FREQUENCY,
+        delay=TEST_PULSE_START,
+    )
+    model.csl(0.1).inject(test_pulse)
+    model.initialize()
+
+    # The point-source field is in mV/mA and the temporal stimulus is in mA.
+    extracellular_field = dn.isotropic_point(
+        z=200.0 * um,
+        rhoe=100 / 1.79,
+    )(model)
+
+    raster = dn.callbacks.Raster(node_check=model.c(0.9), dt=DT)
+    callbacks = [raster]
+
+    voltage_recorder = None
+    if record_voltage:
+        voltage_nodes = model.c(
+            0.1,
+            0.4,
+            0.5,
+            0.501,
+            0.502,
+            0.505,
+            0.51,
+            0.55,
+            0.6,
+            0.65,
+            0.7,
+            0.9,
         )
-        callbacks = [anom, rec, v_rec]
-    else:
-        callbacks = [anom, rec]
+        voltage_recorder = dn.callbacks.Recorder(
+            ["v"],
+            node_indices=voltage_nodes,
+        ).set_hdf5(
+            f"{MODEL_NAME}_voltage.h5",
+            cache_every=10_000,
+        )
+        callbacks.append(voltage_recorder)
 
-    model.longrun(
-        space=ve_s,
-        time=stim,
-        tstop=tstop,
-        dt=dt,
-        intra=intra,
-        chunklength=1000,
-        callbacks=callbacks,
-        reinit=True,
-    )
+    try:
+        model.longrun(
+            tstop=TSTOP,
+            dt=DT,
+            extra=(extracellular_field, extracellular_stimulus),
+            chunklength=CHUNK_LENGTH,
+            callbacks=callbacks,
+            progressbar=True,
+        )
+    finally:
+        if voltage_recorder is not None:
+            voltage_recorder.close()
 
-    if record_v:
-        v_rec.close()
-
-    return anom.numpy(), rec.numpy()
-
-
-# run
-anomalous, raster = run(model, all_params, steady_state=steady_state)
-
-# rerun with slower methods if any anomalous
-n_anomalous = np.count_nonzero(anomalous)
-
-if n_anomalous > 0 and rerun_anomalies:
-    print(
-        f"{n_anomalous} anomalies detected. Trying with Implicit Euler integrator & 64-bit math."
-    )
-    robust_model = model_type(
-        [1.0 * um] * n_anomalous, L=L * mm, dx=10.0 * um, integrator=dn.bwd_euler_ub()
-    ).double()
-    rerun_params = [all_params[i] for i, f in enumerate(anomalous) if f]
-    anomalous_r, raster_r = run(
-        robust_model, rerun_params, "_robust", steady_state=steady_state
-    )
-
-    n_anomalous_r = np.count_nonzero(anomalous_r)
-    print(f"{n_anomalous_r} simulations still failed.")
+    return raster.numpy()
 
 
-# put together data
+def make_results(
+    parameters: list[tuple[float, float]],
+    raster: np.ndarray,
+) -> pd.DataFrame:
+    """Convert a spike raster into one summary row per sweep point."""
+    rows = []
 
-all_times = []
-n_aps_during_khz = []
-all_freq = []
-all_amps = []
-valid = []
+    for simulation, (frequency_khz, amplitude_ma) in enumerate(parameters):
+        # Raster callbacks run after each completed solver step, so sample zero
+        # corresponds to DT rather than t=0.
+        spike_steps = np.flatnonzero(raster[:, simulation, 0])
+        spike_times = (spike_steps + 1) * DT
+        during_stimulus = (spike_times > STIM_START) & (spike_times < STIM_STOP)
 
-anomalous_i = 0
+        rows.append(
+            {
+                "all spike times (ms)": spike_times.tolist(),
+                "# APs during kHz": int(np.count_nonzero(during_stimulus)),
+                "freq (kHz)": float(frequency_khz),
+                "amplitude (mA)": float(amplitude_ma),
+            }
+        )
 
-for i in range(raster.shape[1]):
-    freq, amp = all_params[i]
+    return pd.DataFrame(rows)
 
-    if anomalous[i]:
-        if (not rerun_anomalies) or anomalous_r[anomalous_i]:
-            valid.append(False)
-            all_times.append([])
-            n_aps_during_khz.append(0)
-            all_freq.append(freq)
-            all_amps.append(amp)
-            anomalous_i += 1
-            continue
-        r = raster_r
-        index = anomalous_i
-        anomalous_i += 1
-    else:
-        index = i
-        r = raster
 
-    t_ap = np.where(r[:, index, 0])[0] * dt
-    all_times.append(t_ap.tolist())
-    n_ap = np.count_nonzero(np.logical_and(t_ap > pre, t_ap < off))
-    n_aps_during_khz.append(n_ap)
-    all_freq.append(freq)
-    all_amps.append(amp)
-    valid.append(True)
+def main() -> None:
+    parameters = make_parameter_grid()
+    model = make_model(len(parameters))
+    raster = run_sweep(model, parameters)
+    results = make_results(parameters, raster)
 
-data = {
-    "all spike times (ms)": all_times,
-    "# APs during kHz": n_aps_during_khz,
-    "freq (kHz)": all_freq,
-    "amplitude (mA)": all_amps,
-    "valid": valid,
-}
+    output_path = Path(f"{MODEL_NAME}_khz_df.pkl")
+    results.to_pickle(output_path)
+    print(f"Saved {len(results)} sweep results to {output_path}")
 
-df = pd.DataFrame(data)
-df.to_pickle(f"{model_name}_khz_df.pkl")
+
+if __name__ == "__main__":
+    main()
