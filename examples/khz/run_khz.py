@@ -3,33 +3,17 @@
 from __future__ import annotations
 
 import argparse
-import os
 from pathlib import Path
 
-# Dendra reads these settings while it is imported, so they must be configured
-# before importing Dendra or PyTorch.
-os.environ["DENDRA_INDUCTOR_CACHE_POLICY"] = "shared"
-os.environ["TORCHINDUCTOR_CACHE_DIR"] = (
-    "/hpc/group/wmglab/mah148/dendra_cache/torchinductor/"
-    "torch212_cuda130_py312"
-)
-os.environ["TORCHINDUCTOR_FX_GRAPH_CACHE"] = "1"
-os.environ["TORCHINDUCTOR_AUTOGRAD_CACHE"] = "1"
-os.environ["DENDRA_INDUCTOR_DISABLE_PCH"] = "1"
-os.environ["TORCHINDUCTOR_COMPILE_THREADS"] = "16"
-
-import dendra as dn  # noqa: E402
-from dendra.units import Hz, ms, nA  # noqa: E402
-from dendra_models.models.cells.peripheral import SMF  # noqa: E402
-
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import seaborn as sns  # noqa: E402
-import torch  # noqa: E402
-from matplotlib.lines import Line2D  # noqa: E402
-
-torch._logging.set_logs(recompiles=True, recompiles_verbose=True)
+import dendra as dn
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import torch
+from dendra.units import Hz, ms, nA
+from dendra_models.models.cells.peripheral import SMF
+from matplotlib.lines import Line2D
 
 
 FIELD_DIRECTORY = Path("fields")
@@ -298,8 +282,7 @@ def plot_comparison(
     for column, diameter in enumerate(diameter_values):
         for row, frequency in enumerate(FREQUENCIES_KHZ):
             selection = data[
-                (data["diameter"] == diameter)
-                & (data["frequency"] == frequency)
+                (data["diameter"] == diameter) & (data["frequency"] == frequency)
             ]
             sns.lineplot(
                 data=selection,
