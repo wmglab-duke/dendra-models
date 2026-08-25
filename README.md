@@ -6,9 +6,12 @@
 
 Models implemented in Dendra.
 
+> [!IMPORTANT]
+> To use dendra-models, please use the `develop` branch of Dendra.
+
 ### Installation instructions
 ---
-0. Install [Dendra](https://gitlab.oit.duke.edu/mah148/axonml).
+0. Install [Dendra](https://gitlab.oit.duke.edu/mah148/dendra).
 1. Clone this repository.
 2. Navigate to the cloned directory.
 3. `python -m pip install .`
