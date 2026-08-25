@@ -10,10 +10,10 @@ class cai(S):
     S.GLOBAL_SIGNED(FARADAY=DENDRA_FARADAY)
     S.ASSIGNED("shell_ica")
     S.DERIVATIVE("cai' = shell_ica - (cai - minCai)/decay")
-    S.BUFFER("shell")
+    S.DERIVED_BUFFER("shell")
 
-    def initial(self, v):
-        self.shell = -10_000 * (self.gamma / (2 * self.FARADAY * self.depth))
+    def derive_buffers(self):
+        return {"shell": -10_000 * (self.gamma / (2 * self.FARADAY * self.depth))}
 
     def breakpoint(self, v, states):
         return {"shell_ica": self.shell * self.ica}

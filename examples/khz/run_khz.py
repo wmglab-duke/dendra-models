@@ -134,8 +134,7 @@ def run_simulation(
     simulation_device = torch.device(device)
     simulation_dtype = torch.float32
 
-    # Construct on CPU and move the complete model once. The old sequence sent
-    # diameters GPU -> CPU during SMF construction, then moved the model to GPU.
+    # Construct on CPU and move the complete model once.
     repeated_diameters = np.tile(base_diameters, len(FREQUENCIES_KHZ))
     diameter_tensor = torch.as_tensor(repeated_diameters, dtype=simulation_dtype)
     model = SMF(diameters=diameter_tensor, n_node=NODES).to(
@@ -244,9 +243,6 @@ def build_comparison_frame(
                         }
                     )
 
-                # Some ground-truth files cover a longer amplitude sweep. As in
-                # the original script, use the prefix matching this diameter's
-                # configured amplitudes.
                 for amplitude, count in zip(amplitudes, neuron_counts):
                     rows.append(
                         {

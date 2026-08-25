@@ -21,16 +21,20 @@ class nacapump(M):
     M.USEION("ca", read=["cao", "cai"], write=["ica"])
     M.USEION("na", read=["nai", "nao"], write=["ina"])
 
-    M.BUFFER("inca", "KNaCa", "DFin", "DFout")
+    M.BUFFER("inca")
+    M.DERIVED_BUFFER("KNaCa", "DFin", "DFout")
     M.EXPLICIT("ina", "ica")
 
-    def initial(self, v):
-        self.KNaCa = self.KNaCa22 * self.Q10NaCa ** (
+    def derive_buffers(self):
+        KNaCa = self.KNaCa22 * self.Q10NaCa ** (
             (self.Q10TempA - self.celsius) / self.Q10TempB
         )
         temp = self.celsius + 273.15
-        self.DFin = ((self.r - 2) * self.gamma * self.F) / (self.R * temp)
-        self.DFout = ((self.r - 2) * (self.gamma - 1) * self.F) / (self.R * temp)
+        DFin = ((self.r - 2) * self.gamma * self.F) / (self.R * temp)
+        DFout = ((self.r - 2) * (self.gamma - 1) * self.F) / (self.R * temp)
+        return {"KNaCa": KNaCa, "DFin": DFin, "DFout": DFout}
+
+    def initial(self, v):
         self.breakpoint(v)
 
     def breakpoint(self, v):

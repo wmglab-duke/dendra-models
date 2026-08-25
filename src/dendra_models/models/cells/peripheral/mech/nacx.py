@@ -9,7 +9,8 @@ class nacx(M):
     M.USEION("na", read=["nai", "nao"], write=["ina"])
     M.USEION("ca", read=["cai", "cao"], write=["ica"])
 
-    M.BUFFER("inaca", "q10", "FRT")
+    M.BUFFER("inaca")
+    M.DERIVED_BUFFER("q10", "FRT")
     M.EXPLICIT("ina", "ica")
 
     def breakpoint(self, v):
@@ -18,10 +19,17 @@ class nacx(M):
         s = 1 + self.dnaca * (self.cai * self.nao**3 + self.cao * self.nai**3)
         self.inaca = self.gbar * self.q10 * self.knaca * (dfcain - dfcaout) / s
 
-    def initial(self, v):
+    def derive_buffers(self):
         T = 273 + self.celsius
-        self.q10.copy_((2.2 * (T - 296.0) + (310.0 - T)) / 14.0)
-        self.FRT = self.F / (self.R * T)
+        q10 = (2.2 * (T - 296.0) + (310.0 - T)) / 14.0
+        return {
+            # The historical initializer populated this allocated local buffer
+            # with copy_, so retain its per-segment shape.
+            "q10": q10.expand_as(self.diam),
+            "FRT": self.F / (self.R * T),
+        }
+
+    def initial(self, v):
         self.breakpoint(v)
 
     def ina(self, v):
