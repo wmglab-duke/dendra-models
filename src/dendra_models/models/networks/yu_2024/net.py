@@ -15,7 +15,7 @@ import torch
 
 # alias synapses
 class exp2syn_r(exp2syn): 
-    exp2syn.SAVE('i')
+    exp2syn.SAVE_CURRENT('i')
     exp2syn.EXPLICIT('i')
 
 AMPA = exp2syn_r.rename('AMPA')

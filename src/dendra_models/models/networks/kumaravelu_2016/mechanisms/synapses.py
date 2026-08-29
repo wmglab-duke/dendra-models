@@ -21,7 +21,7 @@ class alpha_state(S):
     S.RANGE(tau=5.0)
     S.DERIVATIVE("s' = z", "z' = -2.0 * z / tau - s / (tau * tau)")
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"s": torch.zeros_like(v), "z": torch.zeros_like(v)}
 
 
@@ -30,7 +30,7 @@ class A_state(S):
     S.RANGE(tau1=0.1)
     S.DERIVATIVE("A' = -A / tau1")
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"A": torch.zeros_like(v)}
 
 
@@ -39,7 +39,7 @@ class B_state(S):
     S.RANGE(tau2=10.0)
     S.DERIVATIVE("B' = -B / tau2")
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"B": torch.zeros_like(v)}
 
 
@@ -83,14 +83,14 @@ class alpha_syn_current(Syn):
     conductance-density convention, not as lumped uS.
     """
 
-    Syn.STATE(alpha_state)
+    Syn.STATE_BUNDLE(alpha_state)
     Syn.RANGE(e=0.0, current_scale=1.0)
-    Syn.BUFFER("factor")
+    Syn.DERIVED_BUFFER("factor")
     Syn.NONSPECIFIC_CURRENT("i")
 
-    def initial(self, v):
+    def derive_buffers(self):
         tau = self.DE["alpha_state"].tau
-        self.factor = exp(torch.ones_like(v)) / tau
+        return {"factor": exp(torch.ones_like(self.diam)) / tau}
 
     def i(self, v):
         return self.current_scale * self.s * (v - self.e)
@@ -112,13 +112,13 @@ class alpha_syn_event(Syn):
     does not include it in the current/conductance bookkeeping pass.
     """
 
-    Syn.STATE(alpha_state)
+    Syn.STATE_BUNDLE(alpha_state)
     Syn.RANGE(e=0.0, current_scale=1.0)
-    Syn.BUFFER("factor")
+    Syn.DERIVED_BUFFER("factor")
 
-    def initial(self, v):
+    def derive_buffers(self):
         tau = self.DE["alpha_state"].tau
-        self.factor = exp(torch.ones_like(v)) / tau
+        return {"factor": exp(torch.ones_like(self.diam)) / tau}
 
     def net_receive(self, weights, netcon):
         weights = _reshape_like_state(weights, self.z)
@@ -135,17 +135,17 @@ class exp2syn_current(Syn):
     MATLAB point-neuron equations.
     """
 
-    Syn.STATE(A_state, B_state)
+    Syn.STATE_BUNDLE(A_state, B_state)
     Syn.RANGE(e=0.0, current_scale=1.0)
-    Syn.BUFFER("factor")
+    Syn.DERIVED_BUFFER("factor")
     Syn.NONSPECIFIC_CURRENT("i")
 
-    def initial(self, v):
+    def derive_buffers(self):
         tau1 = self.DE["A_state"].tau1
         tau2 = self.DE["B_state"].tau2
         tp = (tau1 * tau2) / (tau2 - tau1) * log(tau2 / tau1)
         factor = -exp(-tp / tau1) + exp(-tp / tau2)
-        self.factor = 1.0 / factor
+        return {"factor": torch.ones_like(self.diam) / factor}
 
     def i(self, v):
         return self.current_scale * (self.B - self.A) * (v - self.e)
@@ -164,18 +164,18 @@ class striatal_gaba_gate_state(S):
     S.RANGE(tau_i=13.0)
     S.DERIVATIVE("s' = drive * (1.0 - s) - s / tau_i")
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         drive = 2.0 * (1.0 + torch.tanh(v / 4.0))
         return {"drive": drive}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         drive = 2.0 * (1.0 + torch.tanh(v / 4.0))
         return {"s": drive / (drive + 1.0 / self.tau_i)}
 
 
 class striatal_gaba_gate(M):
     """Continuous voltage-gated MSN recurrent GABA state S1c/S8."""
-    M.STATE(striatal_gaba_gate_state)
+    M.STATE_BUNDLE(striatal_gaba_gate_state)
 
 
 class striatal_recurrent_gaba_refs(S):
@@ -184,7 +184,7 @@ class striatal_recurrent_gaba_refs(S):
     S.RANGE(g=0.1, e=-80.0, current_scale=1.0)
     S.DERIVATIVE("x' = 0.0 * x")
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"x": torch.zeros_like(v)}
 
 
@@ -196,7 +196,7 @@ class striatal_recurrent_gaba(M):
     setreference. The current is ``g * (v - e) * sum_k s_k``.
     """
 
-    M.STATE(striatal_recurrent_gaba_refs)
+    M.STATE_BUNDLE(striatal_recurrent_gaba_refs)
     M.NONSPECIFIC_CURRENT("i")
 
     def _conductance(self, v):

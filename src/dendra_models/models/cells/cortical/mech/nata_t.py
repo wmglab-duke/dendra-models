@@ -6,7 +6,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("m")
     S.GLOBALP(mtau_scale=0.4)
     S.GLOBAL_SIGNED(
@@ -23,12 +23,12 @@ class m(S):
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - self.bq10) / self.cq10)}
 
     def alpha(self, v):
         return (
-            self.q10()
+            self.q10
             * self.ma1
             * (v - self.mshift)
             / (1 - exp(-(v - self.mshift) / self.ma2))
@@ -36,13 +36,13 @@ class m(S):
 
     def beta(self, v):
         return (
-            self.q10()
+            self.q10
             * self.mb1
             * (-v + self.mshift)
             / (1 - exp(-(-v + self.mshift) / self.mb2))
         )
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         v = torch.where(torch.isin(v, self.mshift), v + 0.0001, v)
         a = self.alpha(v)
         b = self.beta(v)
@@ -50,12 +50,12 @@ class m(S):
         minf = a / (a + b)
         return {"taum": taum, "minf": minf}
 
-    def inf(self, v):
-        return {"m": self.breakpoint(v, None)["minf"]}
+    def state_defaults(self, v, values):
+        return {"m": self.assigned_values(v, values)["minf"]}
 
 
 class h(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("h")
     S.GLOBALP(htau_scale=0.4)
     S.GLOBAL_SIGNED(
@@ -74,12 +74,12 @@ class h(S):
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - self.bq10) / self.cq10)}
 
     def alpha(self, v):
         return (
-            self.q10()
+            self.q10
             * self.ha1
             * (v - self.hshift)
             / (1 - exp((v - self.hshift) / self.ha2))
@@ -87,13 +87,13 @@ class h(S):
 
     def beta(self, v):
         return (
-            self.q10()
+            self.q10
             * self.hb1
             * (-v + self.hshift)
             / (1 - exp((-v + self.hshift) / self.hb2))
         )
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         v = torch.where(torch.isin(v, self.hshift), v + 0.0001, v)
         a = self.alpha(v)
         b = self.beta(v)
@@ -101,12 +101,12 @@ class h(S):
         hinf = a / (a + b)
         return {"tauh": tauh, "hinf": hinf}
 
-    def inf(self, v):
-        return {"h": self.breakpoint(v, None)["hinf"]}
+    def state_defaults(self, v, values):
+        return {"h": self.assigned_values(v, values)["hinf"]}
 
 
 class nata_t(M):
-    M.STATE(m, h)
+    M.STATE_BUNDLE(m, h)
     M.USEION("na", read=["ena"], write=["ina"])
     M.RANGEP(gbar=0.00001)
 

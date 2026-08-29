@@ -4,7 +4,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class mh(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("m", "h")
     S.DERIVATIVE(
         "m' = (minf - m) / taum",
@@ -12,12 +12,12 @@ class mh(S):
     )
     S.ASSIGNED("minf", "taum", "hinf", "tauh")
 
-    def calc_q10(self):
-        return 2.3 ** ((self.celsius - 21.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 2.3 ** ((self.celsius - 21.0) / 10.0)}
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         v = v + 10.0
-        q10 = self.q10()
+        q10 = self.q10
         minf = 1.0000 / (1 + exp((v - -30.000) / -6))
         taum = (5.0000 + 20.0000 / (1 + exp((v - -25.000) / 5))) / q10
         hinf = 1.0000 / (1 + exp((v - -80.000) / 6.4))
@@ -29,8 +29,8 @@ class mh(S):
             "hinf": hinf,
         }
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {
             "m": states["minf"],
             "h": states["hinf"],
@@ -38,7 +38,7 @@ class mh(S):
 
 
 class ca_lva(M):
-    M.STATE(mh)
+    M.STATE_BUNDLE(mh)
     M.USEION("ca", read=["eca"], write=["ica"])
 
     M.RANGEP(gbar=0.00001)

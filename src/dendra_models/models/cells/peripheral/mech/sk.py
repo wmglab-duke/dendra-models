@@ -4,28 +4,28 @@ from dendra.models.mechanisms.ops import *
 
 
 class n(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("n")
     S.DERIVATIVE("n' = (ninf - n) / taun")
     S.ASSIGNED("ninf", "taun")
     S.GLOBAL_SIGNED(aq10=3.0)
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 22.0) / 10.0)}
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         pca = log10(self.cai) - 3
         ninf = 1 / (1 + exp(-1 * (pca + 6.4) / 0.12))
-        taun = -1 * pca / self.q10()
+        taun = -1 * pca / self.q10
         return {"taun": taun, "ninf": ninf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         pca = log10(self.cai) - 3
         return {"n": 1 / (1 + exp(-1 * (pca + 6.4) / 0.12))}
 
 
 class sk(M):
-    M.STATE(n)
+    M.STATE_BUNDLE(n)
     M.GLOBAL_SIGNED(gbar=0.0001)
 
     M.USEION("k", read=["ek"], write=["ik"])

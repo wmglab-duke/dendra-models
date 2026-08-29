@@ -255,12 +255,13 @@ def test_modular_kumaravelu_network_initializes_with_safe_current_paths():
     )
 
 
-def test_esser_soft_spike_initializes_its_declared_previous_gate_buffer():
+def test_esser_soft_spike_initializes_its_declared_previous_gate_carry():
     from dendra_models.models.networks.yu_2024.mechanisms.esser import esser_mech_s
 
     mechanism = _new_mechanism(esser_mech_s)
+    mechanism._configure_timestep(0.1)
     mechanism.g_prev.fill_(1.0)
-    mechanism.initial(VOLTAGE)
+    mechanism._init_buffers_s(VOLTAGE)
 
     torch.testing.assert_close(mechanism.g_prev, torch.zeros_like(VOLTAGE))
     assert not hasattr(mechanism, "h_prev")

@@ -8,17 +8,17 @@ class m(S):
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         taum = 0.2 * 20.000 / (1 + exp(((v - (-46.560)) / (-44.140))))
         minf = 1 / (1 + exp(((v - (18.700)) / (-9.700))))
         return {"taum": taum, "minf": minf}
 
-    def inf(self, v):
-        return {"m": self.breakpoint(v, None)["minf"]}
+    def state_defaults(self, v, values):
+        return {"m": self.assigned_values(v, values)["minf"]}
 
 
 class skv3_1(M):
-    M.STATE(m)
+    M.STATE_BUNDLE(m)
     M.RANGEP(gbar=0.00001)
     M.USEION("k", read=["ek"], write=["ik"])
 

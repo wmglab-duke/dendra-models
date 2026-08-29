@@ -6,6 +6,7 @@ import dendra  # noqa: F401 - configure Dendra before importing torch
 import pytest
 import torch
 from dendra.const import FARADAY, R
+from dendra.models.mechanisms._state import _materialize_derived_buffers
 from dendra.models.mod import pas as dendra_pas
 
 from dendra_models.models.cells.cortical.mech import (
@@ -32,13 +33,16 @@ DTYPE = torch.float64
 
 
 def _new_mechanism(mechanism_cls, temperature=37.0):
-    return mechanism_cls(
+    mechanism = mechanism_cls(
         mechanism_cls.__qualname__,
         torch.tensor(temperature, dtype=DTYPE),
         torch.ones(SHAPE, dtype=DTYPE),
         SHAPE,
         SHAPE,
     ).to(dtype=DTYPE)
+    for state in mechanism.DE.values():
+        _materialize_derived_buffers(state)
+    return mechanism
 
 
 def _voltage(values):
@@ -50,7 +54,8 @@ def _voltage(values):
 
 def _rates(mechanism_cls, state_name, values, temperature=37.0):
     mechanism = _new_mechanism(mechanism_cls, temperature)
-    return mechanism.DE[state_name].breakpoint(_voltage(values), None)
+    state = mechanism.DE[state_name]
+    return state.assigned_values(_voltage(values), {})
 
 
 def test_cortical_pas_reexports_dendras_canonical_mechanism():
@@ -171,7 +176,7 @@ def test_fast_sodium_scales_only_change_tau(mechanism_cls):
         state = mechanism.DE[state_name]
         alpha = state.alpha(voltage)
         beta = state.beta(voltage)
-        rates = state.breakpoint(voltage, None)
+        rates = state.assigned_values(voltage, {})
 
         torch.testing.assert_close(
             rates[tau_name],

@@ -10,7 +10,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class mh(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("m", "h")
     S.GLOBAL_SIGNED(aq10=2.3, bq10=21.0, cq10=10.0)
 
@@ -20,20 +20,20 @@ class mh(S):
     )
     S.ASSIGNED("minf", "taum", "hinf", "tauh")
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - self.bq10) / self.cq10)}
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         v = v + 10.0
-        q10 = self.q10()
+        q10 = self.q10
         minf = 1.0 / (1.0 + exp(-v / 19.0))
         taum = (0.34 + 0.92 * exp(-(((v + 71) / 59) ** 2))) / q10
         hinf = 1.0 / (1.0 + exp(-(v + 66.0) / -10.0))
         tauh = (8.0 + 49.0 * exp(-(((v + 73.0) / 23.0) ** 2))) / q10
         return {"taum": taum, "minf": minf, "tauh": tauh, "hinf": hinf}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {
             "m": states["minf"],
             "h": states["hinf"],
@@ -41,7 +41,7 @@ class mh(S):
 
 
 class k_t(M):
-    M.STATE(mh)
+    M.STATE_BUNDLE(mh)
     M.USEION("k", read=["ek"], write=["ik"])
 
     M.RANGEP(gbar=0.00001)

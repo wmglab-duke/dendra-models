@@ -24,6 +24,10 @@ class oc_cai(S):
             "Vol": math.pi * ((1e-4) * (self.diam / 2)) ** 2 * self.lseg,
         }
 
+    def state_defaults(self, v, values):
+        del values
+        return {"oc": v.new_full(v.shape, 0.05)}
+
 
 class oc_cai_augmented(S):
     S.STATE("oc", "cai")
@@ -50,14 +54,16 @@ class oc_cai_augmented(S):
             "Vol": math.pi * ((1e-4) * (self.diam / 2)) ** 2 * self.lseg,
         }
 
+    def state_defaults(self, v, values):
+        del values
+        return {"oc": v.new_full(v.shape, 0.05)}
+
 
 class caintscale(M):
-    M.STATE(oc_cai)
+    M.STATE_BUNDLE(oc_cai)
     M.USEION("ca", read=["ica"], write=["cai"])
-    M.INIT(oc=0.05)
 
 
 class caintscale_augmented(M):
-    M.STATE(oc_cai_augmented)
+    M.STATE_BUNDLE(oc_cai_augmented)
     M.USEION("ca", read=["ica"], write=["cai"])
-    M.INIT(oc=0.05)

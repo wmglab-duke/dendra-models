@@ -8,11 +8,11 @@ name = "dendra-models"
 dynamic = ["version"]
 description = "Models for Dendra"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = { file = "LICENSE" }
 authors = [{ name = "Minhaj Hussain", email = "minhaj.hussain@duke.edu" }]
 dependencies = [
-  "dendra"
+  "dendra>=0.25.0,<0.26.0"
 ]
 
 # Optional but nice-to-have

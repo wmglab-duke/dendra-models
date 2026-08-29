@@ -6,7 +6,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class x(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("x")
     S.GLOBAL_SIGNED(
@@ -25,23 +25,23 @@ class x(S):
     S.DERIVATIVE("x' = (xinf - x) / taux")
     S.ASSIGNED("xinf", "taux")
 
-    def calc_q10(self):
-        return self.Q10kds ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.Q10kds ** ((self.Q10TempA - self.celsius) / self.Q10TempB)}
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         taux = (
             self.A_taux * exp(-((self.B_taux) ** 2) * (v - self.Vpx) ** 2) + self.C_taux
         )
-        taux = self.q10() * taux
+        taux = self.q10 * taux
         xinf = sigmoid(-(v + self.V0p5x + self.shiftkds) / self.S0p5x)
         return {"taux": taux, "xinf": xinf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"x": sigmoid(-(v + self.V0p5x + self.shiftkds) / self.S0p5x)}
 
 
 class y(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("y")
     S.GLOBAL_SIGNED(
@@ -57,20 +57,20 @@ class y(S):
     S.DERIVATIVE("y' = (yinf - y) / tauy")
     S.ASSIGNED("yinf", "tauy")
 
-    def calc_q10(self):
-        return self.Q10kds ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.Q10kds ** ((self.Q10TempA - self.celsius) / self.Q10TempB)}
 
-    def breakpoint(self, v, states):
-        tauy = self.tau_y22 * self.q10()
+    def assigned_values(self, v, values):
+        tauy = self.tau_y22 * self.q10
         yinf = sigmoid(-(v + self.V0p5y + self.shiftkds) / self.S0p5y)
         return {"tauy": tauy, "yinf": yinf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"y": sigmoid(-(v + self.V0p5y + self.shiftkds) / self.S0p5y)}
 
 
 class kds(M):
-    M.STATE(x, y)
+    M.STATE_BUNDLE(x, y)
     M.GLOBAL_SIGNED(gbar=0.000106103)
     M.USEION("k", read=["ek"], write=["ik"])
 

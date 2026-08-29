@@ -21,7 +21,7 @@ class nacapump(M):
     M.USEION("ca", read=["cao", "cai"], write=["ica"])
     M.USEION("na", read=["nai", "nao"], write=["ina"])
 
-    M.BUFFER("inca")
+    M.ASSIGNED("inca")
     M.DERIVED_BUFFER("KNaCa", "DFin", "DFout")
     M.EXPLICIT("ina", "ica")
 
@@ -34,14 +34,12 @@ class nacapump(M):
         DFout = ((self.r - 2) * (self.gamma - 1) * self.F) / (self.R * temp)
         return {"KNaCa": KNaCa, "DFin": DFin, "DFout": DFout}
 
-    def initial(self, v):
-        self.breakpoint(v)
-
-    def breakpoint(self, v):
+    def assigned_values(self, v, values):
+        del values
         S = 1.0 + self.DNaCa * (self.cai * self.nao**3 + self.cao * self.nai**3)
         DFin = self.nai**3 * self.cao * exp(self.DFin * v)
         DFout = self.nao**3 * self.cai * exp(self.DFout * v)
-        self.inca = self.KNaCa * ((DFin - DFout) / S)
+        return {"inca": self.KNaCa * ((DFin - DFout) / S)}
 
     def ina(self, v):
         return 3 * self.inca

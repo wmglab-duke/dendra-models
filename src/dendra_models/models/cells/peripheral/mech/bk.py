@@ -4,17 +4,17 @@ from dendra.models.mechanisms.ops import *
 
 
 class m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("m")
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
     S.GLOBAL_SIGNED(aq10=3.0)
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 22.0) / 10.0)}
 
-    def breakpoint(self, v, states):
-        q10 = self.q10()
+    def assigned_values(self, v, values):
+        q10 = self.q10
         pca = log10(self.cai) - 3.0
         v12 = -50.0 * pca - 232.0
         minf = 1.0 / (1.0 + exp(-1.0 * (v - v12) / 24.0))
@@ -29,24 +29,24 @@ class m(S):
         taum = taum / q10
         return {"taum": taum, "minf": minf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         pca = log10(self.cai) - 3.0
         v12 = -50.0 * pca - 232.0
         return {"m": 1.0 / (1.0 + exp(-1.0 * (v - v12) / 24.0))}
 
 
 class h(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("h")
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
     S.GLOBAL_SIGNED(aq10=3.0)
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 22.0) / 10.0)}
 
-    def breakpoint(self, v, states):
-        q10 = self.q10()
+    def assigned_values(self, v, values):
+        q10 = self.q10
         pca = log10(self.cai) - 3.0
         vh12 = -8.0 * pca + 35.0
         hinf = 1.0 / (1.0 + exp((v - vh12) / 47.0))
@@ -57,14 +57,14 @@ class h(S):
         tauh = tauh / q10
         return {"tauh": tauh, "hinf": hinf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         pca = log10(self.cai) - 3.0
         vh12 = -8.0 * pca + 35.0
         return {"h": 1.0 / (1.0 + exp((v - vh12) / 47.0))}
 
 
 class bk(M):
-    M.STATE(m, h)
+    M.STATE_BUNDLE(m, h)
     M.GLOBAL_SIGNED(gbar=0.0001)
 
     M.USEION("k", read=["ek"], write=["ik"])

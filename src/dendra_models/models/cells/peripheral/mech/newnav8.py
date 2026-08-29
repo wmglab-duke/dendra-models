@@ -4,38 +4,38 @@ from dendra.models.mechanisms.ops import *
 
 
 class m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("m")
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
     S.GLOBAL_SIGNED(aq10=3.0)
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 22.0) / 10.0)}
     
     def taum(self, v):
         taum = 0.03 + 0.5 / (exp((v) / 12) + exp(-1 * (v + 29) / 18))
-        return taum / self.q10() / 2
+        return taum / self.q10 / 2
     
     def minf(self, v):
         return (1 / (1 + exp(-1 * (v + 4) / 7))) ** (1 / 3)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         return {"taum": self.taum(v), "minf": self.minf(v)}
 
-    def inf(self, v):
-        return {"m": self.breakpoint(v, None)["minf"]}
+    def state_defaults(self, v, values):
+        return {"m": self.assigned_values(v, values)["minf"]}
 
 
 class h(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("h")
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
     S.GLOBAL_SIGNED(aq10=3.0)
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 22.0) / 10.0)}
     
     def hinf(self, v):
         return 1 / (1 + exp((v + 28) / 4.56))
@@ -46,24 +46,24 @@ class h(S):
             + 250 / (exp((v + 36) / 7.7) + exp(-1 * (v) / 16.3))
             + 1.4 / (1 + exp(-1 * (v + 0.6) / 2.95))
         )
-        return tauh / self.q10()
+        return tauh / self.q10
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         return {"tauh": self.tauh(v), "hinf": self.hinf(v)}
 
-    def inf(self, v):
-        return {"h": self.breakpoint(v, None)["hinf"]}
+    def state_defaults(self, v, values):
+        return {"h": self.assigned_values(v, values)["hinf"]}
 
 
 class s(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("s")
     S.DERIVATIVE("s' = (sinf - s) / taus")
     S.ASSIGNED("sinf", "taus")
     S.GLOBAL_SIGNED(aq10=3.0)
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 22.0) / 10.0)}
     
     def sinf(self, v):
         return 1 / (1 + exp((v + 50) / 7.5))
@@ -72,17 +72,17 @@ class s(S):
         taus = 34 / (exp((v + 2) / 16) + exp(-1 * (v + 108) / 8)) + 160 / (
             1 + exp(-1 * (v + 110) / 75)
         )
-        return taus / self.q10()
+        return taus / self.q10
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         return {"taus": self.taus(v), "sinf": self.sinf(v)}
 
-    def inf(self, v):
-        return {"s": self.breakpoint(v, None)["sinf"]}
+    def state_defaults(self, v, values):
+        return {"s": self.assigned_values(v, values)["sinf"]}
 
 
 class newnav8(M):
-    M.STATE(m, h, s)
+    M.STATE_BUNDLE(m, h, s)
     M.GLOBAL_SIGNED(gbar=0.001)
     M.USEION("na", read=["ena"], write=["ina"])
 

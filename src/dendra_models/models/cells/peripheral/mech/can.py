@@ -6,7 +6,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class d(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("d")
     S.GLOBAL_SIGNED(
@@ -25,22 +25,22 @@ class d(S):
     S.DERIVATIVE("d' = (dinf - d) / taud")
     S.ASSIGNED("dinf", "taud")
 
-    def calc_q10(self):
-        return self.Q10can ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.Q10can ** ((self.Q10TempA - self.celsius) / self.Q10TempB)}
 
-    def breakpoint(self, v, states):
-        taud = self.q10() * (
+    def assigned_values(self, v, values):
+        taud = self.q10 * (
             self.A_taud * exp(-((self.B_taud) ** 2) * (v - self.Vpd) ** 2) + self.C_taud
         )
         dinf = 1.0 / (1.0 + exp((v + self.V0p5d + self.shiftcan) / self.S0p5d))
         return {"taud": taud, "dinf": dinf}
 
-    def inf(self, v):
-        return {"d": self.breakpoint(v, None)["dinf"]}
+    def state_defaults(self, v, values):
+        return {"d": self.assigned_values(v, values)["dinf"]}
 
 
 class f1(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("f1")
     S.GLOBAL_SIGNED(
@@ -59,23 +59,23 @@ class f1(S):
     S.DERIVATIVE("f1' = (f1inf - f1) / tauf1")
     S.ASSIGNED("f1inf", "tauf1")
 
-    def calc_q10(self):
-        return self.Q10can ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.Q10can ** ((self.Q10TempA - self.celsius) / self.Q10TempB)}
 
-    def breakpoint(self, v, states):
-        tauf1 = self.q10() * (
+    def assigned_values(self, v, values):
+        tauf1 = self.q10 * (
             self.A_tauf1 * exp(-((self.B_tauf1) ** 2) * (v - self.Vpf1) ** 2)
             + self.C_tauf1
         )
         f1inf = 1.0 / (1.0 + exp((v + self.V0p5f1 + self.shiftcan) / self.S0p5f1))
         return {"tauf1": tauf1, "f1inf": f1inf}
 
-    def inf(self, v):
-        return {"f1": self.breakpoint(v, None)["f1inf"]}
+    def state_defaults(self, v, values):
+        return {"f1": self.assigned_values(v, values)["f1inf"]}
 
 
 class f2(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("f2")
     S.GLOBAL_SIGNED(
@@ -96,11 +96,11 @@ class f2(S):
     S.DERIVATIVE("f2' = (f2inf - f2) / tauf2")
     S.ASSIGNED("f2inf", "tauf2")
 
-    def calc_q10(self):
-        return self.Q10can ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.Q10can ** ((self.Q10TempA - self.celsius) / self.Q10TempB)}
 
-    def breakpoint(self, v, states):
-        tauf2 = self.q10() * (
+    def assigned_values(self, v, values):
+        tauf2 = self.q10 * (
             self.A_tauf2 * exp(-((self.B_tauf2) ** 2) * (v - self.Vpf2) ** 2)
             + self.C_tauf2
         )
@@ -110,12 +110,12 @@ class f2(S):
         )
         return {"tauf2": tauf2, "f2inf": f2inf}
 
-    def inf(self, v):
-        return {"f2": self.breakpoint(v, None)["f2inf"]}
+    def state_defaults(self, v, values):
+        return {"f2": self.assigned_values(v, values)["f2inf"]}
 
 
 class can(M):
-    M.STATE(d, f1, f2)
+    M.STATE_BUNDLE(d, f1, f2)
     M.GLOBAL_SIGNED(gbar=0.000106103, R=8314.0, z=2, ecaoffset=78.7, F=96500)
     M.USEION("ca", read=["cao", "cai"], write=["ica"])
 

@@ -4,15 +4,15 @@ from dendra.models.mechanisms.ops import *
 
 
 class m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m")
     S.GLOBAL_SIGNED(amA=1.0, aq10=2.24659524757)
     S.DERIVATIVE("m' = (minf - m) / mtau")
     S.ASSIGNED("minf", "mtau")
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 6.3) / 10)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 6.3) / 10)}
 
     def alpha(self, v):
         return exprelr(2.5 - 0.1 * (v + 70), self.amA)
@@ -20,28 +20,28 @@ class m(S):
     def beta(self, v):
         return 4.0 * exp(-(v + 70.0) / 18.0)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         s = a + b
         minf = a / s
-        mtau = 1.0 / (self.q10() * s)
+        mtau = 1.0 / (self.q10 * s)
         return {"mtau": mtau, "minf": minf}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"m": states["minf"]}
 
 
 class h(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("h")
     S.GLOBAL_SIGNED(aq10=2.24659524757)
     S.DERIVATIVE("h' = (hinf - h) / htau")
     S.ASSIGNED("hinf", "htau")
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 6.3) / 10)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 6.3) / 10)}
 
     def alpha(self, v):
         return 0.07 * exp(-(v + 70) / 20)
@@ -49,28 +49,28 @@ class h(S):
     def beta(self, v):
         return expit((-3.0) + 0.1 * (v + 70))
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         s = a + b
         hinf = a / s
-        htau = 1.0 / (self.q10() * s)
+        htau = 1.0 / (self.q10 * s)
         return {"htau": htau, "hinf": hinf}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"h": states["hinf"]}
 
 
 class n(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("n")
     S.GLOBAL_SIGNED(anA=1.0, aq10=2.24659524757)
     S.DERIVATIVE("n' = (ninf - n) / ntau")
     S.ASSIGNED("ninf", "ntau")
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 6.3) / 10)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 6.3) / 10)}
 
     def alpha(self, v):
         return 0.1 * exprelr(1.0 - 0.1 * (v + 70.0), self.anA)
@@ -78,21 +78,21 @@ class n(S):
     def beta(self, v):
         return 0.125 * exp(-(v + 70.0) / 80.0)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         s = a + b
         ninf = a / s
-        ntau = 1.0 / (self.q10() * s)
+        ntau = 1.0 / (self.q10 * s)
         return {"ntau": ntau, "ninf": ninf}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"n": states["ninf"]}
 
 
 class rattay_aberham(M):
-    M.STATE(m, h, n)
+    M.STATE_BUNDLE(m, h, n)
     M.GLOBAL_SIGNED(gnabar=0.12, gkbar=0.036, gl=0.0003, el=-59.4)
 
     M.USEION("na", read=["ena"], write=["ina"])

@@ -4,55 +4,55 @@ from dendra.models.mechanisms.ops import *
 
 
 class m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("m")
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
     S.GLOBAL_SIGNED(aq10=3.0)
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 22.0) / 10.0)}
     
     def minf(self, v):
         return (1 / (1 + exp((v + 97) / 7.35))) ** (1 / 3)
     
     def taum(self, v):
         taum = 0.5 / (exp((v - 42) / 11.8) + exp(-1 * (v + 498) / 66.6))
-        return taum / self.q10()
+        return taum / self.q10
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         return {"taum": self.taum(v), "minf": self.minf(v)}
     
-    def inf(self, v):
-        return {"m": self.breakpoint(v, None)["minf"]}
+    def state_defaults(self, v, values):
+        return {"m": self.assigned_values(v, values)["minf"]}
 
 
 class n(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("n")
     S.DERIVATIVE("n' = (ninf - n) / taun")
     S.ASSIGNED("ninf", "taun")
     S.GLOBAL_SIGNED(aq10=3.0)
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - 22.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - 22.0) / 10.0)}
     
     def ninf(self, v):
         return (1 / (1 + exp((v + 94) / 8.9))) ** (1 / 3)
     
     def taun(self, v):
         taun = 0.5 / (exp((v + 25) / 4.1) + exp(-1 * (v + 356) / 32))
-        return taun / self.q10()
+        return taun / self.q10
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         return {"taun": self.taun(v), "ninf": self.ninf(v)}
 
-    def inf(self, v):
-        return {"n": self.breakpoint(v, None)["ninf"]}
+    def state_defaults(self, v, values):
+        return {"n": self.assigned_values(v, values)["ninf"]}
 
 
 class hcn(M):
-    M.STATE(m, n)
+    M.STATE_BUNDLE(m, n)
     M.GLOBAL_SIGNED(gbar=0.0001)
     M.GLOBAL_SIGNED(ekna=-30.0)
 

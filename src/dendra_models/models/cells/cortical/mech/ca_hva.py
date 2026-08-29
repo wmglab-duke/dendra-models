@@ -11,7 +11,7 @@ class mh(S):
     )
     S.ASSIGNED("minf", "taum", "hinf", "tauh")
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         mAlpha = 0.055 * vtrap(-(v + 27), 3.8)
         mBeta = 0.94 * exp((-75 - v) / 17)
         mInf = mAlpha / (mAlpha + mBeta)
@@ -27,8 +27,8 @@ class mh(S):
             "hinf": hInf,
         }
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {
             "m": states["minf"],
             "h": states["hinf"],
@@ -36,7 +36,7 @@ class mh(S):
 
 
 class ca_hva(M):
-    M.STATE(mh)
+    M.STATE_BUNDLE(mh)
     M.RANGEP(gbar=0.00001)
     M.USEION("ca", read=["eca"], write=["ica"])
 

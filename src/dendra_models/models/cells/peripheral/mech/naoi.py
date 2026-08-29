@@ -29,10 +29,10 @@ class nao_augmented(S):
 
 
 class naoi(M):
-    M.STATE(nai, nao)
+    M.STATE_BUNDLE(nai, nao)
     M.USEION("na", read=["ina"], write=["nao", "nai"])
 
 
-class naoi_augmented(naoi):
-    M.STATE(nai_augmented, nao_augmented)
+class naoi_augmented(M):
+    M.STATE_BUNDLE(nai_augmented, nao_augmented)
     M.USEION("na", read=["ina"], write=["nao", "nai"])

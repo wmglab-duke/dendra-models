@@ -78,7 +78,7 @@ class thalamic_states(S):
         i_stim=1.2,
     )
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         return {
             "hinf": th_hinf(v),
             "htau": th_tauh(v),
@@ -86,12 +86,12 @@ class thalamic_states(S):
             "rtau": th_taur(v),
         }
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"h": th_hinf(v), "r": th_rinf(v)}
 
 
 class thalamic(M):
-    M.STATE(thalamic_states)
+    M.STATE_BUNDLE(thalamic_states)
     M.NONSPECIFIC_CURRENT("il", "ina", "ik", "it", "istim")
     M.EXPLICIT("istim")
 
@@ -282,11 +282,11 @@ class stn_states(S):
         i_stim=0.0,
     )
 
-    def breakpoint(self, v, states):
-        ca = _positive(states["ca"])
+    def assigned_values(self, v, values):
+        ca = _positive(values["ca"])
         eca = self.con * log(self.cao / ca)
-        ilca = self.gL_Ca * states["c"] ** 2 * states["d1"] * states["d2"] * (v - eca)
-        it = self.gt * states["p"] ** 2 * states["q"] * (v - eca)
+        ilca = self.gL_Ca * values["c"] ** 2 * values["d1"] * values["d2"] * (v - eca)
+        it = self.gt * values["p"] ** 2 * values["q"] * (v - eca)
         return {
             "ninf": stn_ninf(v), "ntau": stn_taun(v),
             "hinf": stn_hinf(v), "htau": stn_tauh(v),
@@ -304,7 +304,7 @@ class stn_states(S):
             "it_for_ca": it,
         }
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {
             "n": stn_ninf(v), "h": stn_hinf(v), "m": stn_minf(v),
             "a": stn_ainf(v), "b": stn_binf(v), "c": stn_cinf(v),
@@ -314,7 +314,7 @@ class stn_states(S):
 
 
 class stn(M):
-    M.STATE(stn_states)
+    M.STATE_BUNDLE(stn_states)
     M.NONSPECIFIC_CURRENT("ina", "ik", "ia", "ilca", "it", "icak", "il", "istim")
     M.EXPLICIT("istim")
 
@@ -466,8 +466,8 @@ class pallidal_states(S):
         i_stim=3.0,
     )
 
-    def breakpoint(self, v, states):
-        it = self.gt * gpe_ainf(v) ** 3 * states["r"] * (v - self.eca)
+    def assigned_values(self, v, values):
+        it = self.gt * gpe_ainf(v) ** 3 * values["r"] * (v - self.eca)
         ica = self.gca * gpe_sinf(v) ** 2 * (v - self.eca)
         return {
             "ninf": gpe_ninf(v),
@@ -480,12 +480,12 @@ class pallidal_states(S):
             "it_for_ca": it,
         }
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"n": gpe_ninf(v), "h": gpe_hinf(v), "r": gpe_rinf(v), "ca": torch.zeros_like(v) + 0.1}
 
 
 class gpe(M):
-    M.STATE(pallidal_states)
+    M.STATE_BUNDLE(pallidal_states)
     M.NONSPECIFIC_CURRENT("il", "ik", "ina", "it", "ica", "iahp", "istim")
     M.EXPLICIT("istim")
 
@@ -645,7 +645,7 @@ class striatal_msn_states(S):
         i_stim=0.0,
     )
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         return {
             "am": str_alpha_m(v), "bm": str_beta_m(v),
             "ah": str_alpha_h(v), "bh": str_beta_h(v),
@@ -653,7 +653,7 @@ class striatal_msn_states(S):
             "ap": str_alpha_p(v), "bp": str_beta_p(v),
         }
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         am, bm = str_alpha_m(v), str_beta_m(v)
         ah, bh = str_alpha_h(v), str_beta_h(v)
         an, bn = str_alpha_n(v), str_beta_n(v)
@@ -667,7 +667,7 @@ class striatal_msn_states(S):
 
 
 class striatal_msn(M):
-    M.STATE(striatal_msn_states)
+    M.STATE_BUNDLE(striatal_msn_states)
     M.NONSPECIFIC_CURRENT("ina", "ik", "il", "im", "istim")
     M.EXPLICIT("istim")
 

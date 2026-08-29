@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dendra as dn  # noqa: F401 - configure Dendra before importing torch
 import torch
+from dendra.models.mechanisms._state import _materialize_derived_buffers
 
 from dendra_models.models.cells.peripheral import Sweeney1987
 from dendra_models.models.cells.peripheral.mech import ka14, km
@@ -12,13 +13,16 @@ SHAPE = (1, 3)
 
 
 def _new_mechanism(mechanism_cls):
-    return mechanism_cls(
+    mechanism = mechanism_cls(
         mechanism_cls.__qualname__,
         torch.tensor(37.0, dtype=DTYPE),
         torch.ones(SHAPE, dtype=DTYPE),
         SHAPE,
         SHAPE,
     ).to(dtype=DTYPE)
+    for state in mechanism.DE.values():
+        _materialize_derived_buffers(state)
+    return mechanism
 
 
 def test_sweeney_reduced_geometry_matches_resistive_internode_equivalent():

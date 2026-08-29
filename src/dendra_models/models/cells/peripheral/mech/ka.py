@@ -4,7 +4,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class p(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("p")
     S.GLOBAL_SIGNED(
@@ -22,22 +22,22 @@ class p(S):
     S.DERIVATIVE("p' = (pinf - p) / taup")
     S.ASSIGNED("pinf", "taup")
 
-    def calc_q10(self):
-        return self.q10ka ** ((self.q10TempA - self.celsius) / self.q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.q10ka ** ((self.q10TempA - self.celsius) / self.q10TempB)}
 
-    def breakpoint(self, v, states):
-        taup = self.q10() * (
+    def assigned_values(self, v, values):
+        taup = self.q10 * (
             self.A_taup * exp(-((self.B_taup) ** 2) * (v - self.Vpp) ** 2) + self.C_taup
         )
         pinf = 1.0 / (1.0 + exp((v + self.V0p5p + self.shiftka) / self.S0p5p))
         return {"taup": taup, "pinf": pinf}
 
-    def inf(self, v):
-        return {"p": self.breakpoint(v, None)["pinf"]}
+    def state_defaults(self, v, values):
+        return {"p": self.assigned_values(v, values)["pinf"]}
 
 
 class q(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
     S.STATE("q")
     S.GLOBAL_SIGNED(
         shiftka=3.0,
@@ -55,22 +55,22 @@ class q(S):
     S.DERIVATIVE("q' = (qinf - q) / tauq")
     S.ASSIGNED("qinf", "tauq")
 
-    def calc_q10(self):
-        return self.q10ka ** ((self.q10TempA - self.celsius) / self.q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.q10ka ** ((self.q10TempA - self.celsius) / self.q10TempB)}
 
-    def breakpoint(self, v, states):
-        tauq = self.q10() * (
+    def assigned_values(self, v, values):
+        tauq = self.q10 * (
             self.A_tauq * exp(-((self.B_tauq) ** 2) * (v - self.Vpq) ** 2) + self.C_tauq
         )
         qinf = 1.0 / (1.0 + exp((v + self.V0p5q + self.shiftka) / self.S0p5q))
         return {"tauq": tauq, "qinf": qinf}
 
-    def inf(self, v):
-        return {"q": self.breakpoint(v, None)["qinf"]}
+    def state_defaults(self, v, values):
+        return {"q": self.assigned_values(v, values)["qinf"]}
 
 
 class ka(M):
-    M.STATE(p, q)
+    M.STATE_BUNDLE(p, q)
     M.GLOBAL_SIGNED(gbar=0.000141471)
     M.USEION("k", read=["ek"], write=["ik"])
 

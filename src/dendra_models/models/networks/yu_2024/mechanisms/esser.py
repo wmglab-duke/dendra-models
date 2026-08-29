@@ -1,13 +1,17 @@
 import torch
 
-from dendra.models.mechanisms._mechanism import Mechanism as M, VoltageProcess as V, Synapse as Syn
+from dendra.models.mechanisms._mechanism import (
+    VoltageProcess as V,
+    Synapse as Syn,
+)
 from dendra.models.mechanisms._state import State as S
-from dendra.models.mechanisms.ops import *
+from dendra.models.mechanisms.ops import exp, log
 from dendra.models.networks.spiking import sigmoid_ste
 
 
 class esser_states(S):
     S.STATE("v_iaf", "theta", "A", "B")
+    S.CARRY("gspike")
     S.ASSIGNED("i_total", "i_spike")
     S.DERIVATIVE("v_iaf' = -((i_total / tau_m) + (i_spike / tau_spike))")
     S.DERIVATIVE("theta' = (-(theta - theta_eq) + C*(v_iaf - theta_eq))/tau_theta")
@@ -17,65 +21,88 @@ class esser_states(S):
     S.RANGE(
         gNa_leak=0.14,
         gK_leak=1.0,
-        gspike=0.0,
-        C = 0.85,
-        theta_eq = -53.0,
-        tau_theta = 2.0,
-        tau_spike = 1.75,
-        tau_syn = 2.0,
-        tau_m = 15.0,
-        ena_iaf = 30.0,
-        ek_iaf = -90.0,
-        v_iaf0 = -77.5,
-        tau1 = 0.1,
-        tau2 = 0.2,
-        e = 0.0,
-        i_stim = 0.0,
+        C=0.85,
+        theta_eq=-53.0,
+        tau_theta=2.0,
+        tau_spike=1.75,
+        tau_syn=2.0,
+        tau_m=15.0,
+        ena_iaf=30.0,
+        ek_iaf=-90.0,
+        v_iaf0=-77.5,
+        tau1=0.1,
+        tau2=0.2,
+        e=0.0,
+        i_stim=0.0,
     )
 
-    def breakpoint(self, v, states):
-        ina_iaf = self.gNa_leak*(v-self.ena_iaf)
-        ik_iaf = self.gK_leak*(v-self.ek_iaf)
-        ispike = self.gspike*(v-self.ek_iaf)
-        g = states["B"] - states["A"]
+    def assigned_values(self, v, values):
+        ina_iaf = self.gNa_leak * (v - self.ena_iaf)
+        ik_iaf = self.gK_leak * (v - self.ek_iaf)
+        ispike = self.gspike * (v - self.ek_iaf)
+        g = values["B"] - values["A"]
         i_noise = g * (v - self.e)
-        i_total = ina_iaf+ik_iaf-self.i_stim+i_noise+self.i_ampa+self.i_nmda+self.i_gaba_a+self.i_gaba_b
+        i_total = (
+            ina_iaf
+            + ik_iaf
+            - self.i_stim
+            + i_noise
+            + self.i_ampa
+            + self.i_nmda
+            + self.i_gaba_a
+            + self.i_gaba_b
+        )
         return {"i_total": i_total, "i_spike": ispike}
-    
-    def inf(self, v):
+
+    def state_defaults(self, v, values):
         return {
             "v_iaf": self.v_iaf0.detach().clone(),
             "theta": self.theta_eq.detach().clone(),
             "A": torch.zeros_like(v),
-            "B": torch.zeros_like(v)
+            "B": torch.zeros_like(v),
         }
 
+    def initial_values(self, v, values):
+        del values
+        return {"gspike": torch.zeros_like(v)}
 
-class esser_mech_h(V, Syn):
-    V.STATE(esser_states)
+
+class _EsserSynapse:
+    """Shared static normalization for Esser double-exponential events."""
+
+    def derive_buffers(self):
+        state = self.DE["esser_states"]
+        tau1 = state.tau1
+        tau2 = state.tau2
+        tp = (tau1 * tau2) / (tau2 - tau1) * log(tau2 / tau1)
+        factor = -exp(-tp / tau1) + exp(-tp / tau2)
+        return {"factor": 1 / factor}
+
+
+class esser_mech_h(_EsserSynapse, V, Syn):
+    V.STATE_BUNDLE(esser_states)
     V.RANGE(tspike=2.0)
     V.PARAMETER(tau_gate=0.5, ste_scale=1.0)
-    V.BUFFER("factor", "spikes", "h_prev", "time_left")
+    V.DERIVED_BUFFER("factor")
+    V.CARRY("spikes", "h_prev", "time_left")
 
     def update_v(self, v):
         return self.v_iaf
-    
-    def initial(self, v):
-        tau1 = self.DE["esser_states"].tau1
-        tau2 = self.DE["esser_states"].tau2
-        tp = (tau1 * tau2) / (tau2 - tau1) * log(tau2 / tau1)
-        factor = -exp(-tp / tau1) + exp(-tp / tau2)
-        self.factor = 1 / factor
-        self.spikes = torch.zeros_like(v)
-        self.h_prev = torch.zeros_like(v)   # store previous *gate* (continuous)
-        self.time_left = torch.zeros_like(v)
+
+    def initial_values(self, v, values):
+        del values
+        return {
+            "spikes": torch.zeros_like(v),
+            "h_prev": torch.zeros_like(v),
+            "time_left": torch.zeros_like(v),
+        }
 
     def net_receive(self, weights, netcon):
         weights = weights * self.factor
         self.A = self.A + weights
         self.B = self.B + weights
 
-        v  = self.v_iaf
+        v = self.v_iaf
         th = self.theta
         ena = self.DE["esser_states"].ena_iaf
 
@@ -84,7 +111,7 @@ class esser_mech_h(V, Syn):
         tau_on = self.tau_gate.clamp_min(1e-3)
         gate = torch.sigmoid((v - th) / tau_on)
         old_h = self.h_prev
-        eligible = (self.time_left <= 0)
+        eligible = self.time_left <= 0
 
         rising = (gate > 0.5) & (old_h <= 0.5) & eligible
 
@@ -94,13 +121,17 @@ class esser_mech_h(V, Syn):
         rise_prob = above_now * below_prev * eligible.to(gate.dtype)
 
         # self.spike_gate = rise_prob
-        self.spikes = rising.to(v.dtype) + self.ste_scale * (rise_prob - rise_prob.detach())
+        self.spikes = rising.to(v.dtype) + self.ste_scale * (
+            rise_prob - rise_prob.detach()
+        )
 
         # Update memory AFTER computing rising/rise_soft
         self.h_prev = gate
 
         # ----- boxcar / spike conductance timer -----
-        time_left = torch.where(rising, self.tspike.expand_as(self.time_left), self.time_left)
+        time_left = torch.where(
+            rising, self.tspike.expand_as(self.time_left), self.time_left
+        )
         self.time_left = torch.clamp(time_left - self.dt, min=0.0)
         self.DE["esser_states"].gspike = (self.time_left > 0).to(v.dtype)
 
@@ -109,24 +140,22 @@ class esser_mech_h(V, Syn):
         self.theta = torch.where(rising, ena.expand_as(th), th)
 
 
-class esser_mech_s(V, Syn):
-    V.STATE(esser_states)
+class esser_mech_s(_EsserSynapse, V, Syn):
+    V.STATE_BUNDLE(esser_states)
     V.RANGE(tspike=2.0)
     V.PARAMETER(tau_gate=0.5, alpha_peak=1.0)
-    V.BUFFER("factor", "spikes", "g_prev", "time_left")
+    V.DERIVED_BUFFER("factor")
+    V.CARRY("spikes", "g_prev")
 
     def update_v(self, v):
         return self.v_iaf
-    
-    def initial(self, v):
-        tau1 = self.DE["esser_states"].tau1
-        tau2 = self.DE["esser_states"].tau2
-        tp = (tau1 * tau2) / (tau2 - tau1) * log(tau2 / tau1)
-        factor = -exp(-tp / tau1) + exp(-tp / tau2)
-        self.factor = 1 / factor
-        self.spikes = torch.zeros_like(v)
-        self.g_prev = torch.zeros_like(v)
-        self.time_left = torch.zeros_like(v)
+
+    def initial_values(self, v, values):
+        del values
+        return {
+            "spikes": torch.zeros_like(v),
+            "g_prev": torch.zeros_like(v),
+        }
 
     def net_receive(self, weights, netcon):
         weights = weights * self.factor

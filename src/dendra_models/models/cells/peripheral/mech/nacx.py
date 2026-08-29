@@ -9,15 +9,17 @@ class nacx(M):
     M.USEION("na", read=["nai", "nao"], write=["ina"])
     M.USEION("ca", read=["cai", "cao"], write=["ica"])
 
-    M.BUFFER("inaca")
+    M.ASSIGNED("inaca")
     M.DERIVED_BUFFER("q10", "FRT")
     M.EXPLICIT("ina", "ica")
 
-    def breakpoint(self, v):
+    def assigned_values(self, v, values):
+        del values
         dfcain = self.nai**3 * self.cao * exp(0.5 * v * self.FRT)
         dfcaout = self.nao**3 * self.cai * exp(-0.5 * v * self.FRT)
         s = 1 + self.dnaca * (self.cai * self.nao**3 + self.cao * self.nai**3)
-        self.inaca = self.gbar * self.q10 * self.knaca * (dfcain - dfcaout) / s
+        inaca = self.gbar * self.q10 * self.knaca * (dfcain - dfcaout) / s
+        return {"inaca": inaca}
 
     def derive_buffers(self):
         T = 273 + self.celsius
@@ -28,9 +30,6 @@ class nacx(M):
             "q10": q10.expand_as(self.diam),
             "FRT": self.F / (self.R * T),
         }
-
-    def initial(self, v):
-        self.breakpoint(v)
 
     def ina(self, v):
         return 3 * self.inaca

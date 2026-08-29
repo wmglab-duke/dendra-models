@@ -6,7 +6,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m")
     S.GLOBAL_SIGNED(
@@ -24,8 +24,8 @@ class m(S):
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
-    def calc_q10(self):
-        return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
+    def derive_buffers(self):
+        return {"q10": 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))}
 
     def alpha(self, v):
         return self.A_am * sigmoid((-self.B_am - v) / self.C_am)
@@ -33,21 +33,21 @@ class m(S):
     def beta(self, v):
         return self.A_bm * sigmoid((-self.B_bm - v) / self.C_bm)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         s = 1 / (a + b)
-        taum = self.q10() * s
+        taum = self.q10 * s
         minf = a * s
         return {"minf": minf, "taum": taum}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"m": states["minf"]}
 
 
 class h(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("h")
     S.GLOBAL_SIGNED(
@@ -65,8 +65,8 @@ class h(S):
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
 
-    def calc_q10(self):
-        return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
+    def derive_buffers(self):
+        return {"q10": 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))}
 
     def alpha(self, v):
         return self.A_ah * sigmoid((-self.B_ah - v) / self.C_ah)
@@ -74,21 +74,21 @@ class h(S):
     def beta(self, v):
         return -0.00283 + self.A_bh * sigmoid((-self.B_bh - v) / self.C_bh)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         s = 1 / (a + b)
-        tauh = self.q10() * s
+        tauh = self.q10 * s
         hinf = a * s
         return {"hinf": hinf, "tauh": tauh}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"h": states["hinf"]}
 
 
 class s(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("s")
     S.GLOBAL_SIGNED(
@@ -106,8 +106,8 @@ class s(S):
     S.DERIVATIVE("s' = (sinf - s) / taus")
     S.ASSIGNED("sinf", "taus")
 
-    def calc_q10(self):
-        return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
+    def derive_buffers(self):
+        return {"q10": 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))}
 
     def alpha(self, v):
         return 0.00003 + self.A_as * sigmoid((-self.B_as - v) / self.C_as)
@@ -115,21 +115,21 @@ class s(S):
     def beta(self, v):
         return 132.05 + self.A_bs * sigmoid((-self.B_bs - v) / self.C_bs)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         s = 1 / (a + b)
-        taus = self.q10() * s
+        taus = self.q10 * s
         sinf = a * s
         return {"sinf": sinf, "taus": taus}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"s": states["sinf"]}
 
 
 class nattxs(M):
-    M.STATE(m, h, s)
+    M.STATE_BUNDLE(m, h, s)
     M.GLOBAL_SIGNED(gbar=0.001)
     M.USEION("na", read=["ena"], write=["ina"])
 

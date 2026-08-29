@@ -11,35 +11,35 @@ from dendra.models.mechanisms.ops import *
 
 
 class s(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("s")
     S.GLOBAL_SIGNED(aq10=3.3, bq10=21.0, cq10=10.0)
     S.DERIVATIVE("s' = (sinf - s) / taus")
     S.ASSIGNED("sinf", "taus")
 
-    def calc_q10(self):
-        return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
+    def derive_buffers(self):
+        return {"q10": 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))}
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         sinf = sigmoid((v + 30.0) / 6.0)
-        taus = self.q10() * torch.where(v < -60.0, 219.0, (13.0 * v + 1000.0))
+        taus = self.q10 * torch.where(v < -60.0, 219.0, (13.0 * v + 1000.0))
         return {"sinf": sinf, "taus": taus}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"s": sigmoid((v + 30.0) / 6.0)}
 
 
 class f(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("f")
     S.GLOBAL_SIGNED(aq10=3.3, bq10=21.0, cq10=10.0)
     S.DERIVATIVE("f' = (finf - f) / tauf")
     S.ASSIGNED("finf", "tauf")
 
-    def calc_q10(self):
-        return 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))
+    def derive_buffers(self):
+        return {"q10": 1 / (self.aq10 ** ((self.celsius - self.bq10) / self.cq10))}
 
     def alpha(self, v):
         return 0.00395 * exp((v + 30.0) / 40.0)
@@ -47,19 +47,19 @@ class f(S):
     def beta(self, v):
         return 0.00395 * exp(-(v + 30.0) / 20.0)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         finf = sigmoid((v + 30.0) / 6.0)
-        tauf = self.q10() / (a + b)
+        tauf = self.q10 / (a + b)
         return {"finf": finf, "tauf": tauf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"f": sigmoid((v + 30.0) / 6.0)}
 
 
 class ks(M):
-    M.STATE(s, f)
+    M.STATE_BUNDLE(s, f)
     M.GLOBAL_SIGNED(gbar=0.0001)
     M.USEION("k", read=["ek"], write=["ik"])
 

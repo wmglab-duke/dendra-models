@@ -15,5 +15,5 @@ class ko(S):
 
 
 class koiTiger(M):
-    M.STATE(ki, ko)
+    M.STATE_BUNDLE(ki, ko)
     M.USEION("k", read=["ik"], write=["ko", "ki"])

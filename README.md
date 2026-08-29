@@ -7,7 +7,8 @@
 Models implemented in Dendra.
 
 > [!IMPORTANT]
-> To use dendra-models, please use the `develop` branch of Dendra.
+> dendra-models requires Dendra 0.25.x. Until Dendra 0.25 is released, install
+> Dendra from its `develop` branch first.
 
 ### Installation instructions
 ---
@@ -121,4 +122,3 @@ Myelination scheme from Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 20
 |1 |`Zhang2014`|
 |---|-----|
 ||Zhang, Tianhe C., John J. Janik, and Warren M. Grill. “Modeling Effects of Spinal Cord Stimulation on Wide-Dynamic Range Dorsal Horn Neurons: Influence of Stimulation Frequency and GABAergic Inhibition.” Journal of Neurophysiology 112, no. 3 (2014): 552–67. https://doi.org/10.1152/jn.00254.2014.
-

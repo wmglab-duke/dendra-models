@@ -6,7 +6,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m")
     S.GLOBAL_SIGNED(
@@ -25,22 +25,22 @@ class m(S):
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
-    def calc_q10(self):
-        return self.Q10nafm ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.Q10nafm ** ((self.Q10TempA - self.celsius) / self.Q10TempB)}
 
-    def breakpoint(self, v, states):
-        taum = self.q10() * (
+    def assigned_values(self, v, values):
+        taum = self.q10 * (
             self.A_taum * exp(-((self.B_taum) ** 2) * (v - self.Vpm) ** 2) + self.C_taum
         )
         minf = sigmoid(-(v + self.V0p5m + self.shiftnaf) / self.S0p5m)
         return {"taum": taum, "minf": minf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"m": sigmoid(-(v + self.V0p5m + self.shiftnaf) / self.S0p5m)}
 
 
 class h(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("h")
     S.GLOBAL_SIGNED(
@@ -59,17 +59,17 @@ class h(S):
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
 
-    def calc_q10(self):
-        return self.Q10nafh ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.Q10nafh ** ((self.Q10TempA - self.celsius) / self.Q10TempB)}
 
-    def breakpoint(self, v, states):
-        tauh = self.q10() * (
+    def assigned_values(self, v, values):
+        tauh = self.q10 * (
             self.A_tauh * exp(-((self.B_tauh) ** 2) * (v - self.Vph) ** 2) + self.C_tauh
         )
         hinf = sigmoid(-(v + self.V0p5h + self.shiftnaf) / self.S0p5h)
         return {"tauh": tauh, "hinf": hinf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"h": sigmoid(-(v + self.V0p5h + self.shiftnaf) / self.S0p5h)}
 
 
@@ -80,17 +80,17 @@ class l(S):
     S.DERIVATIVE("l' = (linf - l) / taul")
     S.ASSIGNED("linf", "taul")
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         taul = (self.A_taul / (1.0 + exp((v + self.Vpl) / self.B_taul))) + self.C_taul
         linf = sigmoid(-(v + self.V0p5l) / self.S0p5l)
         return {"taul": taul, "linf": linf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"l": sigmoid(-(v + self.V0p5l) / self.S0p5l)}
 
 
 class naf(M):
-    M.STATE(m, h, l)
+    M.STATE_BUNDLE(m, h, l)
     M.GLOBAL_SIGNED(gbar=0.068967142)
     M.USEION("na", read=["ena"], write=["ina"])
 

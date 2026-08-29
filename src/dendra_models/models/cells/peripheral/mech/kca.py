@@ -6,7 +6,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class c(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("c")
     S.GLOBAL_SIGNED(
@@ -24,8 +24,8 @@ class c(S):
     S.DERIVATIVE("c' = (cinf - c) / tauc")
     S.ASSIGNED("cinf", "tauc")
 
-    def calc_q10(self):
-        return self.Q10kcac ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.Q10kcac ** ((self.Q10TempA - self.celsius) / self.Q10TempB)}
 
     def alpha(self, v):
         return self.A_alphac * self.cai * safe_exp((v + self.B_alphac) / self.C_alphac)
@@ -33,20 +33,20 @@ class c(S):
     def beta(self, v):
         return self.A_betac * safe_exp((v + self.B_betac) / self.C_betac)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         s = 1 / (a + b)
         cinf = a * s
-        tauc = self.q10() * 4.5 * s
+        tauc = self.q10 * 4.5 * s
         return {"tauc": tauc, "cinf": cinf}
 
-    def inf(self, v):
-        return {"c": self.breakpoint(v, None)["cinf"]}
+    def state_defaults(self, v, values):
+        return {"c": self.assigned_values(v, values)["cinf"]}
 
 
 class kca(M):
-    M.STATE(c)
+    M.STATE_BUNDLE(c)
     M.GLOBAL_SIGNED(gbar=0.000141471)
     M.USEION("k", read=["ek"], write=["ik"])
     M.USEION("ca", read=["cai"])

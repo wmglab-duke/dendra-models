@@ -4,7 +4,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class n(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("n")
     S.GLOBAL_SIGNED(
@@ -25,8 +25,8 @@ class n(S):
     S.DERIVATIVE("n' = (ninf - n) / ntau")
     S.ASSIGNED("ninf", "ntau")
 
-    def calc_q10(self):
-        return self.q10kdn ** ((self.q10TempA - self.celsius) / self.q10TempB)
+    def derive_buffers(self):
+        return {"q10": self.q10kdn ** ((self.q10TempA - self.celsius) / self.q10TempB)}
 
     def alpha(self, v):
         x = v + self.B_alphan
@@ -35,19 +35,19 @@ class n(S):
     def beta(self, v):
         return self.A_betan * exp((v + self.B_betan) / self.C_betan)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
-        ntau = self.q10() * (1.0 + (1.0 / (a + b)))
+        ntau = self.q10 * (1.0 + (1.0 / (a + b)))
         ninf = sigmoid((-v - self.V0p5n - self.shiftkd) / self.S0p5n)
         return {"ntau": ntau, "ninf": ninf}
 
-    def inf(self, v):
-        return {"n": self.breakpoint(v, None)["ninf"]}
+    def state_defaults(self, v, values):
+        return {"n": self.assigned_values(v, values)["ninf"]}
 
 
 class kd(M):
-    M.STATE(n)
+    M.STATE_BUNDLE(n)
     M.GLOBAL_SIGNED(gbar=0.000180376)
     M.USEION("k", read=["ek"], write=["ik"])
 

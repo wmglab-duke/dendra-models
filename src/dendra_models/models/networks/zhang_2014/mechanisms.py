@@ -54,7 +54,7 @@ def _vtrap_1mexp(x, c):
 
 
 class HH2_mhn(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m", "h", "n")
     S.RANGE(vtraub=-55.0)
@@ -65,11 +65,11 @@ class HH2_mhn(S):
         "n' = (n_inf - n) / tau_n",
     )
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 36.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 36.0) / 10.0)}
 
-    def breakpoint(self, v, states):
-        q10 = self.q10()
+    def assigned_values(self, v, values):
+        q10 = self.q10
         v2 = v - self.vtraub
         vh = 5.0
 
@@ -97,13 +97,13 @@ class HH2_mhn(S):
             "tau_n": tau_n,
         }
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"m": states["m_inf"], "h": states["h_inf"], "n": states["n_inf"]}
 
 
 class HH2(M):
-    M.STATE(HH2_mhn)
+    M.STATE_BUNDLE(HH2_mhn)
     M.RANGE(gnabar=0.1, gkbar=0.06, ena=50.0, ek=-77.0)
     M.NONSPECIFIC_CURRENT("ina", "ik")
 
@@ -120,18 +120,18 @@ class HH2(M):
 
 
 class B_Na_mh(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m", "h")
     S.RANGE(alpha_shift=0.0, beta_shift=0.0)
     S.ASSIGNED("m_inf", "h_inf", "tau_m", "tau_h")
     S.DERIVATIVE("m' = (m_inf - m) / tau_m", "h' = (h_inf - h) / tau_h")
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 23.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 23.0) / 10.0)}
 
-    def breakpoint(self, v, states):
-        q10 = self.q10()
+    def assigned_values(self, v, values):
+        q10 = self.q10
         a_m = q10 * 0.182 * vtrap(-v + 7.0 - 35.0 + self.alpha_shift, 9.0)
         b_m = q10 * 0.124 * vtrap(v - 7.0 + 35.0 + self.beta_shift, 9.0)
         tau_m = 1.0 / _clamp_tau(a_m + b_m)
@@ -143,13 +143,13 @@ class B_Na_mh(S):
         h_inf = 1.0 / (1.0 + exp((v + 75.0 - 11.0) / 9.0))
         return {"m_inf": m_inf, "h_inf": h_inf, "tau_m": tau_m, "tau_h": tau_h}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"m": states["m_inf"], "h": states["h_inf"]}
 
 
 class B_Na(M):
-    M.STATE(B_Na_mh)
+    M.STATE_BUNDLE(B_Na_mh)
     M.RANGE(gnabar=0.0, ena=53.0)
     M.NONSPECIFIC_CURRENT("ina")
 
@@ -158,17 +158,17 @@ class B_Na(M):
 
 
 class SS_mh(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m", "h")
     S.ASSIGNED("m_inf", "h_inf", "tau_m", "tau_h")
     S.DERIVATIVE("m' = (m_inf - m) / tau_m", "h' = (h_inf - h) / tau_h")
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 23.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 23.0) / 10.0)}
 
-    def breakpoint(self, v, states):
-        q10 = self.q10()
+    def assigned_values(self, v, values):
+        q10 = self.q10
         a_m = q10 * 0.182 * vtrap(-v - 45.0, 9.0)
         b_m = q10 * 0.124 * vtrap(v + 45.0, 9.0)
         tau_m = 1.0 / _clamp_tau(a_m + b_m)
@@ -180,13 +180,13 @@ class SS_mh(S):
         h_inf = 1.0 / (1.0 + exp((v + 75.0) / 9.0))
         return {"m_inf": m_inf, "h_inf": h_inf, "tau_m": tau_m, "tau_h": tau_h}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"m": states["m_inf"], "h": states["h_inf"]}
 
 
 class SS(M):
-    M.STATE(SS_mh)
+    M.STATE_BUNDLE(SS_mh)
     M.RANGE(gnabar=0.0, ena=53.0)
     M.NONSPECIFIC_CURRENT("ina")
 
@@ -195,30 +195,30 @@ class SS(M):
 
 
 class KDR_n(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("n")
     S.ASSIGNED("n_inf", "tau_n")
     S.DERIVATIVE("n' = (n_inf - n) / tau_n")
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 23.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 23.0) / 10.0)}
 
-    def breakpoint(self, v, states):
-        q10 = self.q10()
+    def assigned_values(self, v, values):
+        q10 = self.q10
         a = q10 * 0.069 * vtrap(-v - 5.0, 10.0)
         b = q10 * 0.024 * exp((-v - 1.0) / 30.0)
         tau = 1.0 / _clamp_tau(a + b)
         inf = a / _clamp_tau(a + b)
         return {"n_inf": inf, "tau_n": tau}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"n": states["n_inf"]}
 
 
 class KDR(M):
-    M.STATE(KDR_n)
+    M.STATE_BUNDLE(KDR_n)
     M.RANGE(gkbar=0.0, ek=-80.0)
     M.NONSPECIFIC_CURRENT("ik")
 
@@ -227,30 +227,30 @@ class KDR(M):
 
 
 class B_DR_n(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("n")
     S.ASSIGNED("n_inf", "tau_n")
     S.DERIVATIVE("n' = (n_inf - n) / tau_n")
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 23.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 23.0) / 10.0)}
 
-    def breakpoint(self, v, states):
-        q10 = self.q10()
+    def assigned_values(self, v, values):
+        q10 = self.q10
         a = q10 * 0.0075 * vtrap(-v - 30.0, 10.0)
         b = q10 * 0.1 * exp((-v - 46.0) / 31.0)
         tau = 1.0 / _clamp_tau(a + b)
         inf = a / _clamp_tau(a + b)
         return {"n_inf": inf, "tau_n": tau}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"n": states["n_inf"]}
 
 
 class B_DR(M):
-    M.STATE(B_DR_n)
+    M.STATE_BUNDLE(B_DR_n)
     M.RANGE(gkbar=0.0, ek=-80.0)
     M.NONSPECIFIC_CURRENT("ik")
 
@@ -259,17 +259,17 @@ class B_DR(M):
 
 
 class KDRI_nh(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("n", "h")
     S.ASSIGNED("n_inf", "h_inf", "tau_n", "tau_h")
     S.DERIVATIVE("n' = (n_inf - n) / tau_n", "h' = (h_inf - h) / tau_h")
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 23.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 23.0) / 10.0)}
 
-    def breakpoint(self, v, states):
-        q10 = self.q10()
+    def assigned_values(self, v, values):
+        q10 = self.q10
         a_n = q10 * 0.035 * vtrap(-v - 15.0, 9.0)
         b_n = q10 * 0.014 * exp((-v + 12.0) / 46.0)
         tau_n = 1.0 / _clamp_tau(a_n + b_n)
@@ -281,13 +281,13 @@ class KDRI_nh(S):
         h_inf = a_h / _clamp_tau(a_h + b_h)
         return {"n_inf": n_inf, "h_inf": h_inf, "tau_n": tau_n, "tau_h": tau_h}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"n": states["n_inf"], "h": states["h_inf"]}
 
 
 class KDRI(M):
-    M.STATE(KDRI_nh)
+    M.STATE_BUNDLE(KDRI_nh)
     M.RANGE(gkbar=0.0, ek=-80.0)
     M.NONSPECIFIC_CURRENT("ik")
 
@@ -296,17 +296,17 @@ class KDRI(M):
 
 
 class B_A_nh(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("n", "h")
     S.ASSIGNED("n_inf", "h_inf", "tau_n", "tau_h")
     S.DERIVATIVE("n' = (n_inf - n) / tau_n", "h' = (h_inf - h) / tau_h")
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 23.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 23.0) / 10.0)}
 
-    def breakpoint(self, v, states):
-        q10 = self.q10()
+    def assigned_values(self, v, values):
+        q10 = self.q10
         a_n = q10 * 0.032 * vtrap(-v - 64.0, 6.0)
         b_n = q10 * 0.203 * exp((-v - 40.0) / 24.0)
         tau_n = 1.0 / _clamp_tau(a_n + b_n)
@@ -318,13 +318,13 @@ class B_A_nh(S):
         h_inf = a_h / _clamp_tau(a_h + b_h)
         return {"n_inf": n_inf, "h_inf": h_inf, "tau_n": tau_n, "tau_h": tau_h}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"n": states["n_inf"], "h": states["h_inf"]}
 
 
 class B_A(M):
-    M.STATE(B_A_nh)
+    M.STATE_BUNDLE(B_A_nh)
     M.RANGE(gkbar=0.0, ek=-80.0)
     M.NONSPECIFIC_CURRENT("ik")
 
@@ -338,61 +338,54 @@ class B_A(M):
 
 
 class ca_dynamics(S):
-    S.STATE("cai_new")
+    # Use the shared calcium concentration itself as the solver state. Dendra
+    # binds a State name that is also a USEION concentration write to the same
+    # local mechanism buffer, so the accepted State transition is committed to
+    # the ion without a mutation hook or a second, manually synchronized copy.
+    S.STATE("cai")
     S.RANGE(depth=0.1, cai_inf=50.0e-6, cai_tau=2.0)
     S.ASSIGNED("drive_channel")
-    S.DERIVATIVE("cai_new' = drive_channel + (cai_inf - cai_new) / cai_tau")
+    S.DERIVATIVE("cai' = drive_channel + (cai_inf - cai) / cai_tau")
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         drive = -(10000.0) * self.ica / (2.0 * FARADAY * self.depth)
         drive = torch.clamp(drive, min=0.0)
         return {"drive_channel": drive}
 
-    def inf(self, v):
-        return {"cai_new": _zeros_like(v) + self.cai_inf}
+    def state_defaults(self, v, values):
+        return {"cai": _zeros_like(v) + self.cai_inf}
 
 
 class CaIntraCellDyn(M):
-    M.STATE(ca_dynamics)
+    M.STATE_BUNDLE(ca_dynamics)
     M.USEION("ca", read=["ica"], write=["cai"])
-
-    def initial(self, v):
-        # The ion write buffer is local to the inserted slice; initialize it to
-        # the same value as the internal state used by the calcium ODE.
-        if "cai" in self._buffers:
-            self._buffers["cai"] = self.cai_new.clone()
-
-    def _advance(self, v, dt):  # noqa: N802 - follows Dendra internal hook name
-        super()._advance(v, dt)
-        if "cai" in self._buffers:
-            self._buffers["cai"] = self.cai_new
 
 
 class iKCa_m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m")
     S.RANGE(beta=0.03, cac=0.001, taumin=0.1)
     S.ASSIGNED("m_inf", "tau_m")
     S.DERIVATIVE("m' = (m_inf - m) / tau_m")
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 22.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 22.0) / 10.0)}
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         car = (self.cai / self.cac) ** 2
         m_inf = car / (1.0 + car)
-        tau_m = 1.0 / self.beta / (1.0 + car) / self.q10()
+        tau_m = 1.0 / self.beta / (1.0 + car) / self.q10
         tau_m = torch.clamp(tau_m, min=self.taumin)
         return {"m_inf": m_inf, "tau_m": tau_m}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"m": states["m_inf"]}
 
 
 class iKCa(M):
-    M.STATE(iKCa_m)
+    M.STATE_BUNDLE(iKCa_m)
     M.USEION("ca", read=["cai"])
     M.RANGE(gbar=0.01, ek=-80.0)
     M.NONSPECIFIC_CURRENT("ik")
@@ -402,31 +395,31 @@ class iKCa(M):
 
 
 class iCaAN_m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m")
     S.RANGE(beta=2.0e-3, tau_factor=40.0, cac=5.0e-4, taumin=0.1)
     S.ASSIGNED("m_inf", "tau_m")
     S.DERIVATIVE("m' = (m_inf - m) / tau_m")
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 22.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 22.0) / 10.0)}
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         alpha2 = self.beta * (self.cai / self.cac) ** 2
         denom = _clamp_tau(alpha2 + self.beta)
-        tau_m = self.tau_factor / denom / self.q10()
+        tau_m = self.tau_factor / denom / self.q10
         tau_m = torch.clamp(tau_m, min=self.taumin)
         m_inf = alpha2 / denom
         return {"m_inf": m_inf, "tau_m": tau_m}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"m": states["m_inf"]}
 
 
 class iCaAN(M):
-    M.STATE(iCaAN_m)
+    M.STATE_BUNDLE(iCaAN_m)
     M.USEION("ca", read=["cai"])
     M.RANGE(gbar=0.00025, ecan=-20.0)
     M.NONSPECIFIC_CURRENT("ican")
@@ -436,29 +429,29 @@ class iCaAN(M):
 
 
 class iCaL_m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m")
     S.ASSIGNED("m_inf", "tau_m")
     S.DERIVATIVE("m' = (m_inf - m) / tau_m")
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 23.5) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 23.5) / 10.0)}
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = 1.6 / (1.0 + exp(-0.072 * (v - 5.0)))
         b = 0.02 * _vtrap_1mexp(-(v - 1.31), 5.36)
-        tau_m = 1.0 / _clamp_tau(a + b) / self.q10()
+        tau_m = 1.0 / _clamp_tau(a + b) / self.q10
         m_inf = 1.0 / (1.0 + exp((v + 10.0) / -10.0))
         return {"m_inf": m_inf, "tau_m": tau_m}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"m": states["m_inf"]}
 
 
 class iCaL(M):
-    M.STATE(iCaL_m)
+    M.STATE_BUNDLE(iCaL_m)
     M.USEION("ca", read=["cai", "cao"], write=["ica"])
     M.RANGE(pcabar=0.000276)
 
@@ -504,18 +497,18 @@ class iCaL(M):
 
 
 class iNaP_mh(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m", "h")
     S.RANGE(vtraub=-55.0, vsm=-2.0, vsh=-5.0, gamma=0.5)
     S.ASSIGNED("m_inf", "h_inf", "tau_m", "tau_h")
     S.DERIVATIVE("m' = (m_inf - m) / tau_m", "h' = (h_inf - h) / tau_h")
 
-    def calc_q10(self):
-        return 3.0 ** ((self.celsius - 36.0) / 10.0)
+    def derive_buffers(self):
+        return {"q10": 3.0 ** ((self.celsius - 36.0) / 10.0)}
 
-    def breakpoint(self, v, states):
-        q10 = self.q10()
+    def assigned_values(self, v, values):
+        q10 = self.q10
         v2 = v - self.vtraub
         a_m = 0.32 * vtrap(self.vsm + 13.0 - v2, 4.0)
         b_m = 0.28 * vtrap(self.vsm + v2 - 40.0, 5.0)
@@ -528,13 +521,13 @@ class iNaP_mh(S):
         h_inf = a_h / _clamp_tau(a_h + b_h)
         return {"m_inf": m_inf, "h_inf": h_inf, "tau_m": tau_m, "tau_h": tau_h}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"m": states["m_inf"], "h": states["h_inf"]}
 
 
 class iNaP(M):
-    M.STATE(iNaP_mh)
+    M.STATE_BUNDLE(iNaP_mh)
     M.RANGE(gnabar=0.00029, ena=50.0)
     M.NONSPECIFIC_CURRENT("ina")
 
@@ -562,23 +555,24 @@ class _DynSynMixin:
             raise AttributeError("Dynamic synapse states must define tau_rise and tau_decay.")
         return tau_rise, tau_decay
 
-    def initial(self, v):
+    def derive_buffers(self):
         tau_rise, tau_decay = self._tau_rise_decay()
         denom = tau_decay - tau_rise
         safe_denom = torch.where(torch.abs(denom) < 1.0e-12, torch.ones_like(denom), denom)
         tp = (tau_rise * tau_decay) / safe_denom * log(tau_decay / tau_rise)
         factor = -exp(-tp / tau_rise) + exp(-tp / tau_decay)
         factor = torch.where(torch.abs(factor) < 1.0e-12, torch.ones_like(factor), factor)
-        self.factor = 1.0 / factor
-        self.P = _ones_like(v)
-        self.Use = _zeros_like(v)
-        if not hasattr(self, "zhang2014_last_stp_step"):
-            self.register_buffer(
-                "zhang2014_last_stp_step",
-                torch.full((1,), -1, device=v.device, dtype=torch.long),
-            )
-        else:
-            self.zhang2014_last_stp_step.fill_(-1)
+        return {"factor": 1.0 / factor}
+
+    def initial_values(self, v, values):
+        del values
+        return {
+            "P": _ones_like(v),
+            "Use": _zeros_like(v),
+            "zhang2014_last_stp_step": torch.full(
+                (1,), -1, device=v.device, dtype=torch.long
+            ),
+        }
 
     def _g(self):
         return self.B - self.A
@@ -600,11 +594,6 @@ class _DynSynMixin:
         tau_rec = torch.clamp(self.tau_rec, min=1.0e-12)
 
         step = self._netcon_global_step(netcon)
-        if not hasattr(self, "zhang2014_last_stp_step"):
-            self.register_buffer(
-                "zhang2014_last_stp_step",
-                torch.full((1,), -1, device=self.P.device, dtype=torch.long),
-            )
 
         should_recover = True
         if step is not None:
@@ -615,7 +604,9 @@ class _DynSynMixin:
             self.Use = self.Use * exp(-self.dt / tau_fac)
             self.P = 1.0 - (1.0 - self.P) * exp(-self.dt / tau_rec)
             if step is not None:
-                self.zhang2014_last_stp_step.fill_(int(step))
+                self.zhang2014_last_stp_step = self.zhang2014_last_stp_step.new_full(
+                    (1,), int(step)
+                )
 
     def _advance_stp(self, weights, netcon):
         # A banked mechanism may be targeted by several NetCons in one network
@@ -645,7 +636,7 @@ def _make_A_state(name: str, tau_rise_default: float):
         S.RANGE(tau_rise=tau_rise_default)
         S.DERIVATIVE("A' = -A / tau_rise")
 
-        def inf(self, v):
+        def state_defaults(self, v, values):
             return {"A": _zeros_like(v)}
 
     A_state.__name__ = f"{name}_A"
@@ -658,7 +649,7 @@ def _make_B_state(name: str, tau_decay_default: float):
         S.RANGE(tau_decay=tau_decay_default)
         S.DERIVATIVE("B' = -B / tau_decay")
 
-        def inf(self, v):
+        def state_defaults(self, v, values):
             return {"B": _zeros_like(v)}
 
     B_state.__name__ = f"{name}_B"
@@ -680,9 +671,11 @@ NK1_B = _make_B_state("NK1", 3000.0)
 
 
 class AMPA_DynSyn(_DynSynMixin, PP, Syn):
-    PP.STATE(AMPA_A, AMPA_B)
+    PP.STATE_BUNDLE(AMPA_A, AMPA_B)
     PP.RANGE(e=0.0, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.BUFFER("factor", "P", "Use")
+    PP.DERIVED_BUFFER("factor")
+    PP.CARRY("P", "Use")
+    PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -690,9 +683,11 @@ class AMPA_DynSyn(_DynSynMixin, PP, Syn):
 
 
 class GABAa_DynSyn(_DynSynMixin, PP, Syn):
-    PP.STATE(GABAa_A, GABAa_B)
+    PP.STATE_BUNDLE(GABAa_A, GABAa_B)
     PP.RANGE(e=-70.0, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.BUFFER("factor", "P", "Use")
+    PP.DERIVED_BUFFER("factor")
+    PP.CARRY("P", "Use")
+    PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -700,9 +695,11 @@ class GABAa_DynSyn(_DynSynMixin, PP, Syn):
 
 
 class GABAb_DynSyn(_DynSynMixin, PP, Syn):
-    PP.STATE(GABAb_A, GABAb_B)
+    PP.STATE_BUNDLE(GABAb_A, GABAb_B)
     PP.RANGE(e=-90.0, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.BUFFER("factor", "P", "Use")
+    PP.DERIVED_BUFFER("factor")
+    PP.CARRY("P", "Use")
+    PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -710,9 +707,11 @@ class GABAb_DynSyn(_DynSynMixin, PP, Syn):
 
 
 class Glycine_DynSyn(_DynSynMixin, PP, Syn):
-    PP.STATE(Glycine_A, Glycine_B)
+    PP.STATE_BUNDLE(Glycine_A, Glycine_B)
     PP.RANGE(e=-70.0, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.BUFFER("factor", "P", "Use")
+    PP.DERIVED_BUFFER("factor")
+    PP.CARRY("P", "Use")
+    PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -720,10 +719,12 @@ class Glycine_DynSyn(_DynSynMixin, PP, Syn):
 
 
 class NMDA_DynSyn(_DynSynMixin, PP, Syn):
-    PP.STATE(NMDA_A, NMDA_B)
+    PP.STATE_BUNDLE(NMDA_A, NMDA_B)
     PP.USEION("ca", write=["ica"])
     PP.RANGE(e=0.0, mgo=1.0, ca_ratio=0.1, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.BUFFER("factor", "P", "Use")
+    PP.DERIVED_BUFFER("factor")
+    PP.CARRY("P", "Use")
+    PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("inon")
 
     def mgblock(self, v):
@@ -759,10 +760,12 @@ class NMDA_DynSyn(_DynSynMixin, PP, Syn):
 
 
 class NK1_DynSyn(_DynSynMixin, PP, Syn):
-    PP.STATE(NK1_A, NK1_B)
+    PP.STATE_BUNDLE(NK1_A, NK1_B)
     PP.USEION("ca", write=["ica"])
     PP.RANGE(e=0.0, ca_ratio=0.1, U1=1.0, tau_rec=0.1, tau_fac=0.1)
-    PP.BUFFER("factor", "P", "Use")
+    PP.DERIVED_BUFFER("factor")
+    PP.CARRY("P", "Use")
+    PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("iNK1R")
 
     def _itotal(self, v):

@@ -28,10 +28,10 @@ class ki_augmented(S):
 
 
 class koi(M):
-    M.STATE(ki, ko)
+    M.STATE_BUNDLE(ki, ko)
     M.USEION("k", read=["ik"], write=["ko", "ki"])
 
 
-class koi_augmented(koi):
-    M.STATE(ki_augmented, ko_augmented)
+class koi_augmented(M):
+    M.STATE_BUNDLE(ki_augmented, ko_augmented)
     M.USEION("k", read=["ik"], write=["ko", "ki"])

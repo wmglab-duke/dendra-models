@@ -6,7 +6,7 @@ from dendra.models.mechanisms.ops import *
 
 
 class l(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("l")
 
@@ -23,8 +23,8 @@ class l(S):
     S.DERIVATIVE("l' = (linf - l) / taul")
     S.ASSIGNED("linf", "taul")
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - self.bq10) / self.cq10)}
 
     def alpha(self, v):
         return exp(
@@ -45,20 +45,20 @@ class l(S):
             / (8.315 * (273.16 + self.celsius))
         )
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         al = 1 + a
         linf = 1 / al
-        taul = b / (self.q10() * self.a0l * al)
+        taul = b / (self.q10 * self.a0l * al)
         return {"taul": taul, "linf": linf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"l": 1 / (1 + self.alpha(v))}
 
 
 class n(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("n")
 
@@ -75,8 +75,8 @@ class n(S):
     S.DERIVATIVE("n' = (ninf - n) / taun")
     S.ASSIGNED("ninf", "taun")
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - self.bq10) / self.cq10)}
 
     def alpha(self, v):
         return exp(
@@ -97,20 +97,20 @@ class n(S):
             / (8.315 * (273.16 + self.celsius))
         )
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         an = 1 + a
         ninf = 1 / an
-        taun = b / (self.q10() * self.a0n * an)
+        taun = b / (self.q10 * self.a0n * an)
         return {"taun": taun, "ninf": ninf}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         return {"n": 1 / (1 + self.alpha(v))}
 
 
 class kdr(M):
-    M.STATE(l, n)
+    M.STATE_BUNDLE(l, n)
 
     M.GLOBAL_SIGNED(gkbar=0.003)
 

@@ -7,7 +7,7 @@ from dendra.models.mechanisms.ops import exprelr, exp, expit
 
 
 class m(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("m")
     S.GLOBAL_SIGNED(
@@ -26,16 +26,16 @@ class m(S):
     S.DERIVATIVE("m' = (minf - m) / taum")
     S.ASSIGNED("minf", "taum")
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - self.bq10) / self.cq10)}
 
     def alpha(self, v):
-        return self.q10() * self.am1 * exprelr(self.am2 - v, self.am3)
+        return self.q10 * self.am1 * exprelr(self.am2 - v, self.am3)
 
     def beta(self, v):
-        return self.q10() * self.bm1 * exprelr(v - self.bm2, self.bm3)
+        return self.q10 * self.bm1 * exprelr(v - self.bm2, self.bm3)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         v = v + 65.0 + self.mshift
         a = self.alpha(v)
         b = self.beta(v)
@@ -43,13 +43,13 @@ class m(S):
         minf = a * taum
         return {"taum": taum, "minf": minf}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"m": states["minf"]}
 
 
 class h(S):
-    has_q10 = True
+    S.DERIVED_BUFFER("q10")
 
     S.STATE("h")
     S.GLOBAL_SIGNED(
@@ -68,16 +68,16 @@ class h(S):
     S.DERIVATIVE("h' = (hinf - h) / tauh")
     S.ASSIGNED("hinf", "tauh")
 
-    def calc_q10(self):
-        return self.aq10 ** ((self.celsius - self.bq10) / self.cq10)
+    def derive_buffers(self):
+        return {"q10": self.aq10 ** ((self.celsius - self.bq10) / self.cq10)}
 
     def alpha(self, v):
-        return self.q10() * self.ah1 * exp((self.ah2 - v) / self.ah3)
+        return self.q10 * self.ah1 * exp((self.ah2 - v) / self.ah3)
 
     def beta(self, v):
-        return self.q10() * self.bh1 * expit((v - self.bh2) / self.bh3)
+        return self.q10 * self.bh1 * expit((v - self.bh2) / self.bh3)
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         v = v + 65.0 + self.hshift
         a = self.alpha(v)
         b = self.beta(v)
@@ -85,13 +85,13 @@ class h(S):
         hinf = a * tauh
         return {"tauh": tauh, "hinf": hinf}
 
-    def inf(self, v):
-        states = self.breakpoint(v, None)
+    def state_defaults(self, v, values):
+        states = self.assigned_values(v, values)
         return {"h": states["hinf"]}
 
 
 class nahh(M):
-    M.STATE(m, h)
+    M.STATE_BUNDLE(m, h)
     M.GLOBAL_SIGNED(gnabar=0.3)
     M.USEION("na", read=["ena"], write=["ina"])
 

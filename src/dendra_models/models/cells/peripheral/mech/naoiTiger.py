@@ -15,5 +15,5 @@ class nao(S):
 
 
 class naoiTiger(M):
-    M.STATE(nai, nao)
+    M.STATE_BUNDLE(nai, nao)
     M.USEION("na", read=["ina"], write=["nao", "nai"])

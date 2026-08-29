@@ -9,17 +9,17 @@ class z(S):
     S.DERIVATIVE("z' = (zinf - z) / ztau")
     S.ASSIGNED("zinf")
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         cai = torch.where(self.cai < 1e-7, self.cai + 1e-7, self.cai)
         zinf = 1 / (1 + (0.00043 / cai) ** 4.8)
         return {"zinf": zinf}
 
-    def inf(self, v):
-        return {"z": self.breakpoint(v, None)["zinf"]}
+    def state_defaults(self, v, values):
+        return {"z": self.assigned_values(v, values)["zinf"]}
 
 
 class sk_e2(M):
-    M.STATE(z)
+    M.STATE_BUNDLE(z)
 
     M.USEION("k", read=["ek"], write=["ik"])
     M.USEION("ca", read=["cai"])

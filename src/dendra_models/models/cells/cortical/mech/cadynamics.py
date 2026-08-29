@@ -15,10 +15,10 @@ class cai(S):
     def derive_buffers(self):
         return {"shell": -10_000 * (self.gamma / (2 * self.FARADAY * self.depth))}
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         return {"shell_ica": self.shell * self.ica}
 
 
 class cadynamics(M):
-    M.STATE(cai)
+    M.STATE_BUNDLE(cai)
     M.USEION("ca", read=["ica"], write=["cai"])

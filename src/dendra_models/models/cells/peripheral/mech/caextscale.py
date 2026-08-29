@@ -53,10 +53,10 @@ class cao_augmented(S):
 
 
 class caextscale(M):
-    M.STATE(cao)
+    M.STATE_BUNDLE(cao)
     M.USEION("ca", read=["ica"], write=["cao"])
 
 
 class caextscale_augmented(M):
-    M.STATE(cao_augmented)
+    M.STATE_BUNDLE(cao_augmented)
     M.USEION("ca", read=["ica"], write=["cao"])

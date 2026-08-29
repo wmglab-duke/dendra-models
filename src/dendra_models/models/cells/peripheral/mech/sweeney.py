@@ -24,15 +24,15 @@ class m(S):
             / (1 + exp(-(self.amA + v) / self.amD))
         )
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         taum = 1 / (a + b)
         minf = a * taum
         return {"taum": taum, "minf": minf}
 
-    def inf(self, v):
-        return {"m": self.breakpoint(v, None)["minf"]}
+    def state_defaults(self, v, values):
+        return {"m": self.assigned_values(v, values)["minf"]}
 
 
 class h(S):
@@ -51,19 +51,19 @@ class h(S):
     def beta(self, v):
         return self.ahB / (1 + exp(-(v + self.ahA) / self.bhA))
 
-    def breakpoint(self, v, states):
+    def assigned_values(self, v, values):
         a = self.alpha(v)
         b = self.beta(v)
         tauh = 1 / (a + b)
         hinf = a * tauh
         return {"tauh": tauh, "hinf": hinf}
 
-    def inf(self, v):
-        return {"h": self.breakpoint(v, None)["hinf"]}
+    def state_defaults(self, v, values):
+        return {"h": self.assigned_values(v, values)["hinf"]}
 
 
 class sweeney(M):
-    M.STATE(m, h)
+    M.STATE_BUNDLE(m, h)
     M.GLOBAL_SIGNED(gnabar=1.445, gl=0.128, el=-80.01, ena=35.64)
 
     M.USEION("na", write=["ina"])

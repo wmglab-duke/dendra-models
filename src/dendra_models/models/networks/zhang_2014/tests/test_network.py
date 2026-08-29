@@ -443,7 +443,10 @@ def test_external_and_biological_event_delivery_paths(full_network_uninitialized
     target_slot = net.T_Cell.zhang2014_synapse_banks["wdr_ex_ampa"]["local_indices"][0]
     unrelated_slot = net.T_Cell.zhang2014_synapse_banks["wdr_abeta_ampa"]["local_indices"][0]
     net.EX.v.view(-1)[source_index] = -65.0
-    detector.initial(detector.get(net.EX.v))
+    detector_v = detector.get(net.EX.v)
+    detector_values = detector._runtime_value_frame()
+    for name, value in detector.initial_values(detector_v, detector_values).items():
+        setattr(detector, name, value)
 
     first_nonzero_step = None
     for step in range(90):
@@ -455,7 +458,14 @@ def test_external_and_biological_event_delivery_paths(full_network_uninitialized
 
         for connection in net.synapses.values():
             connection.advance()
-        detector.breakpoint(detector.get(net.EX.v))
+        detector_v = detector.get(net.EX.v)
+        detector_values = detector._runtime_value_frame()
+        for name, value in detector.advance(
+            detector_v,
+            EVENT_TEST_DT_MS,
+            detector_values,
+        ).items():
+            setattr(detector, name, value)
 
         if first_nonzero_step is None and float(wdr_ampa.A[target_slot]) > 0.0:
             first_nonzero_step = step

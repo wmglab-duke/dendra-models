@@ -9,16 +9,14 @@ from dendra.models.mechanisms._mechanism import Mechanism as M
 class nakpump(M):
     M.GLOBAL_SIGNED(smalla=0.0, b1=1.0)
 
-    M.BUFFER("pump")
+    M.ASSIGNED("pump")
     M.USEION("na", read=["nai"], write=["ina"])
     M.USEION("k", read=["ko"], write=["ik"])
     M.EXPLICIT("ina", "ik")
 
-    def initial(self, v):
-        self.breakpoint(v)
-
-    def breakpoint(self, v):
-        self.pump = (
+    def assigned_values(self, v, values):
+        del values
+        pump = (
             self.smalla
             / ((1.0 + self.b1 / self.ko) ** 2)
             * (
@@ -26,6 +24,7 @@ class nakpump(M):
                 + 1.0 / (1.0 + (67.6 / (self.nai + 8.0)) ** 3)
             )
         )
+        return {"pump": pump}
 
     def ina(self, v):
         return -1.5 * self.pump

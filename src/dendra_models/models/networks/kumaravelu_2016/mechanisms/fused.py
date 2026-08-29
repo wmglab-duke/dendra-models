@@ -308,6 +308,14 @@ _DELAY_PATHWAYS = (
     "ctx_stn",
 )
 
+_EXP2_SCALAR_COEFFICIENTS = {
+    (0.4, 2.5): ("_exp2_exact_decay1_0", "_exp2_exact_decay2_0", "_exp2_inc_0"),
+    (2.0, 67.0): ("_exp2_exact_decay1_1", "_exp2_exact_decay2_1", "_exp2_inc_1"),
+    (0.4, 7.7): ("_exp2_exact_decay1_2", "_exp2_exact_decay2_2", "_exp2_inc_2"),
+    (0.5, 2.49): ("_exp2_exact_decay1_3", "_exp2_exact_decay2_3", "_exp2_inc_3"),
+    (2.0, 90.0): ("_exp2_exact_decay1_4", "_exp2_exact_decay2_4", "_exp2_inc_4"),
+}
+
 
 # ---------------------------------------------------------------------------
 # Fused mechanism
@@ -319,11 +327,14 @@ class _Kumaravelu2016FusedBase(V):
 
     CONFIG: Dict[str, Any] = {}
 
-    # All mutable simulation state is buffered at the mechanism level so Dendra's
-    # checkpointing path can save/restore it through MechanismHandler.mutable_state_dict().
-    V.BUFFER(
+    # Accepted-step state is explicit CARRY so checkpointing and functional
+    # schemas can distinguish it from repeatable algebra and static workspaces.
+    # These layouts depend on the configured network size, optional Population
+    # batch prefix, and delay depths, so pure initialization resolves and freezes
+    # every deferred shape exactly once.
+    V.CARRY(
         # exposed voltage/state summaries
-        "v_all", "spikes", "syn_spikes", "ap_spikes", "i_inj",
+        "v_all", "spikes", "syn_spikes", "ap_spikes",
         # voltages
         "v_th", "v_stn", "v_gpe", "v_gpi", "v_d2", "v_d1", "v_rs", "v_fs",
         # TH states
@@ -345,44 +356,69 @@ class _Kumaravelu2016FusedBase(V):
         # Alpha hidden Z states for non-cortical pathways
         "Z_th_ctx", "Z_stn_gpi", "Z_gpe_gpi", "Z_gpe_gpe", "Z_gpi_th",
         "Z_d2_gpe", "Z_d1_gpi", "Z_ctx_d2", "Z_ctx_d1",
-        # Coalesced pathway-delay group used by register_delayed_states(...).
-        "buf_pathway_delays", "buf_pathway_delays_ptr",
+        # Coalesced pathway-delay queue.
+        "buf_pathway_delays",
         # Optional per-pathway delay queues used by delay_mode="circular_eager".
         "buf_th_ctx", "buf_stn_gpe", "buf_stn_gpi", "buf_gpe_stn", "buf_gpe_gpi", "buf_gpe_gpe",
         "buf_gpi_th", "buf_d2_gpe", "buf_d1_gpi", "buf_ctx_d2", "buf_ctx_d1", "buf_ctx_stn",
-        # Precomputed routing / threshold indices.
-        "idx_roll_p1", "idx_roll_m1", "idx_roll_p2", "idx_sum_10",
+        shape="deferred",
+    )
+    V.CARRY(
+        "buf_pathway_delays_ptr",
+        "buf_th_ctx_ptr", "buf_stn_gpe_ptr", "buf_stn_gpi_ptr",
+        "buf_gpe_stn_ptr", "buf_gpe_gpi_ptr", "buf_gpe_gpe_ptr",
+        "buf_gpi_th_ptr", "buf_d2_gpe_ptr", "buf_d1_gpi_ptr",
+        "buf_ctx_d2_ptr", "buf_ctx_d1_ptr", "buf_ctx_stn_ptr",
+        dtype=torch.long,
+        shape="deferred",
+    )
+
+    # Intracellular waveform evaluation is repeatable algebra at the current
+    # model time; it must not become checkpoint carry.
+    V.ASSIGNED("i_inj")
+
+    V.DERIVED_BUFFER(
         "spike_crossing_thresholds", "ctx_reset_thresholds",
-        # Optional exact MATLAB stimulus samples, shaped (network, time).
         "stim_idbs", "stim_iappco",
-        # Synaptic filter coefficient vectors used by coalesced updates.
-        "alpha_const_streams",
-        "exp2_tau1_streams", "exp2_tau2_streams", "exp2_inc_streams",
-        "exp2_euler_decay1_streams", "exp2_euler_decay2_streams",
-        "exp2_be_decay1_streams", "exp2_be_decay2_streams",
-        "exp2_exact_decay1_streams", "exp2_exact_decay2_streams",
-        # Realization buffers
         "gcorsna", "gcorsnn", "gcordrstr", "ggege", "gsngen", "gsngea", "gsngi",
+        shape="deferred",
+    )
+    V.DERIVED_BUFFER(
+        "idx_roll_p1", "idx_roll_m1", "idx_roll_p2", "idx_sum_10",
+        "pathway_delays_delay_steps",
         "perm_d2_0", "perm_d2_1", "perm_d2_2", "perm_d2_3",
         "perm_d1_0", "perm_d1_1", "perm_d1_2",
         "perm_fsrs_0", "perm_fsrs_1", "perm_fsrs_2", "perm_fsrs_3",
         "perm_rsfs_0", "perm_rsfs_1", "perm_rsfs_2", "perm_rsfs_3",
+        dtype=torch.long,
+        shape="deferred",
+    )
+
+    # Exact-discretization scalar coefficients retain their true scalar layout.
+    V.TIMESTEP_BUFFER(
+        "_alpha_dt", "_alpha_h", "_alpha_decay", "_alpha_dt_over_tau2",
+        "_alpha_const_peak", "_alpha_const_peak1",
+        "_exp2_exact_decay1_0", "_exp2_exact_decay1_1", "_exp2_exact_decay1_2",
+        "_exp2_exact_decay1_3", "_exp2_exact_decay1_4",
+        "_exp2_exact_decay2_0", "_exp2_exact_decay2_1", "_exp2_exact_decay2_2",
+        "_exp2_exact_decay2_3", "_exp2_exact_decay2_4",
+        "_exp2_inc_0", "_exp2_inc_1", "_exp2_inc_2", "_exp2_inc_3", "_exp2_inc_4",
+        shape=(),
+    )
+
+    # Coalesced pathway coefficients are structural axes, independent of the
+    # Population morphology and any explicit batch prefix.
+    V.TIMESTEP_BUFFER("alpha_const_streams", shape=(1, 11, 1))
+    V.TIMESTEP_BUFFER(
+        "exp2_tau1_streams", "exp2_tau2_streams", "exp2_inc_streams",
+        "exp2_euler_decay1_streams", "exp2_euler_decay2_streams",
+        "exp2_be_decay1_streams", "exp2_be_decay2_streams",
+        "exp2_exact_decay1_streams", "exp2_exact_decay2_streams",
+        shape=(1, 5, 1),
     )
 
     # Spike-surrogate settings are trainable/tunable Dendra parameters.
     V.PARAMETER(tau_gate=0.5, ste_scale=1.0)
-
-    def _install_monomorphic_advance(self):
-        """Keep the hand-written fused state transition on Dendra proxies.
-
-        Dendra normally replaces a concrete mechanism proxy's inherited
-        ``_advance`` method with a generated fast path for mechanisms whose
-        differential states live in ``DE`` modules.  Kumaravelu's fused process
-        instead owns one explicit transition for every voltage, gate, synapse,
-        delay queue, and spike flag.  Replacing it with the generic (empty)
-        ``DE`` transition silently freezes the network at initialization.
-        """
-        return None
 
     # ------------------------------------------------------------------
     # Configuration helpers
@@ -440,42 +476,32 @@ class _Kumaravelu2016FusedBase(V):
             f"Cannot broadcast permutation with shape {tuple(x.shape)} to fused group shape {tuple(ref.shape)}."
         )
 
-    def _set_static_buffer(self, name: str, value: torch.Tensor):
-        if name in self._buffers:
-            setattr(self, name, value)
-        else:
-            self.register_buffer(name, value)
-        return getattr(self, name)
-
-    def _init_routing_indices(self, ref):
+    def _routing_buffers(self, ref):
         n = self._n()
         base = torch.arange(n, device=ref.device, dtype=torch.long)
-        self._set_static_buffer("idx_roll_p1", ((base - 1) % n).reshape(1, n))
-        self._set_static_buffer("idx_roll_m1", ((base + 1) % n).reshape(1, n))
-        self._set_static_buffer("idx_roll_p2", ((base - 2) % n).reshape(1, n))
         shifts = torch.arange(min(10, n), device=ref.device, dtype=torch.long)
-        self._set_static_buffer("idx_sum_10", ((base.unsqueeze(0) - shifts.unsqueeze(1)) % n))
+        return {
+            "idx_roll_p1": ((base - 1) % n).reshape(1, n),
+            "idx_roll_m1": ((base + 1) % n).reshape(1, n),
+            "idx_roll_p2": ((base - 2) % n).reshape(1, n),
+            "idx_sum_10": (base.unsqueeze(0) - shifts.unsqueeze(1)) % n,
+        }
 
-    def _init_spike_thresholds(self, ref):
+    def _spike_threshold_buffers(self, ref):
         """Precompute static threshold vectors used by coalesced spike detection."""
-        self._set_static_buffer(
-            "spike_crossing_thresholds",
-            torch.tensor((-10.0, -20.0), device=ref.device, dtype=ref.dtype),
-        )
-        self._set_static_buffer(
-            "ctx_reset_thresholds",
-            torch.tensor(
+        return {
+            "spike_crossing_thresholds": ref.new_tensor((-10.0, -20.0)),
+            "ctx_reset_thresholds": ref.new_tensor(
                 (
                     float(self.cfg["ctx_rs"].get("v_peak", 30.0)),
                     float(self.cfg["ctx_fs"].get("v_peak", 30.0)),
-                ),
-                device=ref.device,
-                dtype=ref.dtype,
+                )
             ),
-        )
+        }
 
-    def _init_stimulus_samples(self, ref):
+    def _stimulus_buffers(self, ref):
         samples = self.cfg.get("stim_samples", {})
+        outputs = {}
         for buffer_name, key in (
             ("stim_idbs", "Idbs"),
             ("stim_iappco", "Iappco"),
@@ -490,104 +516,125 @@ class _Kumaravelu2016FusedBase(V):
                         f"Configured {key} samples must have shape (network, time); "
                         f"got {tuple(value.shape)}."
                     )
-                if value.shape[0] != ref.shape[0]:
+                if value.shape[0] != ref.shape[-2]:
                     raise ValueError(
                         f"Configured {key} samples have {value.shape[0]} networks, "
-                        f"but the fused state has {ref.shape[0]}."
+                        f"but the fused state has {ref.shape[-2]}."
                     )
-            self._set_static_buffer(buffer_name, value)
+            outputs[buffer_name] = value
+        return outputs
 
-    def _precompute_synapse_constants(self, dt_value):
-        dt_f = float(dt_value)
+    def derive_buffers(self):
+        """Purely derive routing, stimulus, realization, and delay metadata."""
+        ref = self._group(self.diam, 0)
+        outputs = {
+            **self._routing_buffers(ref),
+            **self._spike_threshold_buffers(ref),
+            **self._stimulus_buffers(ref),
+            "pathway_delays_delay_steps": torch.tensor(
+                [
+                    int(self.cfg["delay_steps"].get(name, 0))
+                    for name in _DELAY_PATHWAYS
+                ],
+                device=ref.device,
+                dtype=torch.long,
+            ),
+        }
+
+        realization = self.cfg["realization"]
+        for name in (
+            "gcorsna",
+            "gcorsnn",
+            "gcordrstr",
+            "ggege",
+            "gsngen",
+            "gsngea",
+            "gsngi",
+        ):
+            outputs[name] = self._as_vector(realization[name], ref)
+        for index in range(4):
+            outputs[f"perm_d2_{index}"] = self._as_index(
+                realization["str_d2_perms"][index], ref
+            )
+            outputs[f"perm_fsrs_{index}"] = self._as_index(
+                realization["fs_to_rs_perms"][index], ref
+            )
+            outputs[f"perm_rsfs_{index}"] = self._as_index(
+                realization["rs_to_fs_perms"][index], ref
+            )
+        for index in range(3):
+            outputs[f"perm_d1_{index}"] = self._as_index(
+                realization["str_d1_perms"][index], ref
+            )
+        return outputs
+
+    def derive_timestep_buffers(self, dt):
+        """Build all synaptic filter coefficients as pure tensor workspaces."""
+        # Pathway delays are discretized into fixed-size queues when the fused
+        # model class is constructed. Updating only the synaptic coefficients
+        # for another runtime timestep would produce inconsistent dynamics.
+        dt_ref = float(self.cfg["dt_ref"])
+        dt_value = float(dt.detach())
+        finfo = torch.finfo(dt.dtype)
+        tolerance = 4.0 * finfo.eps * max(abs(dt_ref), abs(dt_value), finfo.tiny)
+        if not math.isclose(dt_value, dt_ref, rel_tol=0.0, abs_tol=tolerance):
+            raise ValueError(
+                "Kumaravelu2016 has a fixed timestep because its pathway delay "
+                f"queues were constructed for dt={dt_ref}; got runtime dt={dt_value}. "
+                "Rebuild the model with the desired dt."
+            )
+
         syn = self.cfg.get("syn", {})
         peak = float(syn.get("gpeak", 0.43))
         peak1 = float(syn.get("gpeak1", 0.3))
         tau_alpha = float(syn.get("tau_alpha", 5.0))
 
-        self._syn_peak = peak
-        self._syn_peak1 = peak1
-        self._alpha_const_peak = peak / (tau_alpha * math.exp(-1.0))
-        self._alpha_const_peak1 = peak1 / (tau_alpha * math.exp(-1.0))
-        h = dt_f / tau_alpha
-        self._alpha_dt = dt_f
-        self._alpha_h = h
-        self._alpha_decay = math.exp(-h)
-        self._alpha_dt_over_tau2 = dt_f / (tau_alpha * tau_alpha)
-
-        def exp2_coeffs(pk, tau1, tau2):
-            tp = (tau1 * tau2) / (tau2 - tau1) * math.log(tau2 / tau1)
-            factor = 1.0 / (-math.exp(-tp / tau1) + math.exp(-tp / tau2))
-            return (math.exp(-dt_f / tau1), math.exp(-dt_f / tau2), pk * factor)
-
-        self._exp2_exact_coeffs = {
-            (peak, 0.4, 2.5): exp2_coeffs(peak, 0.4, 2.5),
-            (peak, 2.0, 67.0): exp2_coeffs(peak, 2.0, 67.0),
-            (peak1, 0.4, 7.7): exp2_coeffs(peak1, 0.4, 7.7),
-            (peak, 0.5, 2.49): exp2_coeffs(peak, 0.5, 2.49),
-            (peak, 2.0, 90.0): exp2_coeffs(peak, 2.0, 90.0),
-        }
+        def stream_tensor(values):
+            return dt.new_tensor(values).reshape(1, -1, 1)
 
         # Stream order for coalesced alpha updates:
         #   S7, S2b, S3b, S3c, S4, S5, S9, S6a(ctx_d2),
         #   S6a(ctx_d1), S1a, S1b.
-        alpha_consts = [
-            self._alpha_const_peak,
-            self._alpha_const_peak,
-            self._alpha_const_peak1,
-            self._alpha_const_peak1,
-            self._alpha_const_peak1,
-            self._alpha_const_peak1,
-            self._alpha_const_peak1,
-            self._alpha_const_peak,
-            self._alpha_const_peak,
-            self._alpha_const_peak,
-            self._alpha_const_peak,
-        ]
+        alpha_peaks = stream_tensor(
+            [peak, peak, peak1, peak1, peak1, peak1, peak1, peak, peak, peak, peak]
+        )
+        alpha_consts = alpha_peaks / (tau_alpha * math.exp(-1.0))
 
         # Stream order for coalesced exp2 updates:
         #   STN->GPe AMPA, STN->GPe NMDA, GPe->STN,
         #   CTX->STN AMPA, CTX->STN NMDA.
-        tau1s = [0.4, 2.0, 0.4, 0.5, 2.0]
-        tau2s = [2.5, 67.0, 7.7, 2.49, 90.0]
-        incs = [
-            self._exp2_exact_coeffs[(peak, 0.4, 2.5)][2],
-            self._exp2_exact_coeffs[(peak, 2.0, 67.0)][2],
-            self._exp2_exact_coeffs[(peak1, 0.4, 7.7)][2],
-            self._exp2_exact_coeffs[(peak, 0.5, 2.49)][2],
-            self._exp2_exact_coeffs[(peak, 2.0, 90.0)][2],
-        ]
-        exact_decay1 = [
-            self._exp2_exact_coeffs[(peak, 0.4, 2.5)][0],
-            self._exp2_exact_coeffs[(peak, 2.0, 67.0)][0],
-            self._exp2_exact_coeffs[(peak1, 0.4, 7.7)][0],
-            self._exp2_exact_coeffs[(peak, 0.5, 2.49)][0],
-            self._exp2_exact_coeffs[(peak, 2.0, 90.0)][0],
-        ]
-        exact_decay2 = [
-            self._exp2_exact_coeffs[(peak, 0.4, 2.5)][1],
-            self._exp2_exact_coeffs[(peak, 2.0, 67.0)][1],
-            self._exp2_exact_coeffs[(peak1, 0.4, 7.7)][1],
-            self._exp2_exact_coeffs[(peak, 0.5, 2.49)][1],
-            self._exp2_exact_coeffs[(peak, 2.0, 90.0)][1],
-        ]
+        tau1s = stream_tensor([0.4, 2.0, 0.4, 0.5, 2.0])
+        tau2s = stream_tensor([2.5, 67.0, 7.7, 2.49, 90.0])
+        exp2_peaks = stream_tensor([peak, peak, peak1, peak, peak])
+        tp = tau1s * tau2s / (tau2s - tau1s) * torch.log(tau2s / tau1s)
+        incs = exp2_peaks / (-torch.exp(-tp / tau1s) + torch.exp(-tp / tau2s))
+        alpha_h = dt / tau_alpha
+        exact_decay1 = torch.exp(-dt / tau1s)
+        exact_decay2 = torch.exp(-dt / tau2s)
 
-        def stream_tensor(vals):
-            return torch.tensor(vals, device=self.dt.device, dtype=self.dt.dtype).reshape(1, -1, 1)
-
-        self.alpha_const_streams = stream_tensor(alpha_consts)
-        self.exp2_tau1_streams = stream_tensor(tau1s)
-        self.exp2_tau2_streams = stream_tensor(tau2s)
-        self.exp2_inc_streams = stream_tensor(incs)
-        self.exp2_euler_decay1_streams = stream_tensor([1.0 - dt_f / t for t in tau1s])
-        self.exp2_euler_decay2_streams = stream_tensor([1.0 - dt_f / t for t in tau2s])
-        self.exp2_be_decay1_streams = stream_tensor([1.0 / (1.0 + dt_f / t) for t in tau1s])
-        self.exp2_be_decay2_streams = stream_tensor([1.0 / (1.0 + dt_f / t) for t in tau2s])
-        self.exp2_exact_decay1_streams = stream_tensor(exact_decay1)
-        self.exp2_exact_decay2_streams = stream_tensor(exact_decay2)
-
-    def set_dt(self, dt):
-        super().set_dt(dt)
-        self._precompute_synapse_constants(float(dt))
+        workspaces = {
+            "_alpha_dt": dt.clone(),
+            "_alpha_h": alpha_h,
+            "_alpha_decay": torch.exp(-alpha_h),
+            "_alpha_dt_over_tau2": dt / (tau_alpha * tau_alpha),
+            "_alpha_const_peak": alpha_consts[0, 0, 0],
+            "_alpha_const_peak1": alpha_consts[0, 2, 0],
+            "alpha_const_streams": alpha_consts,
+            "exp2_tau1_streams": tau1s,
+            "exp2_tau2_streams": tau2s,
+            "exp2_inc_streams": incs,
+            "exp2_euler_decay1_streams": 1.0 - dt / tau1s,
+            "exp2_euler_decay2_streams": 1.0 - dt / tau2s,
+            "exp2_be_decay1_streams": 1.0 / (1.0 + dt / tau1s),
+            "exp2_be_decay2_streams": 1.0 / (1.0 + dt / tau2s),
+            "exp2_exact_decay1_streams": exact_decay1,
+            "exp2_exact_decay2_streams": exact_decay2,
+        }
+        for index in range(5):
+            workspaces[f"_exp2_exact_decay1_{index}"] = exact_decay1[0, index, 0]
+            workspaces[f"_exp2_exact_decay2_{index}"] = exact_decay2[0, index, 0]
+            workspaces[f"_exp2_inc_{index}"] = incs[0, index, 0]
+        return workspaces
 
     def _delay_mode(self) -> str:
         return str(self.cfg.get("delay_mode", "auto")).lower()
@@ -598,66 +645,71 @@ class _Kumaravelu2016FusedBase(V):
     def _spike_update_mode(self) -> str:
         return str(self.cfg.get("spike_update_mode", "uncoalesced")).lower()
 
-    def _delay_register_mode(self) -> str:
-        """Return the backend used when registering delay buffers."""
-        mode = self._delay_mode()
-        # ``circular_eager`` is an execution policy: update delay buffers in one
-        # torch._dynamo-disabled island while keeping the rest of the fused step
-        # compiled.  The underlying per-pathway buffers are ordinary circular
-        # delayed states.
-        return "circular" if mode == "circular_eager" else mode
-
-    def _new_pathway_delay_buffer(self, ref):
-        """Register one coalesced delay buffer for all delayed pathways."""
-        like = ref.unsqueeze(-2).expand(
-            *ref.shape[:-1], len(_DELAY_PATHWAYS), ref.shape[-1]
-        )
-        delay_steps = [
-            int(self.cfg["delay_steps"].get(name, 0)) for name in _DELAY_PATHWAYS
-        ]
-        return self.register_delayed_states(
-            "pathway_delays",
-            like,
-            delay_steps,
-            mode=self._delay_register_mode(),
-            buffer_name="buf_pathway_delays",
-            pointer_name="buf_pathway_delays_ptr",
-            stream_axis=-2,
-            delay_axis=0,
-            clear=True,
+    def _initial_delay_values(self, ref):
+        """Return every delay queue/pointer in its configured frozen layout."""
+        pointer = torch.zeros((), device=ref.device, dtype=torch.long)
+        empty = torch.empty(0, device=ref.device, dtype=ref.dtype)
+        outputs = {"buf_pathway_delays_ptr": pointer.clone()}
+        outputs.update(
+            {f"buf_{name}_ptr": pointer.clone() for name in _DELAY_PATHWAYS}
         )
 
-    def _new_delay_buffer(self, name: str, ref):
-        """Register a single per-pathway circular delay buffer.
-
-        This is used only by ``delay_mode='circular_eager'``.  For large CPU
-        batches the per-pathway layout ``(..., depth, n)`` is often faster than
-        a coalesced ``(..., depth, n_pathways, n)`` gather because each pathway
-        reads/writes a contiguous neuron slice and avoids a cross-stream gather.
-        """
-        steps = int(self.cfg["delay_steps"].get(name, 0))
-        return self.register_delayed_state(
-            name,
-            ref,
-            steps,
-            mode="circular",
-            buffer_name=f"buf_{name}",
-            pointer_name=f"buf_{name}_ptr",
-            insert_axis=-2,
-            clear=True,
-        )
-
-    def _init_delay_buffers(self, ref):
-        """Initialize the delay backend selected by ``delay_mode``."""
-        mode = self._delay_mode()
-        if mode == "circular_eager":
-            # Keep these assigned buffers small and unused in this backend.
-            self.buf_pathway_delays = torch.empty(0, device=ref.device, dtype=ref.dtype)
-            self.buf_pathway_delays_ptr = torch.zeros((), device=ref.device, dtype=torch.long)
+        if self._delay_mode() == "circular_eager":
+            outputs["buf_pathway_delays"] = empty.clone()
             for name in _DELAY_PATHWAYS:
-                setattr(self, f"buf_{name}", self._new_delay_buffer(name, ref))
-        else:
-            self.buf_pathway_delays = self._new_pathway_delay_buffer(ref)
+                steps = int(self.cfg["delay_steps"].get(name, 0))
+                depth = max(1, steps + 1)
+                outputs[f"buf_{name}"] = torch.zeros(
+                    (*ref.shape[:-1], depth, ref.shape[-1]),
+                    device=ref.device,
+                    dtype=ref.dtype,
+                )
+            return outputs
+
+        values_shape = (
+            *ref.shape[:-1],
+            len(_DELAY_PATHWAYS),
+            ref.shape[-1],
+        )
+        max_steps = max(
+            int(self.cfg["delay_steps"].get(name, 0))
+            for name in _DELAY_PATHWAYS
+        )
+        outputs["buf_pathway_delays"] = torch.zeros(
+            (max(1, max_steps + 1), *values_shape),
+            device=ref.device,
+            dtype=ref.dtype,
+        )
+        outputs.update({f"buf_{name}": empty.clone() for name in _DELAY_PATHWAYS})
+        return outputs
+
+    def _pathway_delay_spec(self, values):
+        """Build static Python metadata for the coalesced delay helper."""
+        max_steps = max(
+            int(self.cfg["delay_steps"].get(name, 0))
+            for name in _DELAY_PATHWAYS
+        )
+        return {
+            "buffer": "buf_pathway_delays",
+            "pointer": "buf_pathway_delays_ptr",
+            "steps_buffer": "pathway_delays_delay_steps",
+            "steps": max_steps,
+            "depth": max(1, max_steps + 1),
+            "axis": 0,
+            "stream_axis": values.ndim - 1,
+            "value_stream_axis": values.ndim - 2,
+            "value_shape": tuple(values.shape),
+            "n_streams": len(_DELAY_PATHWAYS),
+            "batched": True,
+            "has_zero_delay": any(
+                int(self.cfg["delay_steps"].get(name, 0)) == 0
+                for name in _DELAY_PATHWAYS
+            ),
+            "all_zero_delay": all(
+                int(self.cfg["delay_steps"].get(name, 0)) == 0
+                for name in _DELAY_PATHWAYS
+            ),
+        }
 
     def _delay_pathways_batched(
         self,
@@ -669,7 +721,7 @@ class _Kumaravelu2016FusedBase(V):
         spk_d1,
         spk_rs_reset,
     ):
-        """Delay all fixed-delay pathway spike streams with one batched call."""
+        """Delay all pathways and return both values and explicit carry updates."""
         values = torch.stack(
             (
                 spk_th,
@@ -687,13 +739,49 @@ class _Kumaravelu2016FusedBase(V):
             ),
             dim=-2,
         )
-        return tuple(self.delayed_states("pathway_delays", values).unbind(dim=-2))
+        spec = self._pathway_delay_spec(values)
+        if spec["all_zero_delay"]:
+            return tuple(values.unbind(dim=-2)), {}
+
+        steps = self.pathway_delays_delay_steps
+        mode = self._delay_mode()
+        if mode == "auto":
+            mode = "shift" if (self.training or torch.is_grad_enabled()) else "circular"
+
+        if mode == "shift":
+            queue = self.buf_pathway_delays
+            queue_new = torch.cat((values.unsqueeze(0), queue[:-1]), dim=0)
+            delayed = self._delayed_states_gather(queue_new, spec, steps)
+            return tuple(delayed.unbind(dim=-2)), {
+                "buf_pathway_delays": queue_new
+            }
+
+        # Deliberate framework-owned performance exception: eval circular
+        # backends update the declared queue/pointer in place under no_grad.
+        # Copying the full queue every accepted step defeats the purpose of the
+        # fused fast path. Both tensors remain explicit CARRY and are returned
+        # for normal schema/checkpoint accounting; functional lowering may fail
+        # closed on this helper until it has a dedicated pure circular operator.
+        delayed = self._delayed_states_circular(spec, values, steps)
+        return tuple(delayed.unbind(dim=-2)), {
+            "buf_pathway_delays": self.buf_pathway_delays,
+            "buf_pathway_delays_ptr": self.buf_pathway_delays_ptr,
+        }
 
     def _delay_one_circular_eager(self, name: str, spike):
         steps = int(self.cfg["delay_steps"].get(name, 0))
         if steps <= 0:
-            return spike
-        return self._delayed_state_circular(self._delayed_state_specs[name], spike, steps)
+            return spike, {}
+        spec = {
+            "buffer": f"buf_{name}",
+            "pointer": f"buf_{name}_ptr",
+            "axis": spike.ndim - 1,
+        }
+        delayed = self._delayed_state_circular(spec, spike, steps)
+        return delayed, {
+            f"buf_{name}": getattr(self, f"buf_{name}"),
+            f"buf_{name}_ptr": getattr(self, f"buf_{name}_ptr"),
+        }
 
     @torch._dynamo.disable
     def _delay_pathways_circular_eager(
@@ -706,8 +794,8 @@ class _Kumaravelu2016FusedBase(V):
         spk_d1,
         spk_rs_reset,
     ):
-        """Update all per-pathway circular delay lines in one eager island."""
-        return (
+        """Update per-pathway rings in one eager island and expose their carry."""
+        pairs = (
             self._delay_one_circular_eager("th_ctx", spk_th),
             self._delay_one_circular_eager("stn_gpe", spk_stn),
             self._delay_one_circular_eager("stn_gpi", spk_stn),
@@ -721,6 +809,10 @@ class _Kumaravelu2016FusedBase(V):
             self._delay_one_circular_eager("ctx_d1", spk_rs_reset),
             self._delay_one_circular_eager("ctx_stn", spk_rs_reset),
         )
+        updates = {}
+        for _, local_updates in pairs:
+            updates.update(local_updates)
+        return tuple(value for value, _ in pairs), updates
 
     def _delay_pathways(
         self,
@@ -748,7 +840,7 @@ class _Kumaravelu2016FusedBase(V):
     def inject(self, waveform, *, index=None, shape=None, model_shape=None, model=None, **kwargs):
         """Accept ``model[idx].inject(waveform)`` stimuli for the fused model.
 
-        The waveform is evaluated each timestep in :meth:`_advance` and exposed
+        The waveform is evaluated each timestep in :meth:`assigned_values` and exposed
         as ``i_inj`` with the same full ``8*n`` voltage layout as ``v_all``.
         Only compartments selected by ``idx`` receive nonzero current; all other
         entries are padded with zeros by the base helper.
@@ -765,7 +857,9 @@ class _Kumaravelu2016FusedBase(V):
     # Dendra hooks
     # ------------------------------------------------------------------
 
-    def initial(self, v):
+    def initial_values(self, v, values):
+        """Return the complete pure initial CARRY mapping."""
+        del values
         cfg = self.cfg
         n = self._n()
         if v.shape[-1] != 8 * n:
@@ -774,61 +868,81 @@ class _Kumaravelu2016FusedBase(V):
             )
 
         # Voltages from the Population v_init vector.
-        self.v_th = self._group(v, 0).clone()
-        self.v_stn = self._group(v, 1).clone()
-        self.v_gpe = self._group(v, 2).clone()
-        self.v_gpi = self._group(v, 3).clone()
-        self.v_d2 = self._group(v, 4).clone()
-        self.v_d1 = self._group(v, 5).clone()
-        self.v_rs = self._group(v, 6).clone()
-        self.v_fs = self._group(v, 7).clone()
+        v_th = self._group(v, 0).clone()
+        v_stn = self._group(v, 1).clone()
+        v_gpe = self._group(v, 2).clone()
+        v_gpi = self._group(v, 3).clone()
+        v_d2 = self._group(v, 4).clone()
+        v_d1 = self._group(v, 5).clone()
+        v_rs = self._group(v, 6).clone()
+        v_fs = self._group(v, 7).clone()
 
-        z = torch.zeros_like(self.v_th)
-        one = torch.ones_like(self.v_th)
+        z = torch.zeros_like(v_th)
+        one = torch.ones_like(v_th)
+        outputs = {
+            "v_th": v_th,
+            "v_stn": v_stn,
+            "v_gpe": v_gpe,
+            "v_gpi": v_gpi,
+            "v_d2": v_d2,
+            "v_d1": v_d1,
+            "v_rs": v_rs,
+            "v_fs": v_fs,
+        }
 
         # Intrinsic states at steady-state/in MATLAB initial values.
-        self.H1 = th_hinf(self.v_th)
-        self.R1 = th_rinf(self.v_th)
+        outputs.update(
+            {
+                "H1": th_hinf(v_th),
+                "R1": th_rinf(v_th),
+                "N2": stn_ninf(v_stn),
+                "H2": stn_hinf(v_stn),
+                "M2": stn_minf(v_stn),
+                "A2": stn_ainf(v_stn),
+                "B2": stn_binf(v_stn),
+                "C2": stn_cinf(v_stn),
+                "D2": stn_d2inf(v_stn),
+                "D1": stn_d1inf(v_stn),
+                "P2": stn_pinf(v_stn),
+                "Q2": stn_qinf(v_stn),
+                "R2": stn_rinf(v_stn),
+                "CAsn2": 0.005 * one,
+                "N3": gpe_ninf(v_gpe),
+                "H3": gpe_hinf(v_gpe),
+                "R3": gpe_rinf(v_gpe),
+                "CA3": 0.1 * one,
+                "N4": gpe_ninf(v_gpi),
+                "H4": gpe_hinf(v_gpi),
+                "R4": gpe_rinf(v_gpi),
+                "CA4": 0.1 * one,
+            }
+        )
 
-        self.N2 = stn_ninf(self.v_stn)
-        self.H2 = stn_hinf(self.v_stn)
-        self.M2 = stn_minf(self.v_stn)
-        self.A2 = stn_ainf(self.v_stn)
-        self.B2 = stn_binf(self.v_stn)
-        self.C2 = stn_cinf(self.v_stn)
-        self.D2 = stn_d2inf(self.v_stn)
-        self.D1 = stn_d1inf(self.v_stn)
-        self.P2 = stn_pinf(self.v_stn)
-        self.Q2 = stn_qinf(self.v_stn)
-        self.R2 = stn_rinf(self.v_stn)
-        self.CAsn2 = 0.005 * one
+        am5, ah5, an5, ap5 = alpham(v_d2), alphah(v_d2), alphan(v_d2), alphap(v_d2)
+        bm5, bh5, bn5, bp5 = betam(v_d2), betah(v_d2), betan(v_d2), betap(v_d2)
+        outputs.update(
+            {
+                "m5": am5 / (am5 + bm5),
+                "h5": ah5 / (ah5 + bh5),
+                "n5": an5 / (an5 + bn5),
+                "p5": ap5 / (ap5 + bp5),
+            }
+        )
 
-        self.N3 = gpe_ninf(self.v_gpe)
-        self.H3 = gpe_hinf(self.v_gpe)
-        self.R3 = gpe_rinf(self.v_gpe)
-        self.CA3 = 0.1 * one
-        self.N4 = gpe_ninf(self.v_gpi)
-        self.H4 = gpe_hinf(self.v_gpi)
-        self.R4 = gpe_rinf(self.v_gpi)
-        self.CA4 = 0.1 * one
-
-        am5, ah5, an5, ap5 = alpham(self.v_d2), alphah(self.v_d2), alphan(self.v_d2), alphap(self.v_d2)
-        bm5, bh5, bn5, bp5 = betam(self.v_d2), betah(self.v_d2), betan(self.v_d2), betap(self.v_d2)
-        self.m5 = am5 / (am5 + bm5)
-        self.h5 = ah5 / (ah5 + bh5)
-        self.n5 = an5 / (an5 + bn5)
-        self.p5 = ap5 / (ap5 + bp5)
-
-        am6, ah6, an6, ap6 = alpham(self.v_d1), alphah(self.v_d1), alphan(self.v_d1), alphap(self.v_d1)
-        bm6, bh6, bn6, bp6 = betam(self.v_d1), betah(self.v_d1), betan(self.v_d1), betap(self.v_d1)
-        self.m6 = am6 / (am6 + bm6)
-        self.h6 = ah6 / (ah6 + bh6)
-        self.n6 = an6 / (an6 + bn6)
-        self.p6 = ap6 / (ap6 + bp6)
+        am6, ah6, an6, ap6 = alpham(v_d1), alphah(v_d1), alphan(v_d1), alphap(v_d1)
+        bm6, bh6, bn6, bp6 = betam(v_d1), betah(v_d1), betan(v_d1), betap(v_d1)
+        outputs.update(
+            {
+                "m6": am6 / (am6 + bm6),
+                "h6": ah6 / (ah6 + bh6),
+                "n6": an6 / (an6 + bn6),
+                "p6": ap6 / (ap6 + bp6),
+            }
+        )
 
         # Cortical recovery variables.
-        self.u_rs = float(cfg["ctx_rs"]["b"]) * self.v_rs
-        self.u_fs = float(cfg["ctx_fs"]["b"]) * self.v_fs
+        outputs["u_rs"] = float(cfg["ctx_rs"]["b"]) * v_rs
+        outputs["u_fs"] = float(cfg["ctx_fs"]["b"]) * v_fs
 
         # Synaptic filter states.
         for name in (
@@ -839,42 +953,29 @@ class _Kumaravelu2016FusedBase(V):
             "Z_th_ctx", "Z_stn_gpi", "Z_gpe_gpi", "Z_gpe_gpe", "Z_gpi_th",
             "Z_d2_gpe", "Z_d1_gpi", "Z_ctx_d2", "Z_ctx_d1",
         ):
-            setattr(self, name, z.clone())
+            outputs[name] = z.clone()
 
-        # Fixed-delay queues, static ring-routing indices, and threshold tensors.
-        self._init_delay_buffers(self.v_th)
-        self._init_routing_indices(self.v_th)
-        self._init_spike_thresholds(self.v_th)
-        self._init_stimulus_samples(self.v_th)
-
-        # Realization arrays.
-        r = cfg["realization"]
-        self.gcorsna = self._as_vector(r["gcorsna"], self.v_th)
-        self.gcorsnn = self._as_vector(r["gcorsnn"], self.v_th)
-        self.gcordrstr = self._as_vector(r["gcordrstr"], self.v_th)
-        self.ggege = self._as_vector(r["ggege"], self.v_th)
-        self.gsngen = self._as_vector(r["gsngen"], self.v_th)
-        self.gsngea = self._as_vector(r["gsngea"], self.v_th)
-        self.gsngi = self._as_vector(r["gsngi"], self.v_th)
-
-        for k in range(4):
-            setattr(self, f"perm_d2_{k}", self._as_index(r["str_d2_perms"][k], self.v_th))
-            setattr(self, f"perm_fsrs_{k}", self._as_index(r["fs_to_rs_perms"][k], self.v_th))
-            setattr(self, f"perm_rsfs_{k}", self._as_index(r["rs_to_fs_perms"][k], self.v_th))
-        for k in range(3):
-            setattr(self, f"perm_d1_{k}", self._as_index(r["str_d1_perms"][k], self.v_th))
-
-        self.spikes = torch.zeros_like(v)
-        self.syn_spikes = torch.zeros_like(v)
-        self.ap_spikes = torch.zeros_like(v)
-        self.i_inj = torch.zeros_like(v)
-        self.v_all = self._cat_v(
-            self.v_th, self.v_stn, self.v_gpe, self.v_gpi, self.v_d2, self.v_d1, self.v_rs, self.v_fs
+        outputs.update(self._initial_delay_values(v_th))
+        outputs["spikes"] = torch.zeros_like(v)
+        outputs["syn_spikes"] = torch.zeros_like(v)
+        outputs["ap_spikes"] = torch.zeros_like(v)
+        outputs["v_all"] = self._cat_v(
+            v_th, v_stn, v_gpe, v_gpi, v_d2, v_d1, v_rs, v_fs
         )
+        return outputs
+
+    def assigned_values(self, v, values):
+        """Evaluate the current-time intracellular waveform without carry."""
+        del v
+        return {
+            "i_inj": self.evaluate_injections(
+                values["v_all"], current_name="i_inj"
+            )
+        }
 
     def update_v(self, v):
-        # scnv calls update_v() before _advance(); return the current exposed
-        # voltage vector. _advance() will update self.v_all for the next call.
+        # scnv calls update_v() before advance(); return the current exposed
+        # voltage vector. advance() will return v_all for the accepted step.
         return self.v_all
 
     # ------------------------------------------------------------------
@@ -950,7 +1051,7 @@ class _Kumaravelu2016FusedBase(V):
         return a_new, b_new, b_new - a_new
 
     def _dbs_current(self, ref, dt):
-        sampled = self._sampled_current(self.stim_idbs, ref)
+        sampled = self._sampled_current(self.stim_idbs, ref, dt)
         if sampled is not None:
             return sampled
         dbs = self.cfg.get("dbs", {})
@@ -965,7 +1066,7 @@ class _Kumaravelu2016FusedBase(V):
         return torch.zeros_like(ref) + amp * in_pulse
 
     def _ctx_stim_current(self, ref, dt):
-        sampled = self._sampled_current(self.stim_iappco, ref)
+        sampled = self._sampled_current(self.stim_iappco, ref, dt)
         if sampled is not None:
             return sampled
         stim = self.cfg.get("ctx_stim", {})
@@ -979,30 +1080,29 @@ class _Kumaravelu2016FusedBase(V):
         on = ((t_ms >= start) & (t_ms <= stop)).to(ref.dtype)
         return torch.zeros_like(ref) + amp * on
 
-    def _sampled_current(self, samples, ref):
+    def _sampled_current(self, samples, ref, dt):
         """Return the MATLAB sample used for the pending Euler transition."""
         if samples.numel() == 0:
             return None
         # MATLAB advances from column i-1 to i using stimulus sample i.  Dendra
         # enters this method at the old time, so select (t + dt) / dt.
-        index = torch.round((self.t + self.dt) / self.dt).to(torch.long)
+        index = torch.round((self.t + dt) / dt).to(torch.long)
         index = index.clamp(0, samples.shape[-1] - 1)
-        value = samples[:, index]
-        return value.reshape(value.shape[0], 1).expand_as(ref)
+        value = samples[..., index].unsqueeze(-1)
+        while value.ndim < ref.ndim:
+            value = value.unsqueeze(0)
+        return value.expand_as(ref)
 
     # ------------------------------------------------------------------
     # Fused explicit Euler step
     # ------------------------------------------------------------------
 
-    def _advance(self, v, dt):  # noqa: C901, PLR0915 - intentionally fused
+    def advance(self, v, dt, values):  # noqa: C901, PLR0915 - intentionally fused
+        del v
         cfg = self.cfg
         p = cfg["constants"]
         c = cfg["coupling"]
         syn = cfg["syn"]
-        n = self._n()
-        # ``set_dt`` has already normalized the timestep and precomputed all
-        # timestep-dependent filter constants.  Avoid hot-path casting.
-        dt = self.dt
 
         # Old voltages/states.
         V1, V2, V3, V4 = self.v_th, self.v_stn, self.v_gpe, self.v_gpi
@@ -1010,7 +1110,7 @@ class _Kumaravelu2016FusedBase(V):
 
         # Optional user-supplied waveform stimulation.  The exposed vector uses
         # the same layout as v_all: TH, STN, GPe, GPi, StrD2, StrD1, CTX_RS, CTX_FS.
-        Iinj_all = self.evaluate_injections(self.v_all, current_name="i_inj")
+        Iinj_all = values["i_inj"]
         Iinj1 = self._group(Iinj_all, 0)
         Iinj2 = self._group(Iinj_all, 1)
         Iinj3 = self._group(Iinj_all, 2)
@@ -1192,6 +1292,15 @@ class _Kumaravelu2016FusedBase(V):
         )
 
         # ---------------- Delays and synaptic filter updates ----------------
+        delayed_pathways, delay_updates = self._delay_pathways(
+            spk_th,
+            spk_stn,
+            spk_gpe,
+            spk_gpi,
+            spk_d2,
+            spk_d1,
+            spk_rs_reset,
+        )
         (
             d_th_ctx,
             d_stn_gpe,
@@ -1205,15 +1314,7 @@ class _Kumaravelu2016FusedBase(V):
             d_ctx_d2,
             d_ctx_d1,
             d_ctx_stn,
-        ) = self._delay_pathways(
-            spk_th,
-            spk_stn,
-            spk_gpe,
-            spk_gpi,
-            spk_d2,
-            spk_d1,
-            spk_rs_reset,
-        )
+        ) = delayed_pathways
 
         (
             S7_new, Z_th_ctx_new,
@@ -1237,41 +1338,129 @@ class _Kumaravelu2016FusedBase(V):
             spk_rs_syn, spk_fs_syn, dt, syn,
         )
 
-        # ---------------- Commit state updates ----------------
-        self.v_th, self.v_stn, self.v_gpe, self.v_gpi = v_th_new, v_stn_new, v_gpe_new, v_gpi_new
-        self.v_d2, self.v_d1, self.v_rs, self.v_fs = v_d2_new, v_d1_new, v_rs_new, v_fs_new
-
-        self.H1, self.R1 = H1_new, R1_new
-        self.N2, self.H2, self.M2, self.A2, self.B2, self.C2 = N2_new, H2_new, M2_new, A2_new, B2_new, C2_new
-        self.D1, self.D2, self.P2, self.Q2, self.R2, self.CAsn2 = D1_new, D2_new, P2_new, Q2_new, R2_new, CAsn2_new
-        self.N3, self.H3, self.R3, self.CA3 = N3_new, H3_new, R3_new, CA3_new
-        self.N4, self.H4, self.R4, self.CA4 = N4_new, H4_new, R4_new, CA4_new
-        self.m5, self.h5, self.n5, self.p5, self.S1c = m5_new, h5_new, n5_new, p5_new, S1c_new
-        self.m6, self.h6, self.n6, self.p6, self.S8 = m6_new, h6_new, n6_new, p6_new, S8_new
-        self.u_rs, self.u_fs = u_rs_new, u_fs_new
-
-        self.S7, self.Z_th_ctx = S7_new, Z_th_ctx_new
-        self.S2b, self.Z_stn_gpi = S2b_new, Z_stn_gpi_new
-        self.S3b, self.Z_gpe_gpi = S3b_new, Z_gpe_gpi_new
-        self.S3c, self.Z_gpe_gpe = S3c_new, Z_gpe_gpe_new
-        self.S4, self.Z_gpi_th = S4_new, Z_gpi_th_new
-        self.S5, self.Z_d2_gpe = S5_new, Z_d2_gpe_new
-        self.S9, self.Z_d1_gpi = S9_new, Z_d1_gpi_new
-        self.S6a, self.Z_ctx_d2, self.Z_ctx_d1 = S6a_new, Z_ctx_d2_new, Z_ctx_d1_new
-        self.S1a, self.Z1a, self.S1b, self.Z1b = S1a_new, Z1a_new, S1b_new, Z1b_new
-
-        self.A_stn_gpe_a, self.B_stn_gpe_a, self.S2a = A_stn_gpe_a_new, B_stn_gpe_a_new, S2a_new
-        self.A_stn_gpe_n, self.B_stn_gpe_n, self.S2an = A_stn_gpe_n_new, B_stn_gpe_n_new, S2an_new
-        self.A_gpe_stn, self.B_gpe_stn, self.S3a = A_gpe_stn_new, B_gpe_stn_new, S3a_new
-        self.A_ctx_stn_a, self.B_ctx_stn_a, self.S6b = A_ctx_stn_a_new, B_ctx_stn_a_new, S6b_new
-        self.A_ctx_stn_n, self.B_ctx_stn_n, self.S6bn = A_ctx_stn_n_new, B_ctx_stn_n_new, S6bn_new
-
-        self.spikes = self._cat_v(spk_th, spk_stn, spk_gpe, spk_gpi, spk_d2, spk_d1, spk_rs_reset, spk_fs_reset)
-        self.syn_spikes = self._cat_v(spk_th, spk_stn, spk_gpe, spk_gpi, spk_d2, spk_d1, spk_rs_syn, spk_fs_syn)
-        self.ap_spikes = self._cat_v(ap_th, ap_stn, ap_gpe, ap_gpi, ap_d2, ap_d1, ap_rs, ap_fs)
-        self.v_all = self._cat_v(
-            self.v_th, self.v_stn, self.v_gpe, self.v_gpi, self.v_d2, self.v_d1, self.v_rs, self.v_fs
+        # ---------------- Return accepted-step state ----------------
+        outputs = {
+            **delay_updates,
+            "v_th": v_th_new,
+            "v_stn": v_stn_new,
+            "v_gpe": v_gpe_new,
+            "v_gpi": v_gpi_new,
+            "v_d2": v_d2_new,
+            "v_d1": v_d1_new,
+            "v_rs": v_rs_new,
+            "v_fs": v_fs_new,
+            "H1": H1_new,
+            "R1": R1_new,
+            "N2": N2_new,
+            "H2": H2_new,
+            "M2": M2_new,
+            "A2": A2_new,
+            "B2": B2_new,
+            "C2": C2_new,
+            "D1": D1_new,
+            "D2": D2_new,
+            "P2": P2_new,
+            "Q2": Q2_new,
+            "R2": R2_new,
+            "CAsn2": CAsn2_new,
+            "N3": N3_new,
+            "H3": H3_new,
+            "R3": R3_new,
+            "CA3": CA3_new,
+            "N4": N4_new,
+            "H4": H4_new,
+            "R4": R4_new,
+            "CA4": CA4_new,
+            "m5": m5_new,
+            "h5": h5_new,
+            "n5": n5_new,
+            "p5": p5_new,
+            "m6": m6_new,
+            "h6": h6_new,
+            "n6": n6_new,
+            "p6": p6_new,
+            "u_rs": u_rs_new,
+            "u_fs": u_fs_new,
+            "S2a": S2a_new,
+            "S2an": S2an_new,
+            "S2b": S2b_new,
+            "S3a": S3a_new,
+            "S3b": S3b_new,
+            "S3c": S3c_new,
+            "S4": S4_new,
+            "S5": S5_new,
+            "S6a": S6a_new,
+            "S6b": S6b_new,
+            "S6bn": S6bn_new,
+            "S7": S7_new,
+            "S8": S8_new,
+            "S9": S9_new,
+            "S1a": S1a_new,
+            "Z1a": Z1a_new,
+            "S1b": S1b_new,
+            "Z1b": Z1b_new,
+            "S1c": S1c_new,
+            "A_stn_gpe_a": A_stn_gpe_a_new,
+            "B_stn_gpe_a": B_stn_gpe_a_new,
+            "A_stn_gpe_n": A_stn_gpe_n_new,
+            "B_stn_gpe_n": B_stn_gpe_n_new,
+            "A_gpe_stn": A_gpe_stn_new,
+            "B_gpe_stn": B_gpe_stn_new,
+            "A_ctx_stn_a": A_ctx_stn_a_new,
+            "B_ctx_stn_a": B_ctx_stn_a_new,
+            "A_ctx_stn_n": A_ctx_stn_n_new,
+            "B_ctx_stn_n": B_ctx_stn_n_new,
+            "Z_th_ctx": Z_th_ctx_new,
+            "Z_stn_gpi": Z_stn_gpi_new,
+            "Z_gpe_gpi": Z_gpe_gpi_new,
+            "Z_gpe_gpe": Z_gpe_gpe_new,
+            "Z_gpi_th": Z_gpi_th_new,
+            "Z_d2_gpe": Z_d2_gpe_new,
+            "Z_d1_gpi": Z_d1_gpi_new,
+            "Z_ctx_d2": Z_ctx_d2_new,
+            "Z_ctx_d1": Z_ctx_d1_new,
+            "spikes": self._cat_v(
+                spk_th,
+                spk_stn,
+                spk_gpe,
+                spk_gpi,
+                spk_d2,
+                spk_d1,
+                spk_rs_reset,
+                spk_fs_reset,
+            ),
+            "syn_spikes": self._cat_v(
+                spk_th,
+                spk_stn,
+                spk_gpe,
+                spk_gpi,
+                spk_d2,
+                spk_d1,
+                spk_rs_syn,
+                spk_fs_syn,
+            ),
+            "ap_spikes": self._cat_v(
+                ap_th,
+                ap_stn,
+                ap_gpe,
+                ap_gpi,
+                ap_d2,
+                ap_d1,
+                ap_rs,
+                ap_fs,
+            ),
+        }
+        outputs["v_all"] = self._cat_v(
+            v_th_new,
+            v_stn_new,
+            v_gpe_new,
+            v_gpi_new,
+            v_d2_new,
+            v_d1_new,
+            v_rs_new,
+            v_fs_new,
         )
+        return outputs
 
 
 class _UncoalescedSpikeEventUpdates:
@@ -1602,12 +1791,13 @@ class _BackwardEulerSynapseDiscretization:
 class _ExactSynapseDiscretization:
     """Exact homogeneous transition for linear alpha/bi-exponential filters.
 
-    All dt-dependent coefficients are computed once in ``set_dt``.  This keeps
+    All dt-dependent coefficients are prepared once per configured timestep. This keeps
     the timestep hot path free of scalar ``torch.exp`` calls.
     """
 
     def _alpha_step(self, s, z, spike, peak: float, tau: float, dt):
-        const = self._alpha_const_peak1 if peak == self._syn_peak1 else self._alpha_const_peak
+        peak1 = float(self.cfg["syn"].get("gpeak1", 0.3))
+        const = self._alpha_const_peak1 if peak == peak1 else self._alpha_const_peak
         s_h = self._alpha_decay * ((1.0 + self._alpha_h) * s + self._alpha_dt * z)
         z_h = self._alpha_decay * (-self._alpha_dt_over_tau2 * s + (1.0 - self._alpha_h) * z)
         z_new = z_h + const * spike
@@ -1620,7 +1810,11 @@ class _ExactSynapseDiscretization:
         return s_h, z_new
 
     def _exp2_step(self, a, b, spike, peak: float, tau1: float, tau2: float, dt):
-        decay1, decay2, inc_factor = self._exp2_exact_coeffs[(peak, tau1, tau2)]
+        del peak, dt
+        decay1_name, decay2_name, inc_name = _EXP2_SCALAR_COEFFICIENTS[(tau1, tau2)]
+        decay1 = getattr(self, decay1_name)
+        decay2 = getattr(self, decay2_name)
+        inc_factor = getattr(self, inc_name)
         inc = inc_factor * spike
         a_new = a * decay1 + inc
         b_new = b * decay2 + inc

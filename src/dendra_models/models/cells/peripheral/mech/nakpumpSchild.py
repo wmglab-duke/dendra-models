@@ -18,7 +18,7 @@ class nakpumpSchild(M):
     M.USEION("k", read=["ko"], write=["ik"])
     M.USEION("na", read=["nai"], write=["ina"])
 
-    M.BUFFER("ink")
+    M.ASSIGNED("ink")
     M.DERIVED_BUFFER("INaKmax")
     M.EXPLICIT("ina", "ik")
 
@@ -28,17 +28,16 @@ class nakpumpSchild(M):
             * self.Q10NaK ** ((self.Q10TempA - self.celsius) / self.Q10TempB)
         }
 
-    def initial(self, v):
-        self.breakpoint(v)
-
-    def breakpoint(self, v):
+    def assigned_values(self, v, values):
+        del values
         fnk = (v + 150.0) / (v + 200.0)
-        self.ink = (
+        ink = (
             self.INaKmax
             * fnk
             * ((self.nai / (self.nai + self.Kmnai)) ** 3)
             * ((self.ko / (self.ko + self.Kmko)) ** 2)
         )
+        return {"ink": ink}
 
     def ina(self, v):
         return 3 * self.ink

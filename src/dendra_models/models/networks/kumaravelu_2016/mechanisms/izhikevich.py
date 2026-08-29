@@ -26,14 +26,14 @@ class regular_spiking_cortex_states(S):
     S.DERIVATIVE("v_izh' = rhs_v", "u' = a * (b * v_izh - u)")
     S.RANGE(a=0.02, b=0.2, v0=-65.0, i_stim=0.0)
 
-    def breakpoint(self, v, states):
-        v_izh = states["v_izh"]
+    def assigned_values(self, v, values):
+        v_izh = values["v_izh"]
         # MATLAB RS equation: v' = ... - Iie - Ithcor + Iappco.
         i_syn = _maybe_current(self, "i_ie", v_izh) + _maybe_current(self, "i_thcor", v_izh)
-        rhs_v = 0.04 * v_izh**2 + 5.0 * v_izh + 140.0 - states["u"] - i_syn + self.i_stim
+        rhs_v = 0.04 * v_izh**2 + 5.0 * v_izh + 140.0 - values["u"] - i_syn + self.i_stim
         return {"i_syn": i_syn, "rhs_v": rhs_v}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         v0 = torch.zeros_like(v) + self.v0
         return {"v_izh": v0, "u": self.b * v0}
 
@@ -44,14 +44,14 @@ class fast_spiking_interneuron_states(S):
     S.DERIVATIVE("v_izh' = rhs_v", "u' = a * (b * v_izh - u)")
     S.RANGE(a=0.1, b=0.2, v0=-65.0, i_stim=0.0)
 
-    def breakpoint(self, v, states):
-        v_izh = states["v_izh"]
+    def assigned_values(self, v, values):
+        v_izh = values["v_izh"]
         # MATLAB FS equation: v' = ... - Iei + Iappco.
         i_syn = _maybe_current(self, "i_ei", v_izh)
-        rhs_v = 0.04 * v_izh**2 + 5.0 * v_izh + 140.0 - states["u"] - i_syn + self.i_stim
+        rhs_v = 0.04 * v_izh**2 + 5.0 * v_izh + 140.0 - values["u"] - i_syn + self.i_stim
         return {"i_syn": i_syn, "rhs_v": rhs_v}
 
-    def inf(self, v):
+    def state_defaults(self, v, values):
         v0 = torch.zeros_like(v) + self.v0
         return {"v_izh": v0, "u": self.b * v0}
 
@@ -83,16 +83,10 @@ class cortical_spike_router(M):
         router.setreference("fs_syn_spikes_local", lambda: mc.ctx_fs.syn_spikes)
     """
 
-    M.BUFFER("rs_spikes", "rs_syn_spikes", "fs_spikes", "fs_syn_spikes")
+    M.ASSIGNED("rs_spikes", "rs_syn_spikes", "fs_spikes", "fs_syn_spikes")
 
-    def initial(self, v):
-        z = torch.zeros_like(v)
-        self.rs_spikes = z
-        self.rs_syn_spikes = z
-        self.fs_spikes = z
-        self.fs_syn_spikes = z
-
-    def breakpoint(self, v):
+    def assigned_values(self, v, values):
+        del values
         n_rs = v.shape[-1] // 2
         left = torch.zeros_like(v[..., :n_rs])
         right = torch.zeros_like(v[..., n_rs:])
@@ -102,25 +96,24 @@ class cortical_spike_router(M):
         fs_spikes = _reshape_like(getattr(self, "fs_spikes_local", None), right)
         fs_syn_spikes = _reshape_like(getattr(self, "fs_syn_spikes_local", None), right)
 
-        self.rs_spikes = torch.cat((rs_spikes, right), dim=-1)
-        self.rs_syn_spikes = torch.cat((rs_syn_spikes, right), dim=-1)
-        self.fs_spikes = torch.cat((left, fs_spikes), dim=-1)
-        self.fs_syn_spikes = torch.cat((left, fs_syn_spikes), dim=-1)
         return {
-            "rs_spikes": self.rs_spikes,
-            "rs_syn_spikes": self.rs_syn_spikes,
-            "fs_spikes": self.fs_spikes,
-            "fs_syn_spikes": self.fs_syn_spikes,
+            "rs_spikes": torch.cat((rs_spikes, right), dim=-1),
+            "rs_syn_spikes": torch.cat((rs_syn_spikes, right), dim=-1),
+            "fs_spikes": torch.cat((left, fs_spikes), dim=-1),
+            "fs_syn_spikes": torch.cat((left, fs_syn_spikes), dim=-1),
         }
 
 
 class _IzhikevichResetMixin:
     """Hard reset plus differentiable spike/crossing indicators."""
 
-    def initial(self, v):
-        self.spikes = torch.zeros_like(v)
-        self.syn_spikes = torch.zeros_like(v)
-        self.v_prev = torch.zeros_like(v) + self.DE[self._state_name].v0
+    def initial_values(self, v, values):
+        del values
+        return {
+            "spikes": torch.zeros_like(v),
+            "syn_spikes": torch.zeros_like(v),
+            "v_prev": torch.zeros_like(v) + self.DE[self._state_name].v0,
+        }
 
     def update_v(self, v):
         v_now = self.v_izh
@@ -148,16 +141,16 @@ class _IzhikevichResetMixin:
 
 
 class regular_spiking_cortex(_IzhikevichResetMixin, V, Syn):
-    V.STATE(regular_spiking_cortex_states)
+    V.STATE_BUNDLE(regular_spiking_cortex_states)
     V.RANGE(v_peak=30.0, c=-65.0, d=8.0, syn_threshold=-10.0)
     V.PARAMETER(tau_gate=0.5, ste_scale=1.0)
-    V.BUFFER("spikes", "syn_spikes", "v_prev")
+    V.CARRY("spikes", "syn_spikes", "v_prev")
     _state_name = "regular_spiking_cortex_states"
 
 
 class fast_spiking_interneuron(_IzhikevichResetMixin, V, Syn):
-    V.STATE(fast_spiking_interneuron_states)
+    V.STATE_BUNDLE(fast_spiking_interneuron_states)
     V.RANGE(v_peak=30.0, c=-65.0, d=2.0, syn_threshold=-10.0)
     V.PARAMETER(tau_gate=0.5, ste_scale=1.0)
-    V.BUFFER("spikes", "syn_spikes", "v_prev")
+    V.CARRY("spikes", "syn_spikes", "v_prev")
     _state_name = "fast_spiking_interneuron_states"
