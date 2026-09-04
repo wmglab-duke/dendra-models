@@ -1,6 +1,6 @@
 from dendra.models.mechanisms._mechanism import Mechanism as M
 from dendra.models.mechanisms._state import State as S
-from dendra.models.mechanisms.ops import *
+from dendra.models.mechanisms.ops import exp, log10
 
 
 class n(S):
@@ -19,8 +19,8 @@ class n(S):
         taun = -1 * pca / self.q10
         return {"taun": taun, "ninf": ninf}
 
-    def state_defaults(self, v, values):
-        pca = log10(self.cai) - 3
+    def initial_values(self, v, values):
+        pca = log10(values["cai"]) - 3
         return {"n": 1 / (1 + exp(-1 * (pca + 6.4) / 0.12))}
 
 

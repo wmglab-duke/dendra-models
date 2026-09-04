@@ -1,7 +1,7 @@
+import math
+
 from dendra.models.core import Unmyelinated
 from dendra.units import mm
-
-import torch
 
 from ..mech import (
     nav7,
@@ -26,61 +26,7 @@ from ..mech import (
     leak,
     get_mechanism,
 )
-
-import math
-
-
-def pre_init(model):
-    model.mech.extrapump.pumpina_param.zero_()
-    model.mech.extrapump.pumpik_param.zero_()
-    model.mech.extrapump.pumpica_param.zero_()
-
-    model.mech.leak.gnaleak_param.zero_()
-    model.mech.leak.gkleak_param.zero_()
-    model.mech.leak.gcaleak_param.zero_()
-
-
-def _balance_one_ion(current, v_rest, erev, leak_param, pump_param):
-    # Reference logic:
-    # g = -i_ion / (v_rest - E_ion)
-    # if g is positive, use leak conductance;
-    # if g is negative, use fixed extrapump current.
-    g = -current / (v_rest - erev)
-
-    if torch.as_tensor(g).flatten()[0] < 0:
-        pump_param.copy_(-current)
-        leak_param.zero_()
-    else:
-        leak_param.copy_(g)
-        pump_param.zero_()
-
-
-def balance(model):
-    v_rest = model.v_init
-
-    _balance_one_ion(
-        model.mech.na_ion.ina.flatten()[0],
-        v_rest,
-        model.mech.na_ion.ena.flatten()[0],
-        model.mech.leak.gnaleak_param,
-        model.mech.extrapump.pumpina_param,
-    )
-
-    _balance_one_ion(
-        model.mech.k_ion.ik.flatten()[0],
-        v_rest,
-        model.mech.k_ion.ek.flatten()[0],
-        model.mech.leak.gkleak_param,
-        model.mech.extrapump.pumpik_param,
-    )
-
-    _balance_one_ion(
-        model.mech.ca_ion.ica.flatten()[0],
-        v_rest,
-        model.mech.ca_ion.eca.flatten()[0],
-        model.mech.leak.gcaleak_param,
-        model.mech.extrapump.pumpica_param,
-    )
+from ._balance import register_thio_balance
 
 
 class ThioAutonomic2024(Unmyelinated):
@@ -113,9 +59,6 @@ class ThioAutonomic2024(Unmyelinated):
         self.ion_style("na", 1, 1)
         self.ion_style("k", 1, 1)
 
-        self.register_pre_initialize_hook(pre_init)
-        self.register_post_initialize_hook(balance)
-
         self.insert(nav7, gbar=0.036813)
         self.insert(newnav8, gbar=0.075747)
         self.insert(nav9, gbar=0.000376)
@@ -136,6 +79,7 @@ class ThioAutonomic2024(Unmyelinated):
         self.insert(koi)
         self.insert(leak)
         self.insert(extrapump)
+        register_thio_balance(self)
 
         self.equilibria(ena=ena, ek=ek)
         self.concentrations(
@@ -178,9 +122,6 @@ class ThioCutaneous2024(Unmyelinated):
         self.ion_style("na", 1, 1)
         self.ion_style("k", 1, 1)
 
-        self.register_pre_initialize_hook(pre_init)
-        self.register_post_initialize_hook(balance)
-
         self.insert(nav7, gbar=0.035663)
         self.insert(newnav8, gbar=0.115643)
         self.insert(nav9, gbar=0.000504)
@@ -201,6 +142,7 @@ class ThioCutaneous2024(Unmyelinated):
         self.insert(koi)
         self.insert(leak)
         self.insert(extrapump)
+        register_thio_balance(self)
 
         self.equilibria(ena=ena, ek=ek)
         self.concentrations(
@@ -244,9 +186,6 @@ class ThioCutaneousAugmented2024(Unmyelinated):
         self.ion_style("na", 1, 1)
         self.ion_style("k", 1, 1)
 
-        self.register_pre_initialize_hook(pre_init)
-        self.register_post_initialize_hook(balance)
-
         self.insert(get_mechanism("nav7_augmented"), gbar=0.035663)
         self.insert(get_mechanism("newnav8_augmented"), gbar=0.115643)
         self.insert(get_mechanism("nav9_augmented"), gbar=0.000504)
@@ -254,7 +193,9 @@ class ThioCutaneousAugmented2024(Unmyelinated):
         self.insert(get_mechanism("cav12_augmented"), gbar=0.000188)
         self.insert(get_mechanism("cav22_augmented"), gbar=0.000361)
         self.insert(get_mechanism("km_augmented"), gbar=0.000003)
-        self.insert(get_mechanism("caextscale_augmented"), lseg=(1e-4) * dx, fhspace=0.03)
+        self.insert(
+            get_mechanism("caextscale_augmented"), lseg=(1e-4) * dx, fhspace=0.03
+        )
         self.insert(get_mechanism("caintscale_augmented"), lseg=(1e-4) * dx)
         self.insert(get_mechanism("hcn_augmented"), gbar=0.000106)
         self.insert(get_mechanism("kv21_augmented"), gbar=0.327196)
@@ -265,7 +206,9 @@ class ThioCutaneousAugmented2024(Unmyelinated):
         self.insert(get_mechanism("nakpumpSchild_augmented"), gbar_INaKmax22=0.000456)
         self.insert(get_mechanism("naoi_augmented"))
         self.insert(get_mechanism("koi_augmented"))
+        self.insert(leak)
         self.insert(get_mechanism("extrapump"))
+        register_thio_balance(self)
 
         self.equilibria(ena=ena, ek=ek)
         self.concentrations(
@@ -308,15 +251,14 @@ class ThioCutaneousReduced(Unmyelinated):
         self.ion_style("na", 1, 1)
         self.ion_style("k", 1, 1)
 
-        self.register_pre_initialize_hook(pre_init)
-        self.register_post_initialize_hook(balance)
-
         self.insert(nav7, gbar=0.035663)
         self.insert(newnav8, gbar=0.115643)
         self.insert(kv21, gbar=0.327196)
         self.insert(naoi)
         self.insert(koi)
+        self.insert(leak)
         self.insert(extrapump)
+        register_thio_balance(self)
 
         self.equilibria(ena=ena, ek=ek)
         self.concentrations(

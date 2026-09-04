@@ -1,8 +1,6 @@
 from dendra.models.core import Unmyelinated
 from dendra.units import mm
 
-import torch
-
 from ..mech import (
     ks,
     kf,
@@ -18,66 +16,7 @@ from ..mech import (
     leak,
     extrapump,
 )
-
-
-def pre_init(model):
-    model.mech.leak.gkleak_param.data.zero_()
-    model.mech.leak.gnaleak_param.data.zero_()
-
-    model.mech.extrapump.pumpina_param.data.zero_()
-    model.mech.extrapump.pumpik_param.data.zero_()
-    model.mech.extrapump.pumpica_param.data.zero_()
-
-
-def _balance_one_ion(current, v_rest, erev, leak_param, pump_param):
-    """
-    Match pyfibers logic:
-    required conductance = -I_ion / (v_rest - E_ion)
-
-    If that conductance would be negative, use a fixed extrapump current
-    instead of an unphysical negative leak.
-    """
-    g = -current / (v_rest - erev)
-
-    if torch.as_tensor(g).flatten()[0] < 0:
-        pump_param.data.copy_(-current)
-        leak_param.data.zero_()
-    else:
-        leak_param.data.copy_(g)
-        pump_param.data.zero_()
-
-"""
-def balance(model):
-    ek, ik = model.mech.k_ion.ek.flatten()[0], model.mech.k_ion.ik.flatten()[0]
-    ena, ina = model.mech.na_ion.ena.flatten()[0], model.mech.na_ion.ina.flatten()[0]
-    model.mech.leak.gkleak_param.data.copy_(-(ik / (model.v_init - ek)))
-    model.mech.leak.gnaleak_param.data.copy_(-(ina / (model.v_init - ena)))
-"""
-
-def balance(model):
-    v_rest = model.v_init
-
-    ena = model.mech.na_ion.ena.flatten()[0]
-    ina = model.mech.na_ion.ina.flatten()[0]
-
-    ek = model.mech.k_ion.ek.flatten()[0]
-    ik = model.mech.k_ion.ik.flatten()[0]
-
-    _balance_one_ion(
-        ina,
-        v_rest,
-        ena,
-        model.mech.leak.gnaleak_param,
-        model.mech.extrapump.pumpina_param,
-    )
-
-    _balance_one_ion(
-        ik,
-        v_rest,
-        ek,
-        model.mech.leak.gkleak_param,
-        model.mech.extrapump.pumpik_param,
-    )
+from ._balance import register_tigerholm_balance
 
 
 class Tigerholm2014(Unmyelinated):
@@ -156,13 +95,10 @@ class Tigerholm2014(Unmyelinated):
     ):
         super().__init__(diameters, L, dx, celsius, v_init, integrator)
 
-        self.register_pre_initialize_hook(pre_init)
-        self.register_post_initialize_hook(balance)
-
-        self.insert(ks, gbar=0.0069733) # KM
-        self.insert(kf, gbar=0.012756) #KA
+        self.insert(ks, gbar=0.0069733)  # KM
+        self.insert(kf, gbar=0.012756)  # KA
         self.insert(mh, gbar=0.0025377)
-        self.insert(nattxs, gbar=0.10664) #Nav1.7
+        self.insert(nattxs, gbar=0.10664)  # Nav1.7
         self.insert(nav1p8, gbar=0.24271)
         self.insert(nav1p9, gbar=9.4779e-05)
         self.insert(nakpump, smalla=-0.0047891)
@@ -172,5 +108,6 @@ class Tigerholm2014(Unmyelinated):
         self.insert(koiTiger)
         self.insert(leak)
         self.insert(extrapump)
+        register_tigerholm_balance(self)
 
         self.concentrations(nai0=11.4, nao0=154.0, ki0=121.7, ko0=5.6)

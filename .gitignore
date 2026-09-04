@@ -134,3 +134,6 @@ Thumbs.db
 .codex/*
 validation/
 artifacts/
+
+# Local developer records
+/codex-docs/

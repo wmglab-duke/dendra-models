@@ -1,6 +1,6 @@
 from dendra.models.mechanisms._mechanism import Mechanism as M
 from dendra.models.mechanisms._state import State as S
-from dendra.models.mechanisms.ops import *
+from dendra.models.mechanisms.ops import exp, log10
 
 
 class m(S):
@@ -29,8 +29,8 @@ class m(S):
         taum = taum / q10
         return {"taum": taum, "minf": minf}
 
-    def state_defaults(self, v, values):
-        pca = log10(self.cai) - 3.0
+    def initial_values(self, v, values):
+        pca = log10(values["cai"]) - 3.0
         v12 = -50.0 * pca - 232.0
         return {"m": 1.0 / (1.0 + exp(-1.0 * (v - v12) / 24.0))}
 
@@ -57,8 +57,8 @@ class h(S):
         tauh = tauh / q10
         return {"tauh": tauh, "hinf": hinf}
 
-    def state_defaults(self, v, values):
-        pca = log10(self.cai) - 3.0
+    def initial_values(self, v, values):
+        pca = log10(values["cai"]) - 3.0
         vh12 = -8.0 * pca + 35.0
         return {"h": 1.0 / (1.0 + exp((v - vh12) / 47.0))}
 
