@@ -12,7 +12,7 @@ requires-python = ">=3.11"
 license = { file = "LICENSE" }
 authors = [{ name = "Minhaj Hussain", email = "minhaj.hussain@duke.edu" }]
 dependencies = [
-  "dendra>=0.25.0,<0.26.0"
+  "dendra>=0.25.0"
 ]
 
 # Optional but nice-to-have

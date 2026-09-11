@@ -7,8 +7,7 @@
 Models implemented in Dendra.
 
 > [!IMPORTANT]
-> dendra-models requires Dendra 0.25.x. Until Dendra 0.25 is released, install
-> Dendra from its `develop` branch first.
+> dendra-models requires Dendra >=0.25.0.
 
 ### Installation instructions
 ---
