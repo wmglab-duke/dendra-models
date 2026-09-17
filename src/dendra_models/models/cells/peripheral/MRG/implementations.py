@@ -159,9 +159,9 @@ class bigMRG(MRG):
         v_init=-80.0,
         integrator=None,
     ):
-        if torch.any(torch.as_tensor(diameters) < 5.7):
+        if torch.any(torch.as_tensor(diameters) < 2.0):
             warnings.warn(
-                "Fiber diameter should not be less than 5.7 um for bigMRG. Use smolMRG instead."
+                "Fiber diameter should not be less than 2.0 um for bigMRG. Use smolMRG instead."
             )
 
         super().__init__(diameters, n_node, celsius, v_init, integrator)
