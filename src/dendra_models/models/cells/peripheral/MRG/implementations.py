@@ -145,7 +145,7 @@ class bigMRG(MRG):
     nl = lambda fd: torch.clamp(-0.4749 * fd**2 + 16.85 * fd - 0.7648, min=1)
     axonD = lambda fd: 0.02361 * fd**2 + 0.3673 * fd + 0.7122
     nodeD = lambda fd: 0.01093 * fd**2 + 0.1008 * fd + 1.099
-    deltax = lambda fd: -8.215284e00 * fd**2 + 2.724201e02 * fd + -7.802411e02
+    deltax = lambda fd: torch.where(fd>=5.643, -8.215284e00 * fd**2 + 2.724201e02 * fd + -7.802411e02, 81.08*fd + 37.84)
 
     nodelength0 = lambda fd: 1.0
     paralength1 = lambda fd: 3.0
@@ -188,6 +188,9 @@ class bigMRG(MRG):
         self.node.insert(axnode_myel)
 
         self.x[:] = self._x()
+
+
+MRG_Interpolation = bigMRG
 
 
 class smolMRG(MRG):
@@ -240,6 +243,7 @@ class smolMRG(MRG):
 
         self.x[:] = self._x()
 
+Pena = smolMRG
 
 Number = Union[int, float]
 
@@ -394,3 +398,5 @@ class exactMRG(MRG):
         self.node.insert(axnode_myel)
 
         self.x[:] = self._x()
+
+MRG_Discrete = exactMRG 
