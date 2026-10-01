@@ -31,12 +31,18 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(scope="module")
 def windup_data():
-    return load_windup_data(require_shared_afferent_schedules=True)
+    try:
+        return load_windup_data(require_shared_afferent_schedules=True)
+    except FileNotFoundError as exc:
+        pytest.skip(
+            "The exact Zhang network regressions require the optional ModelDB "
+            f"vectors. Install them with download_windup_data(). ({exc})"
+        )
 
 
 @pytest.fixture(scope="module")
-def cellular_network_uninitialized():
-    return build_windup_network(dtype=torch.float64)
+def cellular_network_uninitialized(windup_data):
+    return build_windup_network(data=windup_data, dtype=torch.float64)
 
 
 @pytest.fixture(scope="module")
@@ -51,7 +57,7 @@ def full_network_uninitialized(cellular_network_uninitialized):
     return net
 
 
-def test_packaged_vectors_and_spike_schedules(windup_data):
+def test_published_vectors_and_spike_schedules(windup_data):
     data = windup_data
     assert data.n_connections == 291
     assert data.n_scheduled_connections == 225
@@ -250,7 +256,7 @@ def test_cellular_netcon_build_omits_static_zero_weights_by_default(
     )
     assert weights.numel() == 63
     # Three biological SGSCS projections are explicitly disabled in the
-    # packaged Wind-Up realization. Static exact-zero rows remain in metadata
+    # published Wind-Up realization. Static exact-zero rows remain in metadata
     # but are omitted from runtime NetCons unless weights are trainable.
     assert int((weights == 0.0).sum()) == 0
     assert sum(not c.runtime_connected for c in net.zhang2014.cellular_connections) == 3

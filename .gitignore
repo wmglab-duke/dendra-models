@@ -131,9 +131,12 @@ Thumbs.db
 *.tar.gz
 *.tar.bz2
 
-.codex/*
-validation/
-artifacts/
+/.codex/
+/validation/
+/artifacts/
 
 # Local developer records
 /codex-docs/
+
+# Local manuscript analysis and validation work
+/examples/analysis/

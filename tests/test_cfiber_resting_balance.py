@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import math
+
 import dendra as dn
 import pytest
 import torch
+from dendra.models.callbacks import Recorder
+from dendra.units import mm, ms, nA
 
 from dendra_models.models.cells.peripheral.cfiber.thio import (
     ThioAutonomic2024,
@@ -175,3 +179,63 @@ def test_validation_cfiber_steady_state_restore_is_exact(constructor):
             msg=lambda message: f"state_dict entry {name}: {message}",
         )
     _assert_raw_and_effective_parameters_match(model)
+
+
+@pytest.mark.parametrize("constructor", VALIDATION_MODEL_CASES)
+def test_resting_balance_preserves_resistivity_parameter_gradient(constructor):
+    with dn.ctx(JIT=0, REQUIRE_GRAD=0, DTYPE="float64"):
+        model = constructor(diameters=[1.0], L=10.0, dx=10)
+        model.train()
+        model.unfreeze("rhoa_param")
+        model.initialize()
+
+    assert model.rhoa_param.requires_grad
+    assert model.rhoa.requires_grad
+    gradient = torch.autograd.grad(model.rhoa.sum(), model.rhoa_param)[0]
+    assert torch.isfinite(gradient).all()
+    assert torch.count_nonzero(gradient)
+
+
+def test_balanced_tigerholm_voltage_gradient_reaches_resistivity():
+    with dn.ctx(JIT=0, REQUIRE_GRAD=0, DTYPE="float64"):
+        model = Tigerholm2014(diameters=[1.0], L=1 * mm)
+        model[:, 5].inject(dn.mono_rect(amp=1.5 * nA, pw=0.3 * ms, delay=0.1 * ms))
+        model.build()
+        model.train()
+        model.unfreeze("rhoa_param")
+        recorder = Recorder(["v"], node_indices=[30])
+        model.initialize()
+        recorder.reset()
+        model.run(tstop=4 * ms, dt=0.025 * ms, callbacks=[recorder], progressbar=False)
+
+    voltage = recorder.stack("v")
+    assert voltage.requires_grad
+    gradient = torch.autograd.grad(voltage.square().mean(), model.rhoa_param)[0]
+    assert torch.isfinite(gradient).all()
+    assert torch.count_nonzero(gradient)
+
+    rhoa0 = float(model.rhoa_param.detach())
+
+    def rerun_loss(rhoa):
+        with torch.no_grad():
+            model.rhoa_param.fill_(rhoa)
+            model.initialize()
+            recorder.reset()
+            model.run(
+                tstop=4 * ms,
+                dt=0.025 * ms,
+                callbacks=[recorder],
+                progressbar=False,
+            )
+            return float(recorder.stack("v").square().mean())
+
+    h = 1e-4
+    finite_difference = (
+        rerun_loss(rhoa0 * math.exp(h)) - rerun_loss(rhoa0 * math.exp(-h))
+    ) / (2 * h)
+    torch.testing.assert_close(
+        gradient * rhoa0,
+        torch.tensor(finite_difference, dtype=gradient.dtype),
+        rtol=1e-4,
+        atol=1e-4,
+    )

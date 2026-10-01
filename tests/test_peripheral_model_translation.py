@@ -4,7 +4,7 @@ import dendra as dn  # noqa: F401 - configure Dendra before importing torch
 import torch
 from dendra.models.mechanisms._state import _materialize_derived_buffers
 
-from dendra_models.models.cells.peripheral import Sweeney1987
+from dendra_models.models.cells.peripheral import Sweeney1987, exactMRG
 from dendra_models.models.cells.peripheral.mech import ka14, km
 
 
@@ -50,6 +50,20 @@ def test_sweeney_reduced_geometry_matches_resistive_internode_equivalent():
         dim=1,
     )
     torch.testing.assert_close(model.x, expected_x)
+
+
+def test_exact_mrg_decimal_table_accepts_valid_diameter_in_float64():
+    with dn.ctx(DTYPE="float64", DEVICE="cpu", JIT=0):
+        model = exactMRG(
+            diameters=torch.tensor([5.7], dtype=torch.float64),
+            n_node=3,
+        )
+
+    assert model.diameters.dtype == torch.float64
+    torch.testing.assert_close(
+        model.diameters,
+        torch.tensor([5.7], dtype=torch.float64),
+    )
 
 
 def test_thio_km_gate_time_constants_match_mod_translation():

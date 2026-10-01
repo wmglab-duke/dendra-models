@@ -27,13 +27,13 @@ Two external-source representations are supported:
 
 ``shared_source`` (default)
     Use the 75 artificial source-cell IDs from the original realization as 75
-    Dendra ``NetStim`` channels.  This is exact for the packaged Wind-Up data,
+    Dendra ``NetStim`` channels.  This is exact for the published Wind-Up data,
     because every externally driven connection sharing a source ID also shares
     the same spike train.
 
 ``per_connection``
     Use one ``NetStim`` channel for each externally scheduled connection (225
-    channels in the packaged realization).  This mirrors ``NetCon.event``
+    channels in the published realization).  This mirrors ``NetCon.event``
     scheduling directly and remains exact for modified vector sets where two
     connections from the same artificial source have different schedules.
 """
@@ -41,7 +41,6 @@ Two external-source representations are supported:
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from importlib.resources import files
 from pathlib import Path
 from types import MappingProxyType
 from typing import Literal, Mapping, Sequence
@@ -54,6 +53,7 @@ from dendra.models.mod import spikedetect
 from dendra.models.parametric import PositiveParam
 
 from .cells import ZHANG_CELSIUS, ZHANG_SYNAPSE_LAYOUTS, build_cell_populations
+from .windup_data import verify_windup_data
 
 
 WINDUP_DT_MS = 0.0125
@@ -76,7 +76,7 @@ WINDUP_SPIKE_DETECTOR_CONSUMPTION_LAG_STEPS = 1
 """Steps between detector evaluation and consumption by outgoing NetCons."""
 
 WINDUP_TSTOP_MS = 21_000.0
-"""Nominal stop time of the packaged Wind-Up protocol (ms)."""
+"""Nominal stop time of the published Wind-Up protocol (ms)."""
 
 WINDUP_N_AFFERENT_SOURCES = 75
 """Number of artificial ``S_NetStim`` source cells in the realization."""
@@ -290,10 +290,6 @@ class WindUpDataError(ValueError):
     """Raised when a vector realization is internally inconsistent."""
 
 
-def _resource_root():
-    return files(__package__) / "data" / "windup"
-
-
 def _read_text(root, name: str) -> str:
     resource = root / name
     try:
@@ -455,8 +451,12 @@ def load_windup_data(
     Parameters
     ----------
     data_dir:
-        Directory containing the eight vector files.  By default the packaged
-        ModelDB realization is used.
+        Directory containing the eight vector files.  When omitted, use the
+        explicitly downloaded, revision-specific user cache.  Call
+        :func:`dendra_models.models.networks.zhang_2014.download_windup_data`
+        once to populate that cache. A supplied directory may contain a
+        deliberately modified realization and is not checked against the
+        hashes of the published vectors.
     n_afferent_sources:
         IDs ``0 .. n_afferent_sources-1`` are treated as artificial sources.
     require_shared_afferent_schedules:
@@ -467,7 +467,7 @@ def load_windup_data(
 
     if n_afferent_sources <= 0:
         raise ValueError("n_afferent_sources must be positive.")
-    root = _resource_root() if data_dir is None else Path(data_dir)
+    root = verify_windup_data() if data_dir is None else Path(data_dir).expanduser()
 
     vectors = {
         "from_cell": _read_numeric_vector(root, "FromVector.txt", dtype=np.int64),
@@ -1353,7 +1353,7 @@ def _validate_biological_populations(populations: Mapping[str, object]) -> dict[
         shape = tuple(getattr(population, "shape", ()))
         if not shape or int(shape[0]) != 1:
             raise WindUpDataError(
-                f"The packaged realization requires exactly one {name} cell; "
+                f"The published realization requires exactly one {name} cell; "
                 f"got population shape {shape!r}."
             )
     return populations

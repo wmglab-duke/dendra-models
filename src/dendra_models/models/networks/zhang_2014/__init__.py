@@ -46,6 +46,19 @@ from .network import (
     synapse_targets,
     zhang2014_windup,
 )
+from .windup_data import (
+    WINDUP_DATA_BASE_URL,
+    WINDUP_DATA_FILENAMES,
+    WINDUP_DATA_REVISION,
+    WINDUP_DATA_SHA256,
+    WindUpDataDownloadError,
+    WindUpDataIntegrityError,
+    WindUpDataUnavailableError,
+    default_windup_data_dir,
+    dendra_models_data_home,
+    download_windup_data,
+    verify_windup_data,
+)
 from . import mechanisms
 
 __all__ = [
@@ -91,5 +104,16 @@ __all__ = [
     "assemble_windup_network",
     "build_windup_network",
     "zhang2014_windup",
+    "WINDUP_DATA_REVISION",
+    "WINDUP_DATA_BASE_URL",
+    "WINDUP_DATA_FILENAMES",
+    "WINDUP_DATA_SHA256",
+    "WindUpDataUnavailableError",
+    "WindUpDataIntegrityError",
+    "WindUpDataDownloadError",
+    "dendra_models_data_home",
+    "default_windup_data_dir",
+    "verify_windup_data",
+    "download_windup_data",
     "mechanisms",
 ]

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,25 +9,30 @@ dynamic = ["version"]
 description = "Models for Dendra"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { file = "LICENSE" }
+license = "LicenseRef-Duke-Research-NonCommercial AND CC-BY-NC-SA-4.0"
+license-files = [
+  "LICENSE.md",
+  "LICENSES/CC-BY-NC-SA-4.0.txt",
+  "THIRD_PARTY_NOTICES.md",
+]
 authors = [{ name = "Minhaj Hussain", email = "minhaj.hussain@duke.edu" }]
 dependencies = [
-  "dendra>=0.25.0"
+  "dendra[solvers]>=0.27.0",
 ]
 
-# Optional but nice-to-have
 keywords = ["neuroscience", "models", "dendra"]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
 
+[project.urls]
+Documentation = "https://wmglab-duke.github.io/dendra/"
+Repository = "https://github.com/wmglab-duke/dendra-models"
+
 [project.optional-dependencies]
-pyfibers-validation = [
-  "pyfibers==0.9.0",
-  "matplotlib>=3.8",
-  "numpy>=1.24",
+dev = [
+  "pytest>=8",
 ]
 
 [tool.setuptools]
@@ -41,12 +46,14 @@ version = {attr = "dendra_models.__version__"}
 # Find packages only under src, and include your package namespace
 where = ["src"]
 include = ["dendra_models*"]
+exclude = ["dendra_models.models.networks.zhang_2014.tests*"]
 
 [tool.setuptools.package-data]
 # patterns are relative to the *package root* (`src/dendra_models`)
 dendra_models = [
   "models/**/*.pt",
-  "models/**/*.gml"
+  "models/**/*.gml",
+  "models/**/*.md",
 ]
 
 [tool.pytest.ini_options]

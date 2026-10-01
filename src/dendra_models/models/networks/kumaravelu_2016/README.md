@@ -186,12 +186,11 @@ standard HH voltage solver.  Therefore the `params["units"]["hh_current_scale"]`
 bridge used by the modular HH population is intentionally not applied in the
 fused mechanism.
 
-The exact-realization MATLAB comparison, including the Chronux-compatible GPi
-spectrum endpoint and paired statistical design, lives in
-`validation/kumaravelu_matlab/README.md`. The fused state-space synaptic filters
-and MATLAB's spike-history lookup-table sums agree before synaptic events but
-are not bitwise-identical realizations afterward. Small numerical differences
-are amplified over long horizons by the recurrent network, so validation
-reports a pre-event voltage conformance window alongside paired population
-rates and GPi 7--35 Hz power rather than requiring bitwise-identical two-second
-traces.
+The exact-realization MATLAB comparison uses a Chronux-compatible GPi spectrum
+endpoint and a paired statistical design. The fused state-space synaptic
+filters and MATLAB's spike-history lookup-table sums agree before synaptic
+events but are not bitwise-identical realizations afterward. Small numerical
+differences are amplified over long horizons by the recurrent network, so the
+comparison reports a pre-event voltage conformance window alongside paired
+population rates and GPi 7--35 Hz power rather than requiring bitwise-identical
+two-second traces.

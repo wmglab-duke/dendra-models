@@ -1,28 +1,39 @@
 <div align="center">
-  <img src="docs/banner.png">
+  <img src="docs/banner.png" alt="Dendra Models">
 </div>
 
 ***
 
-Models implemented in Dendra.
+Reference neuronal models implemented in Dendra.
 
 > [!IMPORTANT]
-> dendra-models requires Dendra >=0.25.0.
+> dendra-models requires Dendra 0.27 or later. Its standard installation
+> includes the native CPU solvers used by tree and extracellular models.
 
-### Installation instructions
----
-0. Install [Dendra](https://gitlab.oit.duke.edu/mah148/dendra).
-1. Clone this repository.
-2. Navigate to the cloned directory.
-3. `python -m pip install .`
+## Installation
 
-### Accessing models
----
-Models can be accessed via `dendra_models.models`, e.g., `from dendra_models.models import Tigerholm2014...`
+Clone this repository, navigate to its root, and run:
 
-# Available models
-## Peripheral nerve fibers
-### Unmyelinated
+```sh
+python -m pip install .
+```
+
+This installs Dendra with its `solvers` extra, including
+[`dendra-solvers`](https://pypi.org/project/dendra-solvers/). On supported
+platforms, pip uses a prebuilt solver wheel. These native solvers are the
+default CPU backends for Dendra Models' cable, tree, and extracellular models.
+
+## Accessing models
+
+Models are available from `dendra_models.models`:
+
+```python
+from dendra_models.models import Tigerholm2014
+```
+
+## Available models
+### Peripheral nerve fibers
+#### Unmyelinated
 
 | 1  |`Rattay1993`  |
 |----|-----------------|
@@ -53,9 +64,9 @@ Models can be accessed via `dendra_models.models`, e.g., `from dendra_models.mod
 ||Tigerholm, J., Petersson, M.E., Obreja, O., Lampert, A., Carr, R., Schmelz, M., Fransén, E., 2014. Modeling activity-dependent changes of axonal spike conduction in primary afferent C-nociceptors. J Neurophysiol 111, 1721–1735. https://doi.org/10.1152/jn.00777.2012
 
 
-### Myelinated
+#### Myelinated
 
-#### MRG & Surrogate
+##### MRG and surrogate
 
 | 1  |`exactMRG`|
 |----|----------|
@@ -65,20 +76,20 @@ Models can be accessed via `dendra_models.models`, e.g., `from dendra_models.mod
 
 
 
-|2   |`bigMRG` (intepolation; 5.7+ um diameter)|
+|2   |`bigMRG` (interpolation; diameter ≥ 5.7 µm)|
 |----|--------|
 ||Musselman, E.D., Cariello, J.E., Grill, W.M., Pelot, N.A., 2021. ASCENT (Automated Simulations to Characterize Electrical Nerve Thresholds): A pipeline for sample-specific computational modeling of electrical stimulation of peripheral nerves. PLoS Comput Biol 17, e1009285. https://doi.org/10.1371/journal.pcbi.1009285
 
-|3   |`smolMRG` (thinly myelinated interpolation; 1.011 - 5.7 um diameter)|
+|3   |`smolMRG` (thinly myelinated interpolation; diameter 1.011–5.7 µm)|
 |----|--------|
 ||Peña, E., Pelot, N.A., Grill, W.M., 2024. Computational models of compound nerve action potentials: Efficient filter-based methods to quantify effects of tissue conductivities, conduction distance, and nerve fiber parameters. PLOS Computational Biology 20, e1011833. https://doi.org/10.1371/journal.pcbi.1011833
 
-|4   |`SMF` (interpolation; 5.7+ um diameter; surrogate)|
+|4   |`SMF` (surrogate; diameter ≥ 5.7 µm)|
 |----|------|
 ||Hussain, M.A., Grill, W.M., Pelot, N.A., 2024. Highly efficient modeling and optimization of neural fiber responses to electrical stimulation. Nat Commun 15, 7597. https://doi.org/10.1038/s41467-024-51709-8
 
 
-#### Other
+##### Other
 
 | 1  |`FHM` / `SENN`  |
 |----|----------------|
@@ -89,10 +100,26 @@ Models can be accessed via `dendra_models.models`, e.g., `from dendra_models.mod
 ||Sweeney, J., Mortimer, J., Durand, D., 1987. Modeling of mammalian myelinated nerve for functional neuromuscular stimulation. Presented at the IEEE 9th Annual Conference of the Engineering in Medicine and Biology Society, pp. 1577–1578.
 
 
-## Cortical neurons
-### Myelinated
+### Cortical neurons
+#### Myelinated
 
-Myelination scheme from Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 2020. Simulation of transcranial magnetic stimulation in head model with morphologically-realistic cortical neurons. Brain Stimul 13, 175–189. https://doi.org/10.1016/j.brs.2019.10.002
+The packaged cortical morphologies are modified derivatives of Blue Brain
+Project/EPFL cortical neuron morphologies, rather than unmodified copies. Their
+axonal arbors were modified and myelinated following the procedures described
+in:
+
+- Aberra, A.S., Peterchev, A.V., Grill, W.M., 2018. Biophysically realistic
+  neuron models for simulation of cortical stimulation. Journal of Neural
+  Engineering 15, 066023. https://doi.org/10.1088/1741-2552/aadbb1
+- Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 2020. Simulation of
+  transcranial magnetic stimulation in head model with morphologically-realistic
+  cortical neurons. Brain Stimulation 13, 175–189.
+  https://doi.org/10.1016/j.brs.2019.10.002
+
+These morphology files are licensed under
+[CC BY-NC-SA 4.0](LICENSES/CC-BY-NC-SA-4.0.txt). See
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for their source, attribution,
+modifications, and file scope.
 
 | |Class|N||
 |-|-----|-|-------|
@@ -106,8 +133,8 @@ Myelination scheme from Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 20
 |8|`L4_SBC_cACint`|35|Layer 4 small basket interneuron, continuous accommodating e-type|
 
 
-## Networks
-### Brain / Cortical
+### Networks
+#### Brain and cortical
 
 |1 |`Yu2024`|
 |---|-----|
@@ -117,7 +144,45 @@ Myelination scheme from Aberra, A.S., Wang, B., Grill, W.M., Peterchev, A.V., 20
 |---|-----|
 ||Kumaravelu, Karthik, David T. Brocker, and Warren M. Grill. “A BIOPHYSICAL MODEL OF THE CORTEX-BASAL GANGLIA-THALAMUS NETWORK IN THE 6-OHDA LESIONED RAT MODEL OF PARKINSON’S DISEASE.” Journal of Computational Neuroscience 40, no. 2 (2016): 207–29. https://doi.org/10.1007/s10827-016-0593-9.
 
-### Spine
+#### Spine
 |1 |`Zhang2014`|
 |---|-----|
 ||Zhang, Tianhe C., John J. Janik, and Warren M. Grill. “Modeling Effects of Spinal Cord Stimulation on Wide-Dynamic Range Dorsal Horn Neurons: Influence of Stimulation Frequency and GABAergic Inhibition.” Journal of Neurophysiology 112, no. 3 (2014): 552–67. https://doi.org/10.1152/jn.00254.2014.
+
+The Zhang 2014 Wind-Up vectors are obtained separately from ModelDB. This is
+an explicit one-time download; importing Dendra Models and constructing other
+models never accesses the network:
+
+```python
+from dendra_models.models.networks.zhang_2014 import download_windup_data
+
+download_windup_data()
+```
+
+The downloader uses an immutable upstream revision, verifies SHA-256 hashes,
+and stores the vectors in a revision-specific user cache. Pass `data_dir=` to
+`load_windup_data()` or `build_windup_network()` to use an existing or modified
+vector realization instead. See the
+[Wind-Up data notes](src/dendra_models/models/networks/zhang_2014/WINDUP_DATA.md)
+for the cache location and vector semantics.
+
+## License
+
+Dendra Models code and the trained `SMF.pt` model parameters are distributed
+under Duke University's custom license for non-commercial research and academic
+testing. Commercial use, including industrially sponsored research, requires a
+separate agreement with Duke's Office for Translation and Commercialization.
+The complete Duke terms are in [LICENSE.md](LICENSE.md).
+
+The cortical morphology files under
+`src/dendra_models/models/cells/cortical/` are separately licensed adapted
+material under [CC BY-NC-SA 4.0](LICENSES/CC-BY-NC-SA-4.0.txt). The Duke license
+does not replace the Creative Commons terms for those files. File-level details
+and required attribution are in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Contributing and support
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) to set up a development environment and
+submit a GitHub pull request. Please report security concerns using the private
+process in [SECURITY.md](SECURITY.md).

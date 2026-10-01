@@ -264,8 +264,12 @@ def make_substituter(
     - `default=<number>` fills unmatched elements with that number.
     - If `tol` is set, float keys are matched to the *nearest* key within `atol=tol`.
     """
-    k = torch.as_tensor(keys)
-    v = torch.as_tensor(values)
+    # Preserve the decimal tables before adapting them to the model's runtime
+    # dtype. Creating them with PyTorch's default float32 would bake rounded
+    # keys into float64 models, so valid entries such as 5.7 would no longer
+    # compare equal after the dtype conversion.
+    k = torch.as_tensor(keys, dtype=torch.float64)
+    v = torch.as_tensor(values, dtype=torch.float64)
     if k.ndim != 1 or v.ndim != 1 or k.numel() != v.numel():
         raise ValueError("`keys` and `values` must be 1D and the same length.")
     if torch.unique(k).numel() != k.numel():
@@ -367,9 +371,14 @@ class exactMRG(MRG):
         v_init=-80.0,
         integrator=None,
     ):
-        valid_diams = torch.as_tensor(self.valid_diams)
+        requested_diams = torch.as_tensor(diameters)
+        valid_diams = torch.as_tensor(
+            self.valid_diams,
+            dtype=requested_diams.dtype,
+            device=requested_diams.device,
+        )
         # Ensure that the diameters are valid
-        if not torch.all(torch.isin(torch.as_tensor(diameters), valid_diams)):
+        if not torch.all(torch.isin(requested_diams, valid_diams)):
             raise ValueError(
                 f"Invalid diameters. Valid diameters are: {self.valid_diams}"
             )
