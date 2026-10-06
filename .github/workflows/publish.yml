@@ -1,0 +1,522 @@
+name: Build and Publish Distributions
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      publish_target:
+        description: "Optional upload destination"
+        required: true
+        type: choice
+        options:
+          - "none"
+          - testpypi
+        default: "none"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+env:
+  MPLBACKEND: Agg
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+
+jobs:
+  build:
+    name: Build and validate distributions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.package.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install packaging tools
+        run: python -m pip install --upgrade build packaging twine
+
+      - name: Read package version
+        id: package
+        run: |
+          python - <<'PY'
+          import ast
+          import os
+          from pathlib import Path
+
+          from packaging.version import Version
+
+          tree = ast.parse(Path("src/dendra_models/__init__.py").read_text())
+          assignments = [
+              node.value
+              for node in tree.body
+              if isinstance(node, ast.Assign)
+              for target in node.targets
+              if isinstance(target, ast.Name) and target.id == "__version__"
+          ]
+          if len(assignments) != 1:
+              raise SystemExit("Expected exactly one __version__ assignment")
+          version = str(ast.literal_eval(assignments[0]))
+          Version(version)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              print(f"version={version}", file=output)
+          PY
+
+      - name: Validate release tag
+        if: github.ref_type == 'tag'
+        env:
+          PACKAGE_VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          if [[ "$GITHUB_REF_NAME" != "v$PACKAGE_VERSION" ]]; then
+            echo "Tag $GITHUB_REF_NAME must equal v$PACKAGE_VERSION"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Release tags must point to a commit on main"
+            exit 1
+          fi
+
+      - name: Build wheel and source distribution
+        run: python -m build
+
+      - name: Validate distribution metadata and contents
+        env:
+          PACKAGE_VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          python -m twine check --strict dist/*
+          python - <<'PY'
+          import os
+          import tarfile
+          import zipfile
+          from email.parser import BytesParser
+          from email.policy import default
+          from pathlib import Path
+
+          from packaging.requirements import Requirement
+          from packaging.utils import (
+              canonicalize_name,
+              parse_sdist_filename,
+              parse_wheel_filename,
+          )
+          from packaging.version import Version
+
+          dist = Path("dist")
+          artifacts = {path for path in dist.iterdir() if path.is_file()}
+          wheels = list(dist.glob("*.whl"))
+          sdists = list(dist.glob("*.tar.gz"))
+          if len(wheels) != 1 or len(sdists) != 1:
+              raise SystemExit(
+                  f"Expected one wheel and one sdist, found "
+                  f"{sorted(path.name for path in artifacts)}"
+              )
+          if artifacts != set(wheels + sdists):
+              raise SystemExit(
+                  f"Unexpected files in dist/: {sorted(path.name for path in artifacts)}"
+              )
+
+          expected_name = canonicalize_name("dendra-models")
+          expected_version = Version(os.environ["PACKAGE_VERSION"])
+          wheel_name, wheel_version, _, wheel_tags = parse_wheel_filename(
+              wheels[0].name
+          )
+          sdist_name, sdist_version = parse_sdist_filename(sdists[0].name)
+          if (wheel_name, wheel_version) != (expected_name, expected_version):
+              raise SystemExit("Wheel name or version does not match the project")
+          if (sdist_name, sdist_version) != (expected_name, expected_version):
+              raise SystemExit("Sdist name or version does not match the project")
+          if {str(tag) for tag in wheel_tags} != {"py3-none-any"}:
+              raise SystemExit(f"Expected a universal wheel, found {wheel_tags}")
+
+          for artifact in artifacts:
+              if artifact.stat().st_size >= 100_000_000:
+                  raise SystemExit(
+                      f"{artifact.name} exceeds PyPI's default 100 MB file limit"
+                  )
+
+          with zipfile.ZipFile(wheels[0]) as archive:
+              wheel_members = set(archive.namelist())
+              metadata_path = next(
+                  (
+                      name
+                      for name in wheel_members
+                      if name.endswith(".dist-info/METADATA")
+                  ),
+                  None,
+              )
+              if metadata_path is None:
+                  raise SystemExit("Wheel is missing METADATA")
+              metadata = BytesParser(policy=default).parsebytes(
+                  archive.read(metadata_path)
+              )
+
+          if canonicalize_name(metadata["Name"]) != expected_name:
+              raise SystemExit(f"Unexpected metadata name: {metadata['Name']}")
+          if Version(metadata["Version"]) != expected_version:
+              raise SystemExit(f"Unexpected metadata version: {metadata['Version']}")
+          if metadata["Requires-Python"] != ">=3.11":
+              raise SystemExit(
+                  f"Unexpected Requires-Python: {metadata['Requires-Python']}"
+              )
+          if (
+              metadata["License-Expression"]
+              != "LicenseRef-Duke-Research-NonCommercial AND CC-BY-NC-SA-4.0"
+          ):
+              raise SystemExit(
+                  f"Unexpected license expression: {metadata['License-Expression']}"
+              )
+
+          requirements = [
+              Requirement(value)
+              for value in metadata.get_all("Requires-Dist", failobj=[])
+          ]
+          dendra_requirements = [
+              requirement
+              for requirement in requirements
+              if canonicalize_name(requirement.name) == "dendra"
+          ]
+          if len(dendra_requirements) != 1:
+              raise SystemExit(
+                  f"Expected one Dendra dependency, found {dendra_requirements}"
+              )
+          dendra_requirement = dendra_requirements[0]
+          if (
+              dendra_requirement.extras != {"solvers"}
+              or str(dendra_requirement.specifier) != ">=0.27.0"
+              or dendra_requirement.marker is not None
+          ):
+              raise SystemExit(
+                  f"Unexpected Dendra dependency: {dendra_requirement}"
+              )
+
+          gml_files = {
+              name for name in wheel_members if name.lower().endswith(".gml")
+          }
+          if len(gml_files) != 291:
+              raise SystemExit(f"Expected 291 GML files, found {len(gml_files)}")
+
+          required_wheel_files = {
+              "dendra_models/models/cells/peripheral/SMF/SMF.pt",
+              "dendra_models/models/networks/zhang_2014/WINDUP_DATA.md",
+          }
+          missing = required_wheel_files - wheel_members
+          if missing:
+              raise SystemExit(f"Wheel is missing package data: {sorted(missing)}")
+
+          required_license_suffixes = {
+              "/licenses/LICENSE.md",
+              "/licenses/LICENSES/CC-BY-NC-SA-4.0.txt",
+              "/licenses/THIRD_PARTY_NOTICES.md",
+          }
+          for suffix in required_license_suffixes:
+              if not any(name.endswith(suffix) for name in wheel_members):
+                  raise SystemExit(f"Wheel is missing license file {suffix}")
+
+          forbidden_wheel_fragments = {
+              "/models/networks/zhang_2014/tests/",
+              "/models/networks/zhang_2014/data/windup/",
+              "/models/cells/cortical/L23/morphologies/",
+              "/models/cells/cortical/L5/morphologies/",
+          }
+          for fragment in forbidden_wheel_fragments:
+              if any(fragment in f"/{name}" for name in wheel_members):
+                  raise SystemExit(f"Wheel contains forbidden path {fragment}")
+
+          with tarfile.open(sdists[0], "r:gz") as archive:
+              sdist_members = set(archive.getnames())
+          required_sdist_suffixes = {
+              "/LICENSE.md",
+              "/LICENSES/CC-BY-NC-SA-4.0.txt",
+              "/THIRD_PARTY_NOTICES.md",
+              "/pyproject.toml",
+          }
+          for suffix in required_sdist_suffixes:
+              if not any(name.endswith(suffix) for name in sdist_members):
+                  raise SystemExit(f"Sdist is missing required file {suffix}")
+
+          sdist_gml_files = {
+              name for name in sdist_members if name.lower().endswith(".gml")
+          }
+          if len(sdist_gml_files) != 291:
+              raise SystemExit(
+                  f"Expected 291 GML files in sdist, found {len(sdist_gml_files)}"
+              )
+          required_sdist_package_suffixes = {
+              "/src/dendra_models/models/cells/peripheral/SMF/SMF.pt",
+              "/src/dendra_models/models/networks/zhang_2014/WINDUP_DATA.md",
+          }
+          for suffix in required_sdist_package_suffixes:
+              if not any(name.endswith(suffix) for name in sdist_members):
+                  raise SystemExit(f"Sdist is missing package data {suffix}")
+          for fragment in forbidden_wheel_fragments:
+              if any(fragment in f"/{name}" for name in sdist_members):
+                  raise SystemExit(f"Sdist contains forbidden path {fragment}")
+          PY
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: candidate-dists
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  test_install:
+    name: Test ${{ matrix.distribution }} / ${{ matrix.os }} / Python ${{ matrix.python }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            python: "3.11"
+            torch: "torch==2.12.0"
+            distribution: wheel
+            run-nested-tests: true
+          - os: ubuntu-24.04
+            python: "3.14"
+            torch: "torch>=2.12,<3"
+            distribution: wheel
+            run-nested-tests: false
+          - os: macos-14
+            python: "3.12"
+            torch: "torch==2.12.0"
+            distribution: wheel
+            run-nested-tests: false
+          - os: ubuntu-24.04
+            python: "3.12"
+            torch: "torch==2.12.0"
+            distribution: sdist
+            run-nested-tests: false
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: candidate-dists
+          path: dist
+
+      - name: Install test runtime
+        env:
+          TORCH_SPEC: ${{ matrix.torch }}
+        run: |
+          python -m pip install --upgrade pip "pytest>=8"
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            python -m pip install "$TORCH_SPEC" \
+              --index-url https://download.pytorch.org/whl/cpu
+          else
+            python -m pip install "$TORCH_SPEC"
+          fi
+
+      - name: Install the built distribution
+        env:
+          DISTRIBUTION: ${{ matrix.distribution }}
+        run: |
+          if [[ "$DISTRIBUTION" == "wheel" ]]; then
+            artifacts=(dist/*.whl)
+          else
+            artifacts=(dist/*.tar.gz)
+          fi
+          python -m pip install --only-binary=dendra-solvers "${artifacts[0]}"
+          python -m pip check
+
+      - name: Check the installed package outside the checkout
+        working-directory: ${{ runner.temp }}
+        env:
+          EXPECTED_VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          python -I - <<'PY'
+          import os
+          from importlib.metadata import files, version
+          from pathlib import Path
+
+          import dendra as dn
+          import dendra_models
+          import dendra_solvers._ext as extension
+          from dendra_models.models.cells.peripheral import exactMRG
+
+          expected_version = os.environ["EXPECTED_VERSION"]
+          if version("dendra-models") != expected_version:
+              raise SystemExit("Installed distribution has the wrong version")
+
+          package_path = Path(dendra_models.__file__).resolve()
+          workspace = Path(os.environ["GITHUB_WORKSPACE"]).resolve()
+          if package_path.is_relative_to(workspace):
+              raise SystemExit(f"Imported source checkout instead of wheel: {package_path}")
+
+          installed_files = files("dendra-models") or ()
+          gml_files = [
+              path for path in installed_files if str(path).lower().endswith(".gml")
+          ]
+          if len(gml_files) != 291:
+              raise SystemExit(f"Expected 291 installed GML files, found {len(gml_files)}")
+
+          with dn.ctx(DTYPE="float64", DEVICE="cpu", JIT=0):
+              model = exactMRG(diameters=[5.7], n_node=3)
+              model.eval()
+              model.initialize()
+          print("Installed package:", package_path)
+          print("Installed solver extension:", Path(extension.__file__).resolve())
+          print("Initialized exactMRG shape:", tuple(model.shape))
+          PY
+
+      - name: Run public tests against the installed distribution
+        working-directory: ${{ runner.temp }}
+        env:
+          DENDRA_MODELS_DATA_HOME: ${{ runner.temp }}/dendra-models-data
+        run: >-
+          python -I -m pytest -q -ra -p no:cacheprovider
+          "$GITHUB_WORKSPACE/tests"
+
+      - name: Verify the pinned Zhang data download and cache
+        if: matrix.run-nested-tests
+        working-directory: ${{ runner.temp }}
+        env:
+          DENDRA_MODELS_DATA_HOME: ${{ runner.temp }}/dendra-models-data
+        run: |
+          python -I - <<'PY'
+          from dendra_models.models.networks.zhang_2014 import (
+              download_windup_data,
+              load_windup_data,
+              verify_windup_data,
+          )
+
+          data_dir = download_windup_data(timeout=30.0)
+          verify_windup_data(data_dir)
+          data = load_windup_data(
+              data_dir,
+              require_shared_afferent_schedules=True,
+          )
+          if data.n_connections != 291 or data.n_scheduled_connections != 225:
+              raise SystemExit("Downloaded Zhang data have unexpected dimensions")
+          print("Verified Zhang data cache:", data_dir)
+          PY
+
+      - name: Run Zhang regression tests against the installed distribution
+        if: matrix.run-nested-tests
+        working-directory: ${{ runner.temp }}
+        env:
+          DENDRA_MODELS_DATA_HOME: ${{ runner.temp }}/dendra-models-data
+        run: |
+          python -I - <<'PY'
+          import os
+          from pathlib import Path
+          from shutil import copytree
+
+          import dendra_models
+          import pytest
+
+          source = (
+              Path(os.environ["GITHUB_WORKSPACE"])
+              / "src/dendra_models/models/networks/zhang_2014/tests"
+          )
+          target = (
+              Path(dendra_models.__file__).resolve().parent
+              / "models/networks/zhang_2014/tests"
+          )
+          copytree(source, target)
+          raise SystemExit(
+              pytest.main(["-q", "-ra", "-p", "no:cacheprovider", str(target)])
+          )
+          PY
+
+  check_dist:
+    name: Approve tested distributions
+    needs:
+      - build
+      - test_install
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: candidate-dists
+          path: dist
+
+      - name: Recheck the files selected for upload
+        run: |
+          python -m pip install --upgrade twine
+          python -m twine check --strict dist/*
+          sha256sum dist/*
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: checked-dists
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  publish_testpypi:
+    name: Publish to TestPyPI
+    needs: check_dist
+    if: >-
+      github.repository == 'wmglab-duke/dendra-models' &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.publish_target == 'testpypi'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/dendra-models
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: checked-dists
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish_pypi:
+    name: Publish to PyPI
+    needs: check_dist
+    if: >-
+      github.repository == 'wmglab-duke/dendra-models' &&
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/p/dendra-models
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: checked-dists
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
