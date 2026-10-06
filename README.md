@@ -1,10 +1,16 @@
 <div align="center">
-  <img src="docs/banner.png" alt="Dendra Models">
+  <img src="https://raw.githubusercontent.com/wmglab-duke/dendra-models/main/docs/banner.png" alt="Dendra Models">
 </div>
 
 ***
 
-Reference neuronal models implemented in Dendra.
+Reference neuronal cell and network models implemented with
+[Dendra](https://wmglab-duke.github.io/dendra/).
+
+[Documentation](https://wmglab-duke.github.io/dendra/) ·
+[Source](https://github.com/wmglab-duke/dendra-models) ·
+[Issue tracker](https://github.com/wmglab-duke/dendra-models/issues) ·
+[PyPI](https://pypi.org/project/dendra-models/)
 
 > [!IMPORTANT]
 > dendra-models requires Dendra 0.27 or later. Its standard installation
@@ -12,24 +18,42 @@ Reference neuronal models implemented in Dendra.
 
 ## Installation
 
-Clone this repository, navigate to its root, and run:
+Dendra Models requires Python 3.11 or later. Install the released package from
+PyPI:
 
 ```sh
-python -m pip install .
+python -m pip install dendra-models
 ```
 
 This installs Dendra with its `solvers` extra, including
 [`dendra-solvers`](https://pypi.org/project/dendra-solvers/). On supported
 platforms, pip uses a prebuilt solver wheel. These native solvers are the
-default CPU backends for Dendra Models' cable, tree, and extracellular models.
+default CPU backends for Dendra Models' block and tree models.
 
-## Accessing models
+For an editable development installation, see
+[CONTRIBUTING.md](https://github.com/wmglab-duke/dendra-models/blob/main/CONTRIBUTING.md).
+
+## Quick start
 
 Models are available from `dendra_models.models`:
 
 ```python
-from dendra_models.models import Tigerholm2014
+import dendra as dn
+from dendra_models.models import exactMRG
+
+with dn.ctx(DTYPE="float64", DEVICE="cpu", JIT=0):
+    model = exactMRG(diameters=[5.7], n_node=3)
+    model.eval()
+    model.initialize()
 ```
+
+## Examples
+
+The repository includes focused examples for
+[threshold finding](https://github.com/wmglab-duke/dendra-models/tree/main/examples/thresholding),
+[kilohertz-frequency stimulation](https://github.com/wmglab-duke/dendra-models/tree/main/examples/khz),
+and
+[C-fiber simulations](https://github.com/wmglab-duke/dendra-models/tree/main/examples/c-fiber).
 
 ## Available models
 ### Peripheral nerve fibers
@@ -117,8 +141,8 @@ in:
   https://doi.org/10.1016/j.brs.2019.10.002
 
 These morphology files are licensed under
-[CC BY-NC-SA 4.0](LICENSES/CC-BY-NC-SA-4.0.txt). See
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for their source, attribution,
+[CC BY-NC-SA 4.0](https://github.com/wmglab-duke/dendra-models/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt). See
+[THIRD_PARTY_NOTICES.md](https://github.com/wmglab-duke/dendra-models/blob/main/THIRD_PARTY_NOTICES.md) for their source, attribution,
 modifications, and file scope.
 
 | |Class|N||
@@ -163,7 +187,7 @@ The downloader uses an immutable upstream revision, verifies SHA-256 hashes,
 and stores the vectors in a revision-specific user cache. Pass `data_dir=` to
 `load_windup_data()` or `build_windup_network()` to use an existing or modified
 vector realization instead. See the
-[Wind-Up data notes](src/dendra_models/models/networks/zhang_2014/WINDUP_DATA.md)
+[Wind-Up data notes](https://github.com/wmglab-duke/dendra-models/blob/main/src/dendra_models/models/networks/zhang_2014/WINDUP_DATA.md)
 for the cache location and vector semantics.
 
 ## License
@@ -172,17 +196,21 @@ Dendra Models code and the trained `SMF.pt` model parameters are distributed
 under Duke University's custom license for non-commercial research and academic
 testing. Commercial use, including industrially sponsored research, requires a
 separate agreement with Duke's Office for Translation and Commercialization.
-The complete Duke terms are in [LICENSE.md](LICENSE.md).
+The complete Duke terms are in
+[LICENSE.md](https://github.com/wmglab-duke/dendra-models/blob/main/LICENSE.md).
 
 The cortical morphology files under
 `src/dendra_models/models/cells/cortical/` are separately licensed adapted
-material under [CC BY-NC-SA 4.0](LICENSES/CC-BY-NC-SA-4.0.txt). The Duke license
+material under
+[CC BY-NC-SA 4.0](https://github.com/wmglab-duke/dendra-models/blob/main/LICENSES/CC-BY-NC-SA-4.0.txt). The Duke license
 does not replace the Creative Commons terms for those files. File-level details
 and required attribution are in
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[THIRD_PARTY_NOTICES.md](https://github.com/wmglab-duke/dendra-models/blob/main/THIRD_PARTY_NOTICES.md).
 
 ## Contributing and support
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) to set up a development environment and
-submit a GitHub pull request. Please report security concerns using the private
-process in [SECURITY.md](SECURITY.md).
+See
+[CONTRIBUTING.md](https://github.com/wmglab-duke/dendra-models/blob/main/CONTRIBUTING.md)
+to set up a development environment and submit a GitHub pull request. Please
+report security concerns using the private process in
+[SECURITY.md](https://github.com/wmglab-duke/dendra-models/blob/main/SECURITY.md).

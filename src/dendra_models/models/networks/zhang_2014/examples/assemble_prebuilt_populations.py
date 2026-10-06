@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
-from zhang2014_dendra import assemble_windup_network, build_cell_populations
 import torch
+
+from dendra_models.models.networks.zhang_2014 import (
+    assemble_windup_network,
+    build_cell_populations,
+)
 
 
 def main() -> None:

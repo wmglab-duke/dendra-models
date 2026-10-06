@@ -6,7 +6,7 @@ import dendra as dn
 from dendra import units as U
 import torch
 
-from zhang2014_dendra import build_windup_network
+from dendra_models.models.networks.zhang_2014 import build_windup_network
 
 
 def main() -> None:

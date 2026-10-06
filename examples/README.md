@@ -1,7 +1,9 @@
 # Examples
 
-An example script for running thresholds with the surrogate, along with instructions, example datasets, and additional information, is in `./thresholding`.
+- [`thresholding`](thresholding) contains a threshold-search example, sample
+  fields, and reference results.
 
-An example script for simulating responses to kHz frequency stimulation is in `./khz`.
+- [`khz`](khz) contains an example of simulating responses to
+  kilohertz-frequency stimulation.
 
-Example scripts for performing waveform optimization for selective stimulation using Differential Evolution or Gradient Descent are in `./optimization`, along with example datasets, instructions, and additional information.
+- [`c-fiber`](c-fiber) contains Tigerholm C-fiber stimulation examples.

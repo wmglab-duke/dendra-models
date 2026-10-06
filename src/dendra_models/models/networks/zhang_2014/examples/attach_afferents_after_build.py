@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from zhang2014_dendra import (
+import torch
+
+from dendra_models.models.networks.zhang_2014 import (
     attach_windup_afferents,
     build_windup_network,
 )
-import torch
 
 
 def main() -> None:
