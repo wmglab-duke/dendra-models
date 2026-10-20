@@ -141,13 +141,14 @@ This API accepts an explicit payload for one named synapse. Alpha synapses
 represent predetermined events and do not need a network event receiver.
 Automatic functional execution of an entire Network remains future work.
 
-The `feat/functional-event-delivery` development checkouts also expose fixed-delay
-projections with explicit source gates and queue state. Continue the example by
-building an ordinary connection to the same regional synapse:
+The `feat/functional-threshold-detection` development checkouts also expose
+fixed-delay projections with explicit source observations, detector state, and
+queue state. Continue the example by building an ordinary thresholded connection
+to the same regional synapse:
 
 ```python
 source = dn.SingleCompartment(
-    N=1, C=2, v_init=0.0, integrator=dn.scnv(imem=False),
+    N=1, C=2, v_init=-0.2, integrator=dn.scnv(imem=False),
 ).double()
 network = dn.Network(
     {"source": source, "fibre": fibre},
@@ -155,7 +156,7 @@ network = dn.Network(
 )
 network.connect_one_to_one(
     source[:], fibre[:, 1:3], fibre.mech.synapse,
-    threshold=None, weight=0.001, delay=0.02,
+    threshold=-0.1, weight=0.001, delay=0.02,
 )
 network.train()
 network.initialize(0.01)
@@ -168,28 +169,44 @@ projection, delivery = dn.func.make_functional_netcon(connection)
 functional, tensors = dn.func.make_functional(fibre, dt=0.01)
 prepared = functional.prepare(tensors.parameters, tensors.constants)
 queue, state = delivery.state, tensors.state
-source_gates = torch.ones_like(network.source.v)
-for _ in range(3):
-    queue, payload = projection.step(delivery.weights, queue, source_gates)
+for voltage in (-0.2, -0.1, 0.1, -0.2, 0.0):
+    queue, payload = projection.read_due(queue)
     state = functional.receive(
         tensors.parameters, prepared, state, target="synapse", payload=payload,
     )
+    source_values = torch.full_like(network.source.v, voltage)
+    queue = projection.advance(delivery.weights, queue, source_values)
     state, _ = functional.step(tensors.parameters, prepared, state)
 ```
 
-Gates have the full initialized source-variable shape, including batch axes,
-and use `projection.source_dtype` and `projection.source_device`. Fractional
-numeric gates retain their values and gradients. Weights use the
-connection's expanded edge order. The projection first returns the payload due
-now, then enqueues newly weighted gates for future calls. Pending payloads keep
+Source values have the full initialized source-variable shape, including batch
+axes, and use `projection.source_dtype` and `projection.source_device`. Equality
+with the threshold counts as above; remaining above does not retrigger. The
+boolean `has_spiked` state records this latch. Training with `diff_spiking=True`
+preserves hard events in the forward pass and uses the native sigmoid surrogate
+for gradients; `diff_spiking=False` gives hard detection. Mixed per-connection
+thresholds are supported. A `None`/NaN threshold passes raw numeric gates through,
+including fractional values and their gradients; an entirely raw projection
+needs no detector latch.
+
+Keep the native order for each projection: read due deliveries, apply the receive
+transition, then observe the current source and advance the detector and queue.
+Advance populations once all projections have run. This matters when receiving
+an event changes the source variable observed by that or a later projection.
+`projection.step(weights, queue, source_values)` combines the two projection
+phases when the source observation is already independent of receive.
+
+Weights use the connection's expanded edge order. Pending payloads keep
 the weights used when they were enqueued, so changing explicit weights affects
 new events. Delays use the native rounded timestep rule, with a minimum of one
 step even for zero delay. The returned queue supports checkpoint continuation
 and `projection.commit_state_(connection, queue)`.
 
-This first projection API requires an initialized dense event connection with
-`threshold=None`, fixed delays, and no scheduled events. Source generation and
-the ordering of multiple projections remain explicit in the caller.
+The projection API requires an initialized dense event connection with fixed
+delays and no scheduled events. NetStim generation and the ordering of multiple
+projections remain explicit in the caller. Detector configuration is fixed when
+the projection is created; lower it again after changing training or detector
+settings. Checkpoints include both the delay queue and the above-threshold latch.
 
 ## Examples
 
