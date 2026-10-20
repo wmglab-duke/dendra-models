@@ -99,6 +99,47 @@ current using the voltage after reset. See the
 [Kumaravelu cortical input example](src/dendra_models/models/networks/kumaravelu_2016/README.md#key-design-choices).
 This requires matching `feat/functional-input-bindings` development checkouts.
 
+## Explicit synaptic delivery (development)
+
+The `feat/functional-event-receive` development checkouts support pure delivery
+to Dendra's builtin `expsyn` and `exp2syn` mechanisms on compatible companion
+cells. For example, attach a regional synapse to a Rattay cable:
+
+```python
+import dendra as dn
+import torch
+from dendra.models.mod import expsyn
+from dendra_models.models import Rattay1993
+
+with dn.ctx(DTYPE="float64", DEVICE="cpu", JIT=0):
+    fibre = Rattay1993(
+        diameters=[1.0], L=40.0, dx=10.0,
+        integrator=dn.bwd_euler_ub(method="pcr", imem=False),
+    ).double()
+    fibre[:, 1:3].insert(expsyn.rename("synapse"), tau=0.7)
+    fibre.initialize()
+
+functional, tensors = dn.func.make_functional(fibre, dt=0.01)
+prepared = functional.prepare(tensors.parameters, tensors.constants)
+payload = torch.full_like(tensors.state["mechanisms"]["synapse"]["g"], 0.001)
+state = functional.receive(
+    tensors.parameters, prepared, tensors.state,
+    target="synapse", payload=payload,
+)
+state, _ = functional.step(tensors.parameters, prepared, state)
+```
+
+The payload uses the synapse's local runtime shape, including explicit batch
+axes, and numerical conductance weights in µS. Delivery changes declared
+synaptic state without advancing time; call `step` to advance the cell. The
+returned state supports differentiation, continuation, and commit through the
+usual functional API. `prepare_and_receive` rebuilds parameter-dependent
+normalization when preparing and delivering together, including `exp2syn`'s
+peak normalization.
+
+This API accepts an explicit payload for one named synapse. Network scheduling,
+delay queues, and custom alpha/Esser receivers remain future work.
+
 ## Examples
 
 The repository includes focused examples for
