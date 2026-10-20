@@ -203,14 +203,14 @@ step even for zero delay. The returned queue supports checkpoint continuation
 and `projection.commit_state_(connection, queue)`.
 
 The projection API requires an initialized dense event connection with fixed
-delays and no scheduled events. The ordering of multiple projections remains
+delays. Tensor schedules are supported as described below. The ordering of multiple projections remains
 explicit in the caller. Detector configuration is fixed when
 the projection is created; lower it again after changing training or detector
 settings. Checkpoints include both the delay queue and the above-threshold latch.
 
 ### Shared NetStim renewal (development)
 
-The `feat/functional-netstim-renewal` checkouts add pure NetStim initialization
+The matching development checkouts add pure NetStim initialization
 and renewal using the same core as native execution. Lower a standard,
 initialized, unscheduled `dn.NetStim` and pass each random draw explicitly:
 
@@ -284,8 +284,86 @@ state untouched. `renewal.commit_state_(stimulus, source_state)` transfers clock
 and RNG state back to a matching native source; it does not change parameters.
 `sample_initialization_draw(parameters, state)` followed by
 `initial_state(parameters, constants, state, draw)` provides a pure reset with
-the native seeded initialization behavior. Scheduled NetStim events still use
-native execution in this first functional interface.
+the native seeded initialization behavior. Tensor schedules are described
+below; legacy heap events continue to use native execution.
+
+### Shared tensor schedules (development)
+
+The `feat/functional-tensor-schedules` checkouts support shared pure NetStim and
+NetCon schedule evaluation. Declare a fixed event topology through the ordinary
+native APIs, then supply explicit time/amplitude packets to the lowered plans.
+This continues the previous example, resetting its native Network before
+lowering again:
+
+```python
+network.initialize(dt)
+network.set_synaptic_diff_config(
+    diff_weights=True, diff_delays=False, diff_spiking=True,
+    diff_scheduled_times=True, sched_width=1.3, train_delay_backend="dense",
+)
+connection = next(iter(network.synapses.values()))
+shared_times = torch.tensor([0.035, 0.065], dtype=torch.float64, requires_grad=True)
+shared_amplitudes = torch.tensor([0.4, 0.7], dtype=torch.float64, requires_grad=True)
+for owner in (stimulus, connection):
+    owner.bind_time_source(shared_times)
+    owner.bind_weight_source(shared_amplitudes)
+stimulus.schedule_ref([0, 1], times=[0.015, 0.025], weight_idx=[0, 1])
+stimulus.schedule_time_ref([0, 1], time_idx=[0, 1], weight=0.3)
+connection.schedule_ref(con_indices=[0, 1], times_ms=[0.045, 0.055], weight_idx=[1, 0])
+connection.schedule_time_ref(con_indices=[0, 1], time_idx=[0, 1], weight=0.2)
+
+renewal, source = dn.func.make_functional_netstim(stimulus)
+projection, delivery = dn.func.make_functional_netcon(connection)
+functional, cable = dn.func.make_functional(fibre, dt=dt)
+prepared = functional.prepare(cable.parameters, cable.constants)
+# Independent snapshots become shared optimizer inputs by explicit rebinding.
+connection_schedule = delivery.schedule._replace(
+    time_source=source.schedule.time_source,
+    amplitude_source=source.schedule.amplitude_source,
+)
+source_state, queue, cable_state = source.state, delivery.state, cable.state
+origin = network.t.detach().clone()
+for index in range(20):
+    draw = renewal.sample_step_draw(source_state)
+    source_state, outputs = renewal.step(
+        source.parameters, source.constants, source_state,
+        origin + origin.new_tensor(index) * dt,
+        draw, bptt=True, schedule=source.schedule,
+    )
+    queue, payload = projection.read_due(queue)
+    cable_state = functional.receive(
+        cable.parameters, prepared, cable_state, target="event", payload=payload,
+    )
+    queue = projection.advance(
+        delivery.weights, queue, outputs.spike_gate, schedule=connection_schedule,
+    )
+    cable_state, _ = functional.step(cable.parameters, prepared, cable_state)
+```
+
+`TensorScheduleTensors(times, amplitudes, time_source, amplitude_source)` keeps
+floating values explicit; fixed event/reference indices belong to the plan.
+Packets from separate owners are independent snapshots, so reuse the same
+explicit source tensors when parameter sharing is intended. Include packets
+with simulation time, clocks/RNG, queues, and population carry in checkpoints.
+`commit_state_` transfers runtime carry while leaving native schedule values
+and bindings unchanged; align those values before native continuation.
+
+Hard schedules assign events to the first causal grid step. Differentiable
+times use each native triangular-kernel policy, with differentiable amplitudes
+and indexed sources. NetStim hard spikes remain boolean causal events; consume
+`spike_gate` through `diff_spiking=True` projections to preserve scheduled
+amplitudes and gradients. Tensor schedules reevaluate repeated times and miss
+skipped hard steps. Legacy heaps consume overdue entries and are not lowered
+by this interface. Topology/binding/policy changes require lowering again;
+floating packet values can change without rebuilding the plan.
+
+The integration tests exercise both `expsyn` and `exp2syn` on companion cables,
+including batching, hard tracked events, shared-source gradients, compiled
+composition, and continuation into a fresh native Network:
+
+```bash
+python -m pytest -q tests/test_functional_tensor_schedules.py
+```
 
 ## Examples
 
