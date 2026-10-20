@@ -47,6 +47,51 @@ with dn.ctx(DTYPE="float64", DEVICE="cpu", JIT=0):
     model.initialize()
 ```
 
+## Isolated voltage models (development)
+
+The `feat/functional-voltage-models` branches in Dendra and Dendra Models add
+pure `voltage_values` hooks for the Yu 2024 Esser mechanisms and the Kumaravelu
+2016 regular-spiking and fast-spiking cortical mechanisms. Use the matching
+Dendra development checkout for this API.
+
+For example, an isolated Izhikevich population can use functional execution:
+
+```python
+import dendra as dn
+from dendra_models.models.networks.kumaravelu_2016.mechanisms.izhikevich import (
+    regular_spiking_cortex,
+)
+
+with dn.ctx(DTYPE="float64", DEVICE="cpu", JIT=0):
+    cells = dn.Population(N=1, C=3, integrator=dn.scnv())
+    cells.insert(regular_spiking_cortex, i_stim=10.0)
+    cells.initialize()
+
+runner = dn.compile(
+    cells,
+    dt=0.025,
+    steps=80,
+    initialization="fresh",
+    inference=False,
+    trainable=("i_stim",),
+    callbacks={"trace": dn.func.Recorder(("v", "regular_spiking_cortex.spikes"))},
+)
+state, auxiliary = runner()
+voltage = auxiliary["callbacks"]["trace"]["v"]
+```
+
+Set `i_stim` to drive the mechanism-owned voltage equation; `scnv` skips the
+ordinary membrane-voltage solve. Public `v` records the voltage exposed before
+the ODE states advance, so it can differ from the mechanism's final voltage
+state. Unbound synaptic currents contribute zero in isolated populations.
+
+Esser's `net_receive` spike generation and synaptic event handling retain their
+imperative network phase. Its default voltage and threshold initialization
+retain their existing detach behavior; use explicit state initialization inputs
+when differentiating those initial conditions. Functional execution of connected
+networks, the Kumaravelu fused implementation, and live cross-mechanism references
+remain outside this isolated-mechanism support.
+
 ## Examples
 
 The repository includes focused examples for

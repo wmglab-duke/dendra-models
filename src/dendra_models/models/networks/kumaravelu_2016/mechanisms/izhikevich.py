@@ -3,18 +3,23 @@ Izhikevich cortical mechanisms for the Kumaravelu et al. CTX-BG-TH model.
 
 These are Dendra VoltageProcess mechanisms intended for use in a Population
 constructed with dn.scnv(). The physical membrane voltage is stored in the
-mechanism state ``v_izh`` and returned by update_v(), matching the Esser-style
+mechanism state ``v_izh`` and returned by voltage_values(), matching the Esser-style
 pattern in the supplied yu_2024 implementation.
 """
 
 import torch
 
-from dendra.models.mechanisms._mechanism import Mechanism as M, VoltageProcess as V, Synapse as Syn
+from dendra.models.mechanisms._mechanism import (
+    Mechanism as M,
+    VoltageProcess as V,
+    Synapse as Syn,
+)
 from dendra.models.mechanisms._state import State as S
 
 
-def _maybe_current(obj, name, like):
-    value = getattr(obj, name, None)
+def _maybe_current(obj, values, name, like):
+    """Prefer explicit currents; retain imperative network reference bindings."""
+    value = values[name] if name in values else getattr(obj, name, None)
     if value is None:
         return torch.zeros_like(like)
     return value
@@ -29,8 +34,12 @@ class regular_spiking_cortex_states(S):
     def assigned_values(self, v, values):
         v_izh = values["v_izh"]
         # MATLAB RS equation: v' = ... - Iie - Ithcor + Iappco.
-        i_syn = _maybe_current(self, "i_ie", v_izh) + _maybe_current(self, "i_thcor", v_izh)
-        rhs_v = 0.04 * v_izh**2 + 5.0 * v_izh + 140.0 - values["u"] - i_syn + self.i_stim
+        i_syn = _maybe_current(self, values, "i_ie", v_izh) + _maybe_current(
+            self, values, "i_thcor", v_izh
+        )
+        rhs_v = (
+            0.04 * v_izh**2 + 5.0 * v_izh + 140.0 - values["u"] - i_syn + self.i_stim
+        )
         return {"i_syn": i_syn, "rhs_v": rhs_v}
 
     def state_defaults(self, v, values):
@@ -47,8 +56,10 @@ class fast_spiking_interneuron_states(S):
     def assigned_values(self, v, values):
         v_izh = values["v_izh"]
         # MATLAB FS equation: v' = ... - Iei + Iappco.
-        i_syn = _maybe_current(self, "i_ei", v_izh)
-        rhs_v = 0.04 * v_izh**2 + 5.0 * v_izh + 140.0 - values["u"] - i_syn + self.i_stim
+        i_syn = _maybe_current(self, values, "i_ei", v_izh)
+        rhs_v = (
+            0.04 * v_izh**2 + 5.0 * v_izh + 140.0 - values["u"] - i_syn + self.i_stim
+        )
         return {"i_syn": i_syn, "rhs_v": rhs_v}
 
     def state_defaults(self, v, values):
@@ -107,43 +118,62 @@ class cortical_spike_router(M):
 class _IzhikevichResetMixin:
     """Hard reset plus differentiable spike/crossing indicators."""
 
+    def derive_buffers(self):
+        # The original previous-voltage initialization follows v0 even when
+        # insertion initial conditions override the integrated v_izh state.
+        return {"v_prev_initial": self.DE[self._state_name].v0}
+
     def initial_values(self, v, values):
         del values
         return {
             "spikes": torch.zeros_like(v),
             "syn_spikes": torch.zeros_like(v),
-            "v_prev": torch.zeros_like(v) + self.DE[self._state_name].v0,
+            "v_prev": torch.zeros_like(v) + self.v_prev_initial,
         }
 
-    def update_v(self, v):
-        v_now = self.v_izh
+    def voltage_values(self, v, dt, values):
+        del v, dt
+        v_now = values["v_izh"]
+        v_prev = values["v_prev"]
+        u = values["u"]
 
         # The MATLAB code uses two event notions for cortex:
         #   1. v >= 30 mV for the reset and corticofugal spike list.
         #   2. crossing -10 mV for local E/I alpha synapses S1a/S1b.
         reset_bool = v_now >= self.v_peak
-        cross_bool = (self.v_prev < self.syn_threshold) & (v_now >= self.syn_threshold)
+        cross_bool = (v_prev < self.syn_threshold) & (v_now >= self.syn_threshold)
 
         hard_reset = reset_bool.to(v_now.dtype)
-        soft_reset = torch.sigmoid((v_now - self.v_peak) / self.tau_gate.clamp_min(1.0e-6))
-        self.spikes = hard_reset + self.ste_scale * (soft_reset - soft_reset.detach())
+        soft_reset = torch.sigmoid(
+            (v_now - self.v_peak) / self.tau_gate.clamp_min(1.0e-6)
+        )
+        spikes = hard_reset + self.ste_scale * (soft_reset - soft_reset.detach())
 
         hard_cross = cross_bool.to(v_now.dtype)
-        soft_cross_now = torch.sigmoid((v_now - self.syn_threshold) / self.tau_gate.clamp_min(1.0e-6))
-        soft_cross_prev = torch.sigmoid((self.v_prev - self.syn_threshold) / self.tau_gate.clamp_min(1.0e-6))
+        soft_cross_now = torch.sigmoid(
+            (v_now - self.syn_threshold) / self.tau_gate.clamp_min(1.0e-6)
+        )
+        soft_cross_prev = torch.sigmoid(
+            (v_prev - self.syn_threshold) / self.tau_gate.clamp_min(1.0e-6)
+        )
         soft_cross = torch.relu(soft_cross_now - soft_cross_prev)
-        self.syn_spikes = hard_cross + self.ste_scale * (soft_cross - soft_cross.detach())
+        syn_spikes = hard_cross + self.ste_scale * (soft_cross - soft_cross.detach())
 
-        self.u = torch.where(reset_bool, self.u + self.d, self.u)
-        self.v_izh = torch.where(reset_bool, torch.zeros_like(v_now) + self.c, v_now)
-        self.v_prev = self.v_izh
-        return self.v_izh
+        voltage = torch.where(reset_bool, torch.zeros_like(v_now) + self.c, v_now)
+        return voltage, {
+            "u": torch.where(reset_bool, u + self.d, u),
+            "v_izh": voltage,
+            "v_prev": voltage,
+            "spikes": spikes,
+            "syn_spikes": syn_spikes,
+        }
 
 
 class regular_spiking_cortex(_IzhikevichResetMixin, V, Syn):
     V.STATE_BUNDLE(regular_spiking_cortex_states)
     V.RANGE(v_peak=30.0, c=-65.0, d=8.0, syn_threshold=-10.0)
     V.PARAMETER(tau_gate=0.5, ste_scale=1.0)
+    V.DERIVED_BUFFER("v_prev_initial")
     V.CARRY("spikes", "syn_spikes", "v_prev")
     _state_name = "regular_spiking_cortex_states"
 
@@ -152,5 +182,6 @@ class fast_spiking_interneuron(_IzhikevichResetMixin, V, Syn):
     V.STATE_BUNDLE(fast_spiking_interneuron_states)
     V.RANGE(v_peak=30.0, c=-65.0, d=2.0, syn_threshold=-10.0)
     V.PARAMETER(tau_gate=0.5, ste_scale=1.0)
+    V.DERIVED_BUFFER("v_prev_initial")
     V.CARRY("spikes", "syn_spikes", "v_prev")
     _state_name = "fast_spiking_interneuron_states"

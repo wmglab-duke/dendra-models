@@ -36,9 +36,18 @@ and mechanism-level inspection; it is not the public `Kumaravelu2016` alias.
 The modular builder contains two populations:
 
 - `net.hh`: TH, STN, GPe, GPi, StrD2, StrD1; standard Dendra membrane-voltage integration.
-- `net.ctx`: CTX_RS and CTX_FS; `dn.scnv()` integration because the cortical voltage is stored as the mechanism state `v_izh` and returned by `update_v()`.
+- `net.ctx`: CTX_RS and CTX_FS; `dn.scnv()` integration because the cortical voltage is stored as the mechanism state `v_izh` and exposed by the pure `voltage_values()` hook.
 
 ## Key design choices
+
+The isolated `regular_spiking_cortex` and `fast_spiking_interneuron` mechanisms
+support `dn.func` with the matching Dendra development branch. Their pure
+voltage hooks apply the existing reset, recovery increment, and hard-forward
+spike/crossing flags before ODE integration. Surrogate gradients retain the
+original straight-through equations. An isolated population uses `i_stim` for
+its applied current and treats unbound synaptic currents as zero; the modular
+network continues to supply its live current references. The modular network
+and the public fused builder still require imperative execution.
 
 1. The network builder labels subranges, inserts renamed mechanisms on those labels, constructs `dn.Network`, and only then binds cross-mechanism references using `setreference`.
 

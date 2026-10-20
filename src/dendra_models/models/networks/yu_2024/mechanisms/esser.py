@@ -6,7 +6,14 @@ from dendra.models.mechanisms._mechanism import (
 )
 from dendra.models.mechanisms._state import State as S
 from dendra.models.mechanisms.ops import exp, log
-from dendra.models.networks.spiking import sigmoid_ste
+
+
+def _synaptic_current(state, values, name, like):
+    """Read explicit inputs, retaining imperative network reference bindings."""
+    if name in values:
+        return values[name]
+    current = getattr(state, name, None)
+    return torch.zeros_like(like) if current is None else current
 
 
 class esser_states(S):
@@ -39,7 +46,7 @@ class esser_states(S):
     def assigned_values(self, v, values):
         ina_iaf = self.gNa_leak * (v - self.ena_iaf)
         ik_iaf = self.gK_leak * (v - self.ek_iaf)
-        ispike = self.gspike * (v - self.ek_iaf)
+        ispike = values["gspike"] * (v - self.ek_iaf)
         g = values["B"] - values["A"]
         i_noise = g * (v - self.e)
         i_total = (
@@ -47,10 +54,10 @@ class esser_states(S):
             + ik_iaf
             - self.i_stim
             + i_noise
-            + self.i_ampa
-            + self.i_nmda
-            + self.i_gaba_a
-            + self.i_gaba_b
+            + _synaptic_current(self, values, "i_ampa", v)
+            + _synaptic_current(self, values, "i_nmda", v)
+            + _synaptic_current(self, values, "i_gaba_a", v)
+            + _synaptic_current(self, values, "i_gaba_b", v)
         )
         return {"i_total": i_total, "i_spike": ispike}
 
@@ -86,8 +93,9 @@ class esser_mech_h(_EsserSynapse, V, Syn):
     V.DERIVED_BUFFER("factor")
     V.CARRY("spikes", "h_prev", "time_left")
 
-    def update_v(self, v):
-        return self.v_iaf
+    def voltage_values(self, v, dt, values):
+        del v, dt
+        return values["v_iaf"], {}
 
     def initial_values(self, v, values):
         del values
@@ -147,8 +155,9 @@ class esser_mech_s(_EsserSynapse, V, Syn):
     V.DERIVED_BUFFER("factor")
     V.CARRY("spikes", "g_prev")
 
-    def update_v(self, v):
-        return self.v_iaf
+    def voltage_values(self, v, dt, values):
+        del v, dt
+        return values["v_iaf"], {}
 
     def initial_values(self, v, values):
         del values
