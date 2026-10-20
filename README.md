@@ -141,7 +141,7 @@ This API accepts an explicit payload for one named synapse. Alpha synapses
 represent predetermined events and do not need a network event receiver.
 Automatic functional execution of an entire Network remains future work.
 
-The `feat/functional-threshold-detection` development checkouts also expose
+The matching development checkouts also expose
 fixed-delay projections with explicit source observations, detector state, and
 queue state. Continue the example by building an ordinary thresholded connection
 to the same regional synapse:
@@ -203,10 +203,89 @@ step even for zero delay. The returned queue supports checkpoint continuation
 and `projection.commit_state_(connection, queue)`.
 
 The projection API requires an initialized dense event connection with fixed
-delays and no scheduled events. NetStim generation and the ordering of multiple
-projections remain explicit in the caller. Detector configuration is fixed when
+delays and no scheduled events. The ordering of multiple projections remains
+explicit in the caller. Detector configuration is fixed when
 the projection is created; lower it again after changing training or detector
 settings. Checkpoints include both the delay queue and the above-threshold latch.
+
+### Shared NetStim renewal (development)
+
+The `feat/functional-netstim-renewal` checkouts add pure NetStim initialization
+and renewal using the same core as native execution. Lower a standard,
+initialized, unscheduled `dn.NetStim` and pass each random draw explicitly:
+
+```python
+import dendra as dn
+import torch
+from dendra.models.mod import expsyn
+from dendra_models.models import Rattay1993
+
+dt = 0.01
+with dn.ctx(DTYPE=torch.float64, JIT=0, REQUIRE_GRAD=1, IMEM=False):
+    fibre = Rattay1993(
+        diameters=[1.0], L=40.0, dx=10.0,
+        integrator=dn.bwd_euler_ub(method="pcr", imem=False),
+    ).double()
+    fibre[:, 1:3].insert(expsyn.rename("event"), tau=0.7)
+    stimulus = dn.NetStim(
+        N=2, interval=[0.03, 0.04], noise=0.5, seed=719,
+    )
+    network = dn.Network(
+        {"fibre": fibre}, netstim=stimulus,
+        netcon_delay_backend="dense", netcon_train_backend="dense",
+    )
+    network.connect_one_to_one(
+        stimulus[:], fibre[:, 1:3], fibre.mech.event,
+        weight=0.001, delay=0.02,
+    )
+    network.train()
+    network.initialize(dt)
+    network.set_synaptic_diff_config(
+        diff_weights=True, diff_delays=False, diff_spiking=True,
+        diff_scheduled_times=False, train_delay_backend="dense",
+    )
+
+renewal, source = dn.func.make_functional_netstim(stimulus)
+connection = next(iter(network.synapses.values()))
+projection, delivery = dn.func.make_functional_netcon(connection)
+functional, cable = dn.func.make_functional(fibre, dt=dt)
+prepared = functional.prepare(cable.parameters, cable.constants)
+source_state, queue, cable_state = source.state, delivery.state, cable.state
+for index in range(20):
+    # Sample outside compiled/vmapped transitions from the explicit RNG state.
+    draw = renewal.sample_step_draw(source_state)
+    time = source.parameters["interval"].new_tensor(index * dt)
+    source_state, outputs = renewal.step(
+        source.parameters, source.constants, source_state, time, draw, bptt=True,
+    )
+    queue, payload = projection.read_due(queue)
+    cable_state = functional.receive(
+        cable.parameters, prepared, cable_state, target="event", payload=payload,
+    )
+    queue = projection.advance(delivery.weights, queue, outputs.spike_gate)
+    cable_state, _ = functional.step(cable.parameters, prepared, cable_state)
+```
+
+Generate the NetStim output once before all projections in each timestep and
+reuse it for every connection from that source. Each projection still follows
+`read_due → receive → advance`; populations advance after all projections.
+`outputs.spikes` is the hard boolean event mask, while `outputs.spike_gate`
+preserves the native hard forward values and sigmoid surrogate gradients.
+Use `outputs.spikes.to(projection.source_dtype)` for hard-only connections.
+`bptt=True` retains gradients through renewal clocks across timesteps;
+`bptt=False` cuts that history as native NetStim does.
+
+The source state contains both renewal clocks and RNG/seeder byte tensors.
+Checkpoint it together with queues, population states, and simulation time;
+continue sampling from the restored state to reproduce subsequent renewals.
+The draw packet includes its post-draw RNG state, so keep it paired with its
+sampled exponential values. `sample_step_draw` leaves the source and its input
+state untouched. `renewal.commit_state_(stimulus, source_state)` transfers clocks
+and RNG state back to a matching native source; it does not change parameters.
+`sample_initialization_draw(parameters, state)` followed by
+`initial_state(parameters, constants, state, draw)` provides a pure reset with
+the native seeded initialization behavior. Scheduled NetStim events still use
+native execution in this first functional interface.
 
 ## Examples
 
