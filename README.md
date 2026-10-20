@@ -101,7 +101,7 @@ This requires matching `feat/functional-input-bindings` development checkouts.
 
 ## Explicit synaptic delivery (development)
 
-The `feat/functional-event-receive` development checkouts support pure delivery
+The matching development checkouts support pure delivery
 to Dendra's builtin `expsyn` and `exp2syn` mechanisms on compatible companion
 cells. For example, attach a regional synapse to a Rattay cable:
 
@@ -137,8 +137,59 @@ usual functional API. `prepare_and_receive` rebuilds parameter-dependent
 normalization when preparing and delivering together, including `exp2syn`'s
 peak normalization.
 
-This API accepts an explicit payload for one named synapse. Network scheduling,
-delay queues, and custom alpha/Esser receivers remain future work.
+This API accepts an explicit payload for one named synapse. Alpha synapses
+represent predetermined events and do not need a network event receiver.
+Automatic functional execution of an entire Network remains future work.
+
+The `feat/functional-event-delivery` development checkouts also expose fixed-delay
+projections with explicit source gates and queue state. Continue the example by
+building an ordinary connection to the same regional synapse:
+
+```python
+source = dn.SingleCompartment(
+    N=1, C=2, v_init=0.0, integrator=dn.scnv(imem=False),
+).double()
+network = dn.Network(
+    {"source": source, "fibre": fibre},
+    netcon_delay_backend="dense", netcon_train_backend="dense",
+)
+network.connect_one_to_one(
+    source[:], fibre[:, 1:3], fibre.mech.synapse,
+    threshold=None, weight=0.001, delay=0.02,
+)
+network.train()
+network.initialize(0.01)
+network.set_synaptic_diff_config(
+    diff_weights=True, diff_delays=False, diff_spiking=True,
+    diff_scheduled_times=False, train_delay_backend="dense",
+)
+connection = next(iter(network.synapses.values()))
+projection, delivery = dn.func.make_functional_netcon(connection)
+functional, tensors = dn.func.make_functional(fibre, dt=0.01)
+prepared = functional.prepare(tensors.parameters, tensors.constants)
+queue, state = delivery.state, tensors.state
+source_gates = torch.ones_like(network.source.v)
+for _ in range(3):
+    queue, payload = projection.step(delivery.weights, queue, source_gates)
+    state = functional.receive(
+        tensors.parameters, prepared, state, target="synapse", payload=payload,
+    )
+    state, _ = functional.step(tensors.parameters, prepared, state)
+```
+
+Gates have the full initialized source-variable shape, including batch axes,
+and use `projection.source_dtype` and `projection.source_device`. Fractional
+numeric gates retain their values and gradients. Weights use the
+connection's expanded edge order. The projection first returns the payload due
+now, then enqueues newly weighted gates for future calls. Pending payloads keep
+the weights used when they were enqueued, so changing explicit weights affects
+new events. Delays use the native rounded timestep rule, with a minimum of one
+step even for zero delay. The returned queue supports checkpoint continuation
+and `projection.commit_state_(connection, queue)`.
+
+This first projection API requires an initialized dense event connection with
+`threshold=None`, fixed delays, and no scheduled events. Source generation and
+the ordering of multiple projections remain explicit in the caller.
 
 ## Examples
 
