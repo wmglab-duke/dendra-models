@@ -353,9 +353,9 @@ times use each native triangular-kernel policy, with differentiable amplitudes
 and indexed sources. NetStim hard spikes remain boolean causal events; consume
 `spike_gate` through `diff_spiking=True` projections to preserve scheduled
 amplitudes and gradients. Tensor schedules reevaluate repeated times and miss
-skipped hard steps. Legacy heaps consume overdue entries and are not lowered
-by this interface. Topology/binding/policy changes require lowering again;
-floating packet values can change without rebuilding the plan.
+skipped hard steps. Legacy heaps consume overdue entries through the shared
+pure calendar described below. Topology/binding/policy changes require lowering
+again; floating packet values can change without rebuilding the plan.
 
 The integration tests exercise both `expsyn` and `exp2syn` on companion cables,
 including batching, hard tracked events, shared-source gradients, compiled
@@ -363,6 +363,56 @@ composition, and continuation into a fresh native Network:
 
 ```bash
 python -m pytest -q tests/test_functional_tensor_schedules.py
+```
+
+### Consuming heap schedules (development)
+
+The matching `feat/functional-heap-schedules` checkouts also lower ordinary
+unit-amplitude Python schedules declared with `stimulus.schedule(indices, times)`.
+Native and functional NetStim use the same pure tensor calendar; no second
+NetStim implementation is needed. Heap events retain their consumption policy:
+one call consumes all overdue duplicates for each generator that can fire,
+coalescing them into one boolean event. A spike cap prevents further consumption.
+Repeated or decreasing call times never rewind the cursor. Tensor schedules
+retain the distinct stateless policy above.
+
+```python
+stimulus.schedule([0, 0, 1], [0.015, 0.015, 0.025])
+renewal, source = dn.func.make_functional_netstim(stimulus)
+state = source.state
+origin = network.t.detach().clone()
+for index in range(20):
+    time = origin + origin.new_tensor(index) * dt
+    state, outputs = renewal.step(
+        source.parameters, source.constants, state, time,
+        renewal.sample_step_draw(state), bptt=True, schedule=source.schedule,
+    )
+```
+
+The fixed calendar is in `source.constants["heap_times"]` and
+`source.constants["heap_row_offsets"]`. Calendar times use Float64 on CPU/CUDA
+and the simulation dtype on MPS. Comparisons use the simulation dtype; native
+metadata and checkpoints retain original Python precision across dtype/device
+changes.
+The flat per-generator `state["heap_cursor"]` travels with clock and RNG carry.
+Legacy head-only checkpoint overrides are explicit carry too. Pure
+`initial_state` resets the renewal clock and counts, preserving the consumed
+cursor and clearing those overrides, as native initialization does.
+
+Save constants, parameter/schedule values, simulation time, source carry,
+projection queues, and population carry together for continuation. A compatible
+`commit_state_` restores the cursor and RNG into native NetStim. Native runtime
+restore also accepts older remaining-heap and head-only checkpoints. Changing
+the calendar requires lowering again. Heap event times are not differentiable;
+use tensor schedules for trainable event times and amplitudes. Calendars with
+NaN entries keep native heap ordering and are rejected by functional lowering.
+
+The companion integration tests compare native and pure trajectories, renewal
+and weight gradients, compiled composition, and checkpoint continuation through
+both `expsyn` and `exp2syn` on cable populations:
+
+```bash
+python -m pytest -q tests/test_functional_heap_schedules.py
 ```
 
 ## Examples
