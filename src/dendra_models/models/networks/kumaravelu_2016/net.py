@@ -11,15 +11,17 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Callable, Dict, Iterable, List, Mapping, Tuple
 
+import dendra as dn
 import numpy as np
 import torch
-
-import dendra as dn
 from dendra.models.mod import spikedetect
 
-from .params import params as default_parameter_dict
-from .mechanisms.hh import thalamic, stn, gpe, gpi, striatal_d2, striatal_d1
-from .mechanisms.izhikevich import regular_spiking_cortex, fast_spiking_interneuron, cortical_spike_router
+from .mechanisms.hh import gpe, gpi, stn, striatal_d1, striatal_d2, thalamic
+from .mechanisms.izhikevich import (
+    cortical_spike_router,
+    fast_spiking_interneuron,
+    regular_spiking_cortex,
+)
 from .mechanisms.synapses import (
     alpha_syn_current,
     alpha_syn_event,
@@ -27,6 +29,7 @@ from .mechanisms.synapses import (
     striatal_gaba_gate,
     striatal_recurrent_gaba,
 )
+from .params import params as default_parameter_dict
 
 
 def _copy_params(params=None):
@@ -268,71 +271,26 @@ def _ctx_local_view(getter: Callable[[], torch.Tensor], start: int, stop: int):
     return ref
 
 
-def _ctx_syn_current_reference(
-    get_s: Callable[[], torch.Tensor],
-    get_v: Callable[[], torch.Tensor],
-    e: float,
-    start: int,
-    stop: int,
-    current_scale: float = 1.0,
-):
-    """Compute CTX synaptic current directly from conductance and local voltage.
+def _bind_cortical_inputs(population):
+    """Declare the conductance and reversal inputs for the three CTX currents.
 
-    For the scnv cortical population, ``mech.advance`` evaluates the
-    Izhikevich state equations before the bookkeeping ``mech.i`` pass. Reading
-    saved ``i_`` from a separate synapse mechanism can therefore lag by one
-    step and is sensitive to full-vs-local current frames.  This helper computes
-    the current from the synapse conductance state in the target-local RS/FS
-    voltage frame instead.
+    The State forms s * (v_izh - e) after the voltage-reset phase, before the
+    synapses advance. Reading a saved current here would introduce a lag.
+    These construction specs survive Population and Network rebuilds.
     """
-
-    def ref():
-        v = get_v()
-        s = get_s()
-        width = v.shape[-1]
-        if s.shape[-1] != width:
-            s = s[..., start:stop]
-        if tuple(s.shape) != tuple(v.shape) and s.numel() == v.numel():
-            s = s.reshape_as(v)
-        return current_scale * s * (v - e)
-
-    return ref
+    for consumer, state, suffix, source in (
+        ("ctx_rs", "regular_spiking_cortex_states", "ie", "FS_RS"),
+        ("ctx_rs", "regular_spiking_cortex_states", "thcor", "TH_CTX"),
+        ("ctx_fs", "fast_spiking_interneuron_states", "ei", "RS_FS"),
+    ):
+        population.bind_input(f"{consumer}.DE.{state}.s_{suffix}", f"{source}.s")
+        population.bind_input(f"{consumer}.DE.{state}.e_{suffix}", f"{source}.e")
 
 
-def _bind_references(net, realization: Mapping, params: Mapping):
-    """Bind state/current references after dn.Network construction."""
+def _bind_references(net, realization: Mapping):
+    """Bind the remaining imperative routers after dn.Network construction."""
     mh = net.hh.mech
     mc = net.ctx.mech
-
-    # Izhikevich scnv population: model.v is not the integrated voltage, so the
-    # VoltageProcess state equation must explicitly read synaptic currents.
-    # The cortical synapse mechanisms are full-population mechanisms; slice their
-    # saved currents back to the mechanism-local RS/FS state-vector shapes.
-    n_ctx = int(len(realization["gcorsna"]))
-    mc.ctx_rs.DE["regular_spiking_cortex_states"].setreference(
-        "i_ie",
-        _ctx_syn_current_reference(
-            lambda: mc.FS_RS.s, lambda: mc.ctx_rs.v_izh,
-            e=float(params["syn"]["pathways"]["FS_RS"]["e"]),
-            start=0, stop=n_ctx,
-        ),
-    )
-    mc.ctx_rs.DE["regular_spiking_cortex_states"].setreference(
-        "i_thcor",
-        _ctx_syn_current_reference(
-            lambda: mc.TH_CTX.s, lambda: mc.ctx_rs.v_izh,
-            e=float(params["syn"]["pathways"]["TH_CTX"]["e"]),
-            start=0, stop=n_ctx,
-        ),
-    )
-    mc.ctx_fs.DE["fast_spiking_interneuron_states"].setreference(
-        "i_ei",
-        _ctx_syn_current_reference(
-            lambda: mc.RS_FS.s, lambda: mc.ctx_fs.v_izh,
-            e=float(params["syn"]["pathways"]["RS_FS"]["e"]),
-            start=n_ctx, stop=2 * n_ctx,
-        ),
-    )
     mc.ctx_spikes.setreference("rs_spikes_local", lambda: mc.ctx_rs.spikes)
     mc.ctx_spikes.setreference("rs_syn_spikes_local", lambda: mc.ctx_rs.syn_spikes)
     mc.ctx_spikes.setreference("fs_spikes_local", lambda: mc.ctx_fs.spikes)
@@ -422,13 +380,14 @@ def kumaravelu_2016(params=None, rng=None):
 
     # CTX-target synapses are event-only conductance states.  The cortical
     # Izhikevich mechanisms own the voltage state under scnv and read these
-    # conductances through setreference, so the synapses should not contribute
+    # conductances through declared inputs, so the synapses should not contribute
     # to the standard membrane-current bookkeeping pass.  Insert them on their
     # actual target slices so NetCon post indices, synapse state, and the
     # VoltageProcess reference frame are all length n.
     _insert_synapse(ctx_pop.CTX_RS, "TH_CTX", sp["TH_CTX"], event_only=True)
     _insert_synapse(ctx_pop.CTX_RS, "FS_RS", sp["FS_RS"], event_only=True)
     _insert_synapse(ctx_pop.CTX_FS, "RS_FS", sp["RS_FS"], event_only=True)
+    _bind_cortical_inputs(ctx_pop)
 
     for name in ["GPe_STN", "CTX_STN_AMPA", "CTX_STN_NMDA"]:
         _insert_synapse(hh_pop.STN, name, sp[name], current_scale=hh_current_scale)
@@ -445,7 +404,7 @@ def kumaravelu_2016(params=None, rng=None):
     else:
         net = dn.Network({"hh": hh_pop, "ctx": ctx_pop}).double()
 
-    _bind_references(net, realization, params)
+    _bind_references(net, realization)
 
     c = params["coupling"]
     hh_spikes = "mech.spikedetect.spikes"

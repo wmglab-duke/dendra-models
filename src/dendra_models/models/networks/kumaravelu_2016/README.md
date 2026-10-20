@@ -46,18 +46,40 @@ voltage hooks apply the existing reset, recovery increment, and hard-forward
 spike/crossing flags before ODE integration. Surrogate gradients retain the
 original straight-through equations. An isolated population uses `i_stim` for
 its applied current and treats unbound synaptic currents as zero; the modular
-network continues to supply its live current references. The modular network
+network supplies declared conductance and reversal inputs. The modular network
 and the public fused builder still require imperative execution.
 
-1. The network builder labels subranges, inserts renamed mechanisms on those labels, constructs `dn.Network`, and only then binds cross-mechanism references using `setreference`.
+1. The network builder labels subranges, inserts renamed mechanisms, and declares the cortical input bindings before constructing `dn.Network`. The remaining imperative spike-router and striatal references are installed after construction.
 
-2. **Cortical Izhikevich cells use `setreference` for synaptic currents.** Because `dn.scnv()` bypasses ordinary `model.v` updates, the RS and FS voltage-state equations explicitly read saved synaptic currents:
+2. **Cortical Izhikevich currents use explicit inputs.** The RS and FS States
+declare conductance and reversal inputs for `i_ie`, `i_thcor`, and `i_ei`.
+Bindings read the three event-only alpha synapses in the same population:
 
 ```python
-mc.ctx_rs.DE["regular_spiking_cortex_states"].setreference("i_ie", lambda: mc.FS_RS.i_)
-mc.ctx_rs.DE["regular_spiking_cortex_states"].setreference("i_thcor", lambda: mc.TH_CTX.i_)
-mc.ctx_fs.DE["fast_spiking_interneuron_states"].setreference("i_ei", lambda: mc.RS_FS.i_)
+ctx.bind_input("ctx_rs.DE.regular_spiking_cortex_states.s_ie", "FS_RS.s")
+ctx.bind_input("ctx_rs.DE.regular_spiking_cortex_states.e_ie", "FS_RS.e")
+ctx.bind_input("ctx_rs.DE.regular_spiking_cortex_states.s_thcor", "TH_CTX.s")
+ctx.bind_input("ctx_rs.DE.regular_spiking_cortex_states.e_thcor", "TH_CTX.e")
+ctx.bind_input("ctx_fs.DE.fast_spiking_interneuron_states.s_ei", "RS_FS.s")
+ctx.bind_input("ctx_fs.DE.fast_spiking_interneuron_states.e_ei", "RS_FS.e")
 ```
+
+Each State computes `s * (values["v_izh"] - e)` after the voltage reset and at
+its normal position in the mechanism advance order. In this builder the alpha
+synapses advance after the cortical States, so the current uses their incoming
+conductance states. Saved `i_` fields would introduce a one-step lag. The
+bindings follow physical support coordinates and survive population rebuilds
+and explicit batching. Unbound inputs default to zero.
+
+Reversal values are now explicit provider parameters, so changing or
+differentiating a synapse's `e` affects the cortical current. The original
+closure captured reversal as a float when the network was built. The numerical
+current convention is unchanged: these three currents retain the original
+scale of one and do not multiply the provider's `current_scale` parameter.
+
+An isolated cortical population with these providers supports functional
+execution. Complete Network event delivery and the remaining live routers
+still use imperative execution.
 
 3. **Recurrent striatal GABA is not event-based.** The MATLAB variables `S1c` and `S8` are voltage-gated continuous states, so they are implemented as `striatal_gaba_gate` mechanisms on the D2/D1 MSN populations. The postsynaptic MSN recurrent-GABA currents then reference permuted copies of those presynaptic gate states:
 

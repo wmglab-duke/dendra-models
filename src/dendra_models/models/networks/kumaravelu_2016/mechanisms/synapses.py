@@ -10,8 +10,8 @@ what these MATLAB conductance-density equations need.
 """
 
 import torch
-
-from dendra.models.mechanisms._mechanism import Synapse as Syn, Mechanism as M
+from dendra.models.mechanisms._mechanism import Mechanism as M
+from dendra.models.mechanisms._mechanism import Synapse as Syn
 from dendra.models.mechanisms._state import State as S
 from dendra.models.mechanisms.ops import exp, log
 
@@ -107,7 +107,7 @@ class alpha_syn_event(Syn):
 
     This is used for CTX-target synapses in the scnv/Izhikevich population.
     The Izhikevich VoltageProcess owns the actual voltage state and reads this
-    conductance through ``setreference`` to form currents inside its own ODE.
+    conductance through declared inputs to form currents inside its own ODE.
     Since this mechanism declares no NONSPECIFIC_CURRENT, MechanismHandler.i()
     does not include it in the current/conductance bookkeeping pass.
     """

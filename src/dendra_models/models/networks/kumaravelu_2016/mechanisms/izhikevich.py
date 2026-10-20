@@ -8,25 +8,25 @@ pattern in the supplied yu_2024 implementation.
 """
 
 import torch
-
-from dendra.models.mechanisms._mechanism import (
-    Mechanism as M,
-    VoltageProcess as V,
-    Synapse as Syn,
-)
+from dendra.models.mechanisms._mechanism import Mechanism as M
+from dendra.models.mechanisms._mechanism import Synapse as Syn
+from dendra.models.mechanisms._mechanism import VoltageProcess as V
 from dendra.models.mechanisms._state import State as S
 
 
-def _maybe_current(obj, values, name, like):
-    """Prefer explicit currents; retain imperative network reference bindings."""
+def _maybe_current(obj, values, name, like, conductance, reversal):
+    """Form current from explicit inputs, retaining legacy imperative bindings."""
     value = values[name] if name in values else getattr(obj, name, None)
-    if value is None:
-        return torch.zeros_like(like)
-    return value
+    if value is not None:
+        return value
+    if conductance in values:
+        return values[conductance] * (like - values[reversal])
+    return torch.zeros_like(like)
 
 
 class regular_spiking_cortex_states(S):
     S.STATE("v_izh", "u")
+    S.INPUT("s_ie", "e_ie", "s_thcor", "e_thcor", default=0.0)
     S.ASSIGNED("i_syn", "rhs_v")
     S.DERIVATIVE("v_izh' = rhs_v", "u' = a * (b * v_izh - u)")
     S.RANGE(a=0.02, b=0.2, v0=-65.0, i_stim=0.0)
@@ -34,9 +34,9 @@ class regular_spiking_cortex_states(S):
     def assigned_values(self, v, values):
         v_izh = values["v_izh"]
         # MATLAB RS equation: v' = ... - Iie - Ithcor + Iappco.
-        i_syn = _maybe_current(self, values, "i_ie", v_izh) + _maybe_current(
-            self, values, "i_thcor", v_izh
-        )
+        i_syn = _maybe_current(
+            self, values, "i_ie", v_izh, "s_ie", "e_ie"
+        ) + _maybe_current(self, values, "i_thcor", v_izh, "s_thcor", "e_thcor")
         rhs_v = (
             0.04 * v_izh**2 + 5.0 * v_izh + 140.0 - values["u"] - i_syn + self.i_stim
         )
@@ -49,6 +49,7 @@ class regular_spiking_cortex_states(S):
 
 class fast_spiking_interneuron_states(S):
     S.STATE("v_izh", "u")
+    S.INPUT("s_ei", "e_ei", default=0.0)
     S.ASSIGNED("i_syn", "rhs_v")
     S.DERIVATIVE("v_izh' = rhs_v", "u' = a * (b * v_izh - u)")
     S.RANGE(a=0.1, b=0.2, v0=-65.0, i_stim=0.0)
@@ -56,7 +57,7 @@ class fast_spiking_interneuron_states(S):
     def assigned_values(self, v, values):
         v_izh = values["v_izh"]
         # MATLAB FS equation: v' = ... - Iei + Iappco.
-        i_syn = _maybe_current(self, values, "i_ei", v_izh)
+        i_syn = _maybe_current(self, values, "i_ei", v_izh, "s_ei", "e_ei")
         rhs_v = (
             0.04 * v_izh**2 + 5.0 * v_izh + 140.0 - values["u"] - i_syn + self.i_stim
         )

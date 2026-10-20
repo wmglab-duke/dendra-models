@@ -49,8 +49,8 @@ with dn.ctx(DTYPE="float64", DEVICE="cpu", JIT=0):
 
 ## Isolated voltage models (development)
 
-The `feat/functional-voltage-models` branches in Dendra and Dendra Models add
-pure `voltage_values` hooks for the Yu 2024 Esser mechanisms and the Kumaravelu
+The development versions of Dendra and Dendra Models provide pure
+`voltage_values` hooks for the Yu 2024 Esser mechanisms and the Kumaravelu
 2016 regular-spiking and fast-spiking cortical mechanisms. Use the matching
 Dendra development checkout for this API.
 
@@ -91,6 +91,13 @@ retain their existing detach behavior; use explicit state initialization inputs
 when differentiating those initial conditions. Functional execution of connected
 networks, the Kumaravelu fused implementation, and live cross-mechanism references
 remain outside this isolated-mechanism support.
+
+The cortical Izhikevich States also accept explicit conductance and reversal
+inputs from other mechanisms in the same population. `Population.bind_input`
+maps each source into the consumer's physical support; the State forms its
+current using the voltage after reset. See the
+[Kumaravelu cortical input example](src/dendra_models/models/networks/kumaravelu_2016/README.md#key-design-choices).
+This requires matching `feat/functional-input-bindings` development checkouts.
 
 ## Examples
 
