@@ -6,6 +6,7 @@ import dendra as dn
 import numpy as np
 import pytest
 import torch
+from torch.utils import _pytree as pytree
 
 from dendra_models.models.networks.kumaravelu_2016 import (
     Kumaravelu2016,
@@ -354,3 +355,98 @@ def test_exact_uncoalesced_filter_helpers_use_only_prepared_coefficients(monkeyp
         2.5,
         mechanism.dt,
     )
+
+
+def test_fused_voltage_and_waveform_algebra_do_not_commit_runtime_values():
+    model = _build(_small_params())
+    model[:, :2].inject(dn.constant(value=0.4))
+    model.initialize()
+    mechanism = model.mech.kumaravelu
+    before = {name: value.detach().clone() for name, value in mechanism.named_buffers()}
+    frame = mechanism._runtime_value_frame()
+    explicit = torch.full_like(model.v, -43.0, requires_grad=True)
+    voltage, updates = mechanism.voltage_values(
+        model.v, model.v.new_tensor(0.01), {**frame, "v_all": explicit}
+    )
+    assert voltage is explicit
+    assert updates == {}
+    torch.testing.assert_close(
+        torch.autograd.grad(voltage.sum(), explicit)[0], torch.ones_like(explicit)
+    )
+
+    assigned = mechanism.assigned_values(model.v, frame)
+    expected = torch.zeros_like(model.v)
+    expected[:, :2] = 0.4
+    torch.testing.assert_close(assigned["i_inj"], expected)
+    for name, value in mechanism.named_buffers():
+        torch.testing.assert_close(value, before[name], rtol=0.0, atol=0.0, msg=name)
+
+
+@pytest.mark.parametrize("synapse_discretization", ["euler", "exact"])
+def test_fused_functional_shift_step_waveform_gradients_and_commit_continuation(
+    synapse_discretization,
+):
+    def model():
+        result = _build(_small_params(), synapse_discretization=synapse_discretization)
+        result[:, :2].inject(dn.constant(value=0.4))
+        result.train()
+        result.initialize()
+        return result
+
+    source = model()
+    next(
+        value
+        for name, value in source.named_parameters()
+        if name.endswith(".injected_waveforms.0.value")
+    ).requires_grad_()
+    # Each factory call defines a distinct configured Mechanism class.
+    reference = deepcopy(source)
+    functional, tensors = dn.func.make_functional(source, dt=0.01)
+    original = {name: value.detach().clone() for name, value in source.named_buffers()}
+    state = tensors.state
+    for _ in range(3):
+        state, _ = functional.prepare_and_step(
+            tensors.parameters, tensors.constants, state
+        )
+    reference.run(steps=3, dt=0.01, progressbar=False)
+    expected = functional.extract(reference).state
+    assert pytree.tree_structure(state) == pytree.tree_structure(expected)
+    for actual, native in zip(
+        pytree.tree_leaves(state), pytree.tree_leaves(expected), strict=True
+    ):
+        torch.testing.assert_close(actual, native, rtol=2e-11, atol=2e-12)
+    source_amplitude = next(
+        value
+        for name, value in tensors.parameters.items()
+        if name.endswith(".injected_waveforms.0.value")
+    )
+    native_amplitude = next(
+        value
+        for name, value in reference.named_parameters()
+        if name.endswith(".injected_waveforms.0.value")
+    )
+    torch.testing.assert_close(
+        torch.autograd.grad(
+            state["mechanism_buffers"]["kumaravelu"]["v_all"].square().mean(),
+            source_amplitude,
+        )[0],
+        torch.autograd.grad(
+            reference.mech.kumaravelu.v_all.square().mean(), native_amplitude
+        )[0],
+        rtol=2e-10,
+        atol=2e-11,
+    )
+    for name, value in source.named_buffers():
+        torch.testing.assert_close(value, original[name], rtol=0.0, atol=0.0, msg=name)
+    resumed = deepcopy(source)
+    functional.commit_state_(resumed, state)
+    resumed.run(steps=1, dt=0.01, progressbar=False)
+    continued, _ = functional.prepare_and_step(
+        tensors.parameters, tensors.constants, state
+    )
+    for actual, native in zip(
+        pytree.tree_leaves(continued),
+        pytree.tree_leaves(functional.extract(resumed).state),
+        strict=True,
+    ):
+        torch.testing.assert_close(actual, native, rtol=2e-11, atol=2e-12)

@@ -201,7 +201,7 @@ def stn_qinf(v):
 
 
 def stn_rinf(v):
-    return 1.0 / (1.0 + exp(-(v - 0.17) / 0.08))
+    return torch.sigmoid((v - 0.17) / 0.08)
 
 
 def stn_taua(v):

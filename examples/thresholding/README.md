@@ -1,53 +1,99 @@
-# Thresholding
+# Threshold finding
 
-The basic procedure for running thresholds is:
+`Thresholder` searches for one stimulus amplitude per Population lane. It uses
+an activity callback to decide whether each trial activates the model. Supply
+either a spatial field and a waveform (`space=` and `time=`), or precomputed
+extracellular potentials (`bases=`).
 
-1. Load surrogate model (useful to set `handle_nan=True` when calling the model constructor).
+This folder contains ImThera and Livanova cuff fields, fiber diameters, and
+NEURON reference thresholds. Run the complete surrogate-model comparison from
+this folder after installing Dendra Models:
 
-2. Load / calculate the set of spatiotemporal extracellular potentials corresponding to 'unit' stimulation under each condition you're interested in (fiber diameter x field x stimulus waveform)
+```sh
+cd examples/thresholding
+python thresholds.py -f imthera
+python thresholds.py -f livanova -v
+```
 
-> [!IMPORTANT]
-> The resulting set of spatiotemporal extracellular potentials must be an array of shape `(n_conditions, n_timesteps, n_comps)`. For example, if you were calculating thresholds for the same extracellular field distribution for 50 different pulse-widths of monophasic extracellular cathodic stimulation, with a simulation duration of 5 ms and dt=0.005 ms and each fiber has 51 nodes, the array would have dimensions `(50, 1000, 51)`. If you were doing the same but for two fiber diameters, the resulting array would have dimensions `(100, 1000, 51)`, etc.
+The `-v` option plots computed versus reference thresholds and their error
+distribution. The example runs on CPU by default; add `--cuda` when using a CUDA
+installation.
 
-3. Construct an `dendra.instruments.thresholder.Thresholder` object.
+## Use precomputed fields
+
+The following smaller example runs the first two ImThera conditions from the
+repository root. The model defines the fiber diameters and the callback defines
+the activation criterion.
 
 ```python
-from dendra.models.instruments.thresholder import Thresholder
-# load model, construct field arrays
-thresholder = Thresholder(model, field_arrays, fiber_diameters)
+from pathlib import Path
+
+import dendra as dn
+import numpy as np
+from dendra.models.instruments import Thresholder
+from dendra_models.models import SMF
+
+
+data = Path("examples/thresholding/example_imthera")
+diameters = np.load(data / "example_diameters_imthera.npy")
+fields = np.memmap(
+    data / "example_field_array_imthera.mmap",
+    dtype="float32", mode="r", shape=(len(diameters), 1000, 101),
+)
+# Convert the stored condition-first fields to time-first solver inputs.
+bases = np.array(fields[:2]).transpose(1, 0, 2)
+dt = 0.005
+
+model = SMF(diameters=diameters[:2], n_node=101)
+activity = dn.callbacks.Active(dt=dt)
+search = Thresholder(model, active=activity, bases=bases, rtol=0.01)
+upper, lower = search.calculate_thresholds(dt=dt)
+print(upper, lower)
 ```
-> [!IMPORTANT]
-> `fiber_diameters` can be a float if you're only testing one fiber diameter, or a 1D array `n_conditions` long, corresponding to the fiber diameter for each condition you're testing.
 
+The canonical `bases` layout is `(n_steps, *model.shape)`: time, optional batch
+axes, Population lanes, and compartments. Here it is `(1000, 2, 101)`, describing
+5 ms at `dt=0.005` ms. Each search amplitude multiplies one lane's entire
+spatiotemporal field. Threshold units are therefore the current units used when
+the unit-amplitude field was generated (mA for these cuff data).
 
-4. Calculate thresholds.
+`upper` is an activating amplitude and `lower` is a non-activating amplitude.
+`rtol=0.01` requests `(upper - lower) / upper <= 0.01`; `atol=` optionally adds
+an absolute interval tolerance. Failed or ignored searches return `NaN`.
+The thresholder ignores Population lanes whose fields contain `NaN`.
+
+## Use a waveform or a compiled Population
+
+For a separable stimulus, use the same callback with
+`Thresholder(model, active=activity, space=field, time=waveform, rtol=0.01)` and
+pass `tstop=` and `dt=` to `calculate_thresholds`. `field` must broadcast to the
+model's Population/compartment shape; `waveform` is a Dendra waveform such as
+`dn.mono_rect(...)`.
+
+A Population program returned by `dn.compile` is also accepted. Configure a
+named activity callback when compiling and pass its name to `Thresholder`:
 
 ```python
-threshold, lb = thresholder.calculate_thresholds()
+model.initialize()
+program = dn.compile(
+    model, dt=dt, steps=bases.shape[0],
+    callbacks={"activation": dn.callbacks.Active(dt=dt)},
+    backend="eager",
+)
+compiled_search = Thresholder(
+    program, active="activation", bases=bases, ub=0.2, rtol=0.01,
+)
+upper, lower = compiled_search.calculate_thresholds()
 ```
 
-> [!NOTE]
-> `calculate_thresholds` returns a 2-tuple, the upper and lower bound for a bisection threshold search. Say we're simulating $t$ timesteps and $n$ nodes. Then let $x \in \mathbb{R}^{t\times n}$ be the spatiotemporal field generated by a unit stimulus amplitude for a given condition (field, fiber diameter, waveform, etc.). The upper bound $b_u$ and lower bound $b_l$ are such that stimulating with $b_u\times x$ generates a propagating action potential and stimulating with $b_l \times x$ does not, and $\frac{b_u - b_l}{b_u} \leq r$, where $r$ is by default 0.01. This may be changed by setting `resolution` when constructing the Thresholder, e.g.:
+This continues the setup above. The eager backend keeps the example lightweight;
+omit `backend=` to use the default optimizing compiler. Each trial starts from
+the program's captured initial snapshot. A compiled program needs explicit
+`ub=`; it does not infer a search bracket from the source model's diameters.
+For `space=`/`time=` stimulation, compile with `extra=dn.VarInput()` so each trial
+can supply its scaled field. Compiled Network threshold searches are currently
+unsupported.
 
-```python
-thresholder = Thresholder(model, field_arrays, fiber_diameters, resolution=0.05)
-```
-
-`thresholds.py` provides a full example that you can run. You can run monopolar ImThera or bipolar Livanova stimulation, which you can specify with the `-f` command-line flag. Use the `-v` flag if you want to visualize results with `matplotlib`. E.g., :
-
-```
-> python thresholds.py -f imthera (or livanonva) -v
-```
-
-Expected output, for Imthera cuff:
-
-<div align="center">
-  <img src="../../docs/_images/imthera_thresholds_example.png">
-</div>
-
-and for Livanova (helical) cuff:
-
-
-<div align="center">
-  <img src="../../docs/_images/livanova_thresholds_example.png">
-</div>
+See the [Thresholder API](https://wmglab-duke.github.io/dendra/api/dendra.models.instruments.html)
+and [functional execution guide](https://wmglab-duke.github.io/dendra/advanced/functional_execution.html)
+for callback criteria, partitions and conduction-block diagnostics.

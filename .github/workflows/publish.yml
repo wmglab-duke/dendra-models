@@ -199,7 +199,7 @@ jobs:
           dendra_requirement = dendra_requirements[0]
           if (
               dendra_requirement.extras != {"solvers"}
-              or str(dendra_requirement.specifier) != ">=0.27.0"
+              or str(dendra_requirement.specifier) != ">=0.28.0"
               or dendra_requirement.marker is not None
           ):
               raise SystemExit(

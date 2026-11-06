@@ -174,7 +174,7 @@ def stn_qinf(v):
 
 
 def stn_rinf(v):
-    return 1.0 / (1.0 + _exp(-(v - 0.17) / 0.08))
+    return torch.sigmoid((v - 0.17) / 0.08)
 
 
 def stn_taua(v):
@@ -968,15 +968,15 @@ class _Kumaravelu2016FusedBase(V):
         """Evaluate the current-time intracellular waveform without carry."""
         del v
         return {
-            "i_inj": self.evaluate_injections(
-                values["v_all"], current_name="i_inj"
+            "i_inj": self.injection_values(
+                values["v_all"], t=self.t, current_name="i_inj"
             )
         }
 
-    def update_v(self, v):
-        # scnv calls update_v() before advance(); return the current exposed
-        # voltage vector. advance() will return v_all for the accepted step.
-        return self.v_all
+    def voltage_values(self, v, dt, values):
+        # scnv exposes the current voltage before the accepted-step transition.
+        del v, dt
+        return values["v_all"], {}
 
     # ------------------------------------------------------------------
     # Spike/event helpers

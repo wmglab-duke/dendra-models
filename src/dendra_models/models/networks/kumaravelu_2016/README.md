@@ -36,19 +36,54 @@ and mechanism-level inspection; it is not the public `Kumaravelu2016` alias.
 The modular builder contains two populations:
 
 - `net.hh`: TH, STN, GPe, GPi, StrD2, StrD1; standard Dendra membrane-voltage integration.
-- `net.ctx`: CTX_RS and CTX_FS; `dn.scnv()` integration because the cortical voltage is stored as the mechanism state `v_izh` and returned by `update_v()`.
+- `net.ctx`: CTX_RS and CTX_FS; `dn.scnv()` integration because the cortical voltage is stored as the mechanism state `v_izh` and exposed by the pure `voltage_values()` hook.
 
 ## Key design choices
 
-1. The network builder labels subranges, inserts renamed mechanisms on those labels, constructs `dn.Network`, and only then binds cross-mechanism references using `setreference`.
+The isolated `regular_spiking_cortex` and `fast_spiking_interneuron` mechanisms
+support `dn.func` with Dendra 0.28. Their pure
+voltage hooks apply the existing reset, recovery increment, and hard-forward
+spike/crossing flags before ODE integration. Surrogate gradients retain the
+original straight-through equations. An isolated population uses `i_stim` for
+its applied current and treats unbound synaptic currents as zero; the modular
+network supplies declared conductance and reversal inputs. The public fused
+builder supports native and functional execution.
 
-2. **Cortical Izhikevich cells use `setreference` for synaptic currents.** Because `dn.scnv()` bypasses ordinary `model.v` updates, the RS and FS voltage-state equations explicitly read saved synaptic currents:
+1. The network builder labels subranges, inserts renamed mechanisms, and declares the cortical input bindings before constructing `dn.Network`. The remaining imperative spike-router and striatal references are installed after construction.
+
+2. **Cortical Izhikevich currents use explicit inputs.** The RS and FS States
+declare conductance and reversal inputs for `i_ie`, `i_thcor`, and `i_ei`.
+Bindings read the three event-only alpha synapses in the same population:
 
 ```python
-mc.ctx_rs.DE["regular_spiking_cortex_states"].setreference("i_ie", lambda: mc.FS_RS.i_)
-mc.ctx_rs.DE["regular_spiking_cortex_states"].setreference("i_thcor", lambda: mc.TH_CTX.i_)
-mc.ctx_fs.DE["fast_spiking_interneuron_states"].setreference("i_ei", lambda: mc.RS_FS.i_)
+ctx.bind_input("ctx_rs.DE.regular_spiking_cortex_states.s_ie", "FS_RS.s")
+ctx.bind_input("ctx_rs.DE.regular_spiking_cortex_states.e_ie", "FS_RS.e")
+ctx.bind_input("ctx_rs.DE.regular_spiking_cortex_states.s_thcor", "TH_CTX.s")
+ctx.bind_input("ctx_rs.DE.regular_spiking_cortex_states.e_thcor", "TH_CTX.e")
+ctx.bind_input("ctx_fs.DE.fast_spiking_interneuron_states.s_ei", "RS_FS.s")
+ctx.bind_input("ctx_fs.DE.fast_spiking_interneuron_states.e_ei", "RS_FS.e")
 ```
+
+Each State computes `s * (values["v_izh"] - e)` after the voltage reset and at
+its normal position in the mechanism advance order. In this builder the alpha
+synapses advance after the cortical States, so the current uses their incoming
+conductance states. Saved `i_` fields would introduce a one-step lag. The
+bindings follow physical support coordinates and survive population rebuilds
+and explicit batching. Unbound inputs default to zero.
+
+Reversal values are now explicit provider parameters, so changing or
+differentiating a synapse's `e` affects the cortical current. The original
+closure captured reversal as a float when the network was built. The numerical
+current convention is unchanged: these three currents retain the original
+scale of one and do not multiply the provider's `current_scale` parameter.
+
+An isolated cortical population with these providers supports functional
+execution. Whole-Network lowering of the experimental modular builder is
+currently unsupported: its cortical spike router assembles disjoint source
+supports, while its striatal currents read permuted gate states at current
+evaluation rather than State-advance time. These live references do not fit
+the existing input-binding contract. Use the public fused builder for
+functional execution, or run the modular builder natively.
 
 3. **Recurrent striatal GABA is not event-based.** The MATLAB variables `S1c` and `S8` are voltage-gated continuous states, so they are implemented as `striatal_gaba_gate` mechanisms on the D2/D1 MSN populations. The postsynaptic MSN recurrent-GABA currents then reference permuted copies of those presynaptic gate states:
 
@@ -94,7 +129,8 @@ The HH population is intentionally constructed with one initial voltage per comp
 hh_pop = dn.Population(C=len(hh_v_init), v_init=hh_v_init)
 ```
 
-This requires Dendra `Population` / `Integrator.init_v` support for scalar or length-`model.nc` `v_init`. The companion `dendra_vinit_patch.zip` adds that support. With the patch, the sampled MATLAB-style initial voltages are broadcast/reshaped at initialization time rather than flattened into a scalar workaround.
+Dendra accepts scalar or length-`model.nc` `v_init`; the sampled MATLAB-style
+initial voltages are broadcast/reshaped at initialization time.
 
 
 ## Connection-weight shape compatibility

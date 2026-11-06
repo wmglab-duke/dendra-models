@@ -10,8 +10,8 @@ what these MATLAB conductance-density equations need.
 """
 
 import torch
-
-from dendra.models.mechanisms._mechanism import Synapse as Syn, Mechanism as M
+from dendra.models.mechanisms._mechanism import Mechanism as M
+from dendra.models.mechanisms._mechanism import Synapse as Syn
 from dendra.models.mechanisms._state import State as S
 from dendra.models.mechanisms.ops import exp, log
 
@@ -95,10 +95,12 @@ class alpha_syn_current(Syn):
     def i(self, v):
         return self.current_scale * self.s * (v - self.e)
 
-    def net_receive(self, weights, netcon):
-        weights = _reshape_like_state(weights, self.z)
-        factor = _reshape_like_state(self.factor, self.z)
-        self.z = self.z + weights * factor
+    def net_receive_values(self, weights, dt, values):
+        del dt
+        z = values["z"]
+        weights = _reshape_like_state(weights, z)
+        factor = _reshape_like_state(values["factor"], z)
+        return {"states": {"z": z + weights * factor}}
 
 
 class alpha_syn_event(Syn):
@@ -107,7 +109,7 @@ class alpha_syn_event(Syn):
 
     This is used for CTX-target synapses in the scnv/Izhikevich population.
     The Izhikevich VoltageProcess owns the actual voltage state and reads this
-    conductance through ``setreference`` to form currents inside its own ODE.
+    conductance through declared inputs to form currents inside its own ODE.
     Since this mechanism declares no NONSPECIFIC_CURRENT, MechanismHandler.i()
     does not include it in the current/conductance bookkeeping pass.
     """
@@ -120,10 +122,12 @@ class alpha_syn_event(Syn):
         tau = self.DE["alpha_state"].tau
         return {"factor": exp(torch.ones_like(self.diam)) / tau}
 
-    def net_receive(self, weights, netcon):
-        weights = _reshape_like_state(weights, self.z)
-        factor = _reshape_like_state(self.factor, self.z)
-        self.z = self.z + weights * factor
+    def net_receive_values(self, weights, dt, values):
+        del dt
+        z = values["z"]
+        weights = _reshape_like_state(weights, z)
+        factor = _reshape_like_state(values["factor"], z)
+        return {"states": {"z": z + weights * factor}}
 
 
 class exp2syn_current(Syn):
@@ -150,12 +154,12 @@ class exp2syn_current(Syn):
     def i(self, v):
         return self.current_scale * (self.B - self.A) * (v - self.e)
 
-    def net_receive(self, weights, netcon):
-        weights = _reshape_like_state(weights, self.A)
-        factor = _reshape_like_state(self.factor, self.A)
+    def net_receive_values(self, weights, dt, values):
+        del dt
+        weights = _reshape_like_state(weights, values["A"])
+        factor = _reshape_like_state(values["factor"], values["A"])
         weights = weights * factor
-        self.A = self.A + weights
-        self.B = self.B + weights
+        return {"states": {"A": values["A"] + weights, "B": values["B"] + weights}}
 
 
 class striatal_gaba_gate_state(S):

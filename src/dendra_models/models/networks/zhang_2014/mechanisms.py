@@ -543,6 +543,34 @@ class iNaP(M):
 class _DynSynMixin:
     """Fuhrmann-style STP + double exponential conductance mixin."""
 
+    def _load_from_state_dict(
+        self,
+        state_dict,
+        prefix,
+        local_metadata,
+        strict,
+        missing_keys,
+        unexpected_keys,
+        error_msgs,
+    ):
+        step = prefix + "zhang2014_stp_step"
+        previous = prefix + "zhang2014_last_stp_step"
+        if step not in state_dict and previous in state_dict:
+            # Older state_dict snapshots store the last received connection
+            # step. At an accepted-step boundary the next local step is one
+            # later; an unvisited synapse retains its initial counter of zero.
+            state_dict = dict(state_dict)
+            state_dict[step] = (state_dict[previous] + 1).clamp_min(0)
+        super()._load_from_state_dict(
+            state_dict,
+            prefix,
+            local_metadata,
+            strict,
+            missing_keys,
+            unexpected_keys,
+            error_msgs,
+        )
+
     def _tau_rise_decay(self):
         tau_rise = None
         tau_decay = None
@@ -561,7 +589,9 @@ class _DynSynMixin:
         safe_denom = torch.where(torch.abs(denom) < 1.0e-12, torch.ones_like(denom), denom)
         tp = (tau_rise * tau_decay) / safe_denom * log(tau_decay / tau_rise)
         factor = -exp(-tp / tau_rise) + exp(-tp / tau_decay)
-        factor = torch.where(torch.abs(factor) < 1.0e-12, torch.ones_like(factor), factor)
+        factor = torch.where(
+            torch.abs(factor) < 1.0e-12, torch.ones_like(factor), factor
+        )
         return {"factor": 1.0 / factor}
 
     def initial_values(self, v, values):
@@ -572,6 +602,7 @@ class _DynSynMixin:
             "zhang2014_last_stp_step": torch.full(
                 (1,), -1, device=v.device, dtype=torch.long
             ),
+            "zhang2014_stp_step": torch.zeros((1,), device=v.device, dtype=torch.long),
         }
 
     def _g(self):
@@ -581,53 +612,38 @@ class _DynSynMixin:
         conductance = self._g()
         return conductance * (v - self.e), conductance
 
-    def _netcon_global_step(self, netcon):
-        if netcon is None or not hasattr(netcon, "global_step"):
-            return None
-        try:
-            return int(netcon.global_step.detach().cpu().reshape(-1)[0].item())
-        except Exception:
-            return None
+    def advance(self, v, dt, values):
+        del v, dt
+        return {"zhang2014_stp_step": values["zhang2014_stp_step"] + 1}
 
-    def _recover_stp_once_per_step(self, netcon):
+    def net_receive_values(self, weights, dt, values):
+        # Recovery precedes the first delivery of each accepted timestep,
+        # including a zero payload. Multiple NetCons share this integer carry;
+        # floating-point simulation time need not uniquely identify the step.
         tau_fac = torch.clamp(self.tau_fac, min=1.0e-12)
         tau_rec = torch.clamp(self.tau_rec, min=1.0e-12)
-
-        step = self._netcon_global_step(netcon)
-
-        should_recover = True
-        if step is not None:
-            last = int(self.zhang2014_last_stp_step.detach().cpu().reshape(-1)[0].item())
-            should_recover = step != last
-
-        if should_recover:
-            self.Use = self.Use * exp(-self.dt / tau_fac)
-            self.P = 1.0 - (1.0 - self.P) * exp(-self.dt / tau_rec)
-            if step is not None:
-                self.zhang2014_last_stp_step = self.zhang2014_last_stp_step.new_full(
-                    (1,), int(step)
-                )
-
-    def _advance_stp(self, weights, netcon):
-        # A banked mechanism may be targeted by several NetCons in one network
-        # timestep.  Recovery/facilitation decay is a property of the synapse
-        # state and must happen once per timestep, not once per incoming NetCon.
-        self._recover_stp_once_per_step(netcon)
-
+        step = values["zhang2014_stp_step"]
+        recover = step != values["zhang2014_last_stp_step"]
+        use = torch.where(recover, values["Use"] * exp(-dt / tau_fac), values["Use"])
+        probability = torch.where(
+            recover,
+            1.0 - (1.0 - values["P"]) * exp(-dt / tau_rec),
+            values["P"],
+        )
         has_event = weights != 0
-        use_event = self.Use + self.U1 * (1.0 - self.Use)
-        p_event = self.P - use_event * self.P
-        pv = use_event * self.P
-
-        self.Use = torch.where(has_event, use_event, self.Use)
-        self.P = torch.where(has_event, p_event, self.P)
-
-        inc = weights * self.factor * pv
-        self.A = self.A + inc
-        self.B = self.B + inc
-
-    def net_receive(self, weights, netcon):
-        self._advance_stp(weights, netcon)
+        use_event = use + self.U1 * (1.0 - use)
+        released = use_event * probability
+        increment = weights * values["factor"] * released
+        return {
+            "states": {"A": values["A"] + increment, "B": values["B"] + increment},
+            "carry": {
+                "Use": torch.where(has_event, use_event, use),
+                "P": torch.where(
+                    has_event, probability - use_event * probability, probability
+                ),
+                "zhang2014_last_stp_step": step,
+            },
+        }
 
 
 def _make_A_state(name: str, tau_rise_default: float):
@@ -676,6 +692,7 @@ class AMPA_DynSyn(_DynSynMixin, PP, Syn):
     PP.DERIVED_BUFFER("factor")
     PP.CARRY("P", "Use")
     PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
+    PP.CARRY("zhang2014_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -688,6 +705,7 @@ class GABAa_DynSyn(_DynSynMixin, PP, Syn):
     PP.DERIVED_BUFFER("factor")
     PP.CARRY("P", "Use")
     PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
+    PP.CARRY("zhang2014_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -700,6 +718,7 @@ class GABAb_DynSyn(_DynSynMixin, PP, Syn):
     PP.DERIVED_BUFFER("factor")
     PP.CARRY("P", "Use")
     PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
+    PP.CARRY("zhang2014_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -712,6 +731,7 @@ class Glycine_DynSyn(_DynSynMixin, PP, Syn):
     PP.DERIVED_BUFFER("factor")
     PP.CARRY("P", "Use")
     PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
+    PP.CARRY("zhang2014_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("i")
 
     def i(self, v):
@@ -725,6 +745,7 @@ class NMDA_DynSyn(_DynSynMixin, PP, Syn):
     PP.DERIVED_BUFFER("factor")
     PP.CARRY("P", "Use")
     PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
+    PP.CARRY("zhang2014_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("inon")
 
     def mgblock(self, v):
@@ -766,6 +787,7 @@ class NK1_DynSyn(_DynSynMixin, PP, Syn):
     PP.DERIVED_BUFFER("factor")
     PP.CARRY("P", "Use")
     PP.CARRY("zhang2014_last_stp_step", dtype=torch.long, shape=(1,))
+    PP.CARRY("zhang2014_stp_step", dtype=torch.long, shape=(1,))
     PP.NONSPECIFIC_CURRENT("iNK1R")
 
     def _itotal(self, v):

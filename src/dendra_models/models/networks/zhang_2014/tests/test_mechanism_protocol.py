@@ -63,7 +63,9 @@ def test_dynamic_synapse_declares_and_initializes_its_state_roles():
     synapse = _initialized_ampa()
 
     assert synapse._derived_buffers == {"factor"}
-    assert synapse._carry == ("P", "Use", "zhang2014_last_stp_step")
+    assert synapse._carry == (
+        "P", "Use", "zhang2014_last_stp_step", "zhang2014_stp_step"
+    )
     assert synapse._carry_specs["zhang2014_last_stp_step"] == (
         torch.long,
         (1,),
@@ -73,6 +75,7 @@ def test_dynamic_synapse_declares_and_initializes_its_state_roles():
     torch.testing.assert_close(synapse.Use, torch.zeros_like(synapse.Use))
     assert synapse.zhang2014_last_stp_step.dtype is torch.long
     assert synapse.zhang2014_last_stp_step.tolist() == [-1]
+    assert synapse.zhang2014_stp_step.tolist() == [0]
 
 
 def test_dynamic_synapse_recovers_once_per_step_and_preserves_event_updates():
@@ -95,6 +98,11 @@ def test_dynamic_synapse_recovers_once_per_step_and_preserves_event_updates():
     torch.testing.assert_close(synapse.Use, first_use)
 
     step.global_step.fill_(1)
+    # Accepted-step bookkeeping belongs to the Synapse, rather than the
+    # connection object. Isolate it here from the A/B differential decay.
+    updates = synapse.advance(weights, synapse.dt, synapse._runtime_value_frame())
+    for name, value in updates.items():
+        setattr(synapse, name, value)
     synapse.net_receive(torch.zeros_like(weights), step)
     assert synapse.zhang2014_last_stp_step.tolist() == [1]
     assert torch.all(synapse.P >= first_p)

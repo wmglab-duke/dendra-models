@@ -77,11 +77,22 @@ def eliminate_self_connections(pre_idx: np.ndarray, post_idx: np.ndarray, *, ret
     return pre_idx[keep], post_idx[keep]
 
 def set_references(net):
-    m = net.cells.mech
-    m.esser_mech.DE['esser_states'].setreference('i_ampa', lambda: m.AMPA.i_)
-    m.esser_mech.DE['esser_states'].setreference('i_nmda', lambda: m.NMDA.i_)
-    m.esser_mech.DE['esser_states'].setreference('i_gaba_a', lambda: m.GABAA.i_)
-    m.esser_mech.DE['esser_states'].setreference('i_gaba_b', lambda: m.GABAB.i_)
+    """Bind the four saved synaptic currents through persistent declarations.
+
+    The current is read when Esser advances, retaining the native saved-current
+    phase. Keeping the declarations on the Population also preserves them when
+    its mechanisms are rebuilt or lowered for functional execution.
+    """
+    for current, source in (
+        ("i_ampa", "AMPA"),
+        ("i_nmda", "NMDA"),
+        ("i_gaba_a", "GABAA"),
+        ("i_gaba_b", "GABAB"),
+    ):
+        net.cells.bind_input(
+            f"esser_mech.DE.esser_states.{current}_input", f"{source}.i_"
+        )
+    return net
 
 # network builder
 

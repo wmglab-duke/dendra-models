@@ -38,9 +38,9 @@ def test_esser_runtime_storage_has_canonical_roles_and_reinitializes():
     hard = _initialized(esser_mech_h)
     soft = _initialized(esser_mech_s)
 
-    assert hard._derived_buffers == {"factor"}
+    assert hard._derived_buffers == {"factor", "event_ena", "event_tau_spike"}
     assert hard._carry == ("spikes", "h_prev", "time_left")
-    assert soft._derived_buffers == {"factor"}
+    assert soft._derived_buffers == {"factor", "event_ena", "event_tau_spike"}
     assert soft._carry == ("spikes", "g_prev")
     assert not hasattr(soft, "time_left")
 
@@ -53,6 +53,8 @@ def test_esser_runtime_storage_has_canonical_roles_and_reinitializes():
             torch.full_like(VOLTAGE, 4.0),
         )
         torch.testing.assert_close(state.gspike, torch.zeros_like(VOLTAGE))
+        torch.testing.assert_close(mechanism.event_ena, state.ena_iaf)
+        torch.testing.assert_close(mechanism.event_tau_spike, state.tau_spike)
 
     hard.spikes.fill_(2.0)
     hard.h_prev.fill_(0.75)

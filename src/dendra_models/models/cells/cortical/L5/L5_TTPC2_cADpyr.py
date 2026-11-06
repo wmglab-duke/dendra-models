@@ -15,10 +15,10 @@ _MORPH = files(__package__) / "L5_TTPC2_cADpyr"
 
 
 def valid_ids():
-    """Return sorted integer IDs from files like L5_TTPC2_cADpyr<ID>.gml packaged in L5_TTPC2_cADpyr/."""
+    """Return sorted IDs of packaged ``L5_TTPC2_cADpyr_<ID>.gml`` morphologies."""
     ids = []
     for p in _MORPH.iterdir():
-        m = re.fullmatch(r"L5_TTPC2_cADpyr(\d+)\.gml", p.name)
+        m = re.fullmatch(r"L5_TTPC2_cADpyr_(\d+)\.gml", p.name)
         if m:
             ids.append(int(m.group(1)))
     return sorted(ids)

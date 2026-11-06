@@ -13,7 +13,7 @@ Reference neuronal cell and network models implemented with
 [PyPI](https://pypi.org/project/dendra-models/)
 
 > [!IMPORTANT]
-> dendra-models requires Dendra 0.27 or later. Its standard installation
+> dendra-models requires Dendra 0.28 or later. Its standard installation
 > includes the native CPU solvers used by tree and extracellular models.
 
 ## Installation
@@ -35,17 +35,124 @@ For an editable development installation, see
 
 ## Quick start
 
-Models are available from `dendra_models.models`:
+Models are available from `dendra_models.models`. This example stimulates one
+end of a Rattay axon with a 0.1 nA current pulse and records its membrane voltage:
 
 ```python
 import dendra as dn
-from dendra_models.models import exactMRG
+from dendra.units import nA
+from dendra_models.models import Rattay1993
 
+DT = 0.025  # ms
 with dn.ctx(DTYPE="float64", DEVICE="cpu", JIT=0):
-    model = exactMRG(diameters=[5.7], n_node=3)
-    model.eval()
-    model.initialize()
+    axon = Rattay1993(diameters=[1.0], L=40.0, dx=10.0)
+    axon[..., 0].inject(dn.mono_rect(amp=0.1 * nA, delay=0.1, pw=0.2))
+    axon.eval()
+    axon.initialize()
+    recorder = dn.Recorder(("v", "t"))
+    axon.run(duration=1.0, dt=DT, callbacks=[recorder])
+
+voltage = recorder.numpy("v")
+print(voltage.shape)  # (41, 1, 5): time, fibers, compartments
 ```
+
+`Population.run` advances the axon's state in place. The recording includes the
+initial boundary and every accepted solver step, giving 41 samples over 1 ms.
+Another `axon.run(...)` call continues from the model's current state.
+
+## Functional execution
+
+Use `dn.compile` to create a reusable simulation function with explicit state,
+for example when fitting model parameters or checkpointing separate simulation
+trajectories. The same axon, pulse and recording configuration can be executed
+through a compiled program:
+
+```python
+import dendra as dn
+from dendra.units import nA
+from dendra_models.models import Rattay1993
+
+DT = 0.025  # ms
+with dn.ctx(DTYPE="float64", DEVICE="cpu", JIT=0):
+    axon = Rattay1993(diameters=[1.0], L=40.0, dx=10.0)
+    axon[..., 0].inject(dn.mono_rect(amp=0.1 * nA, delay=0.1, pw=0.2))
+    axon.eval()
+    axon.initialize()
+    program = dn.compile(
+        axon, dt=DT, duration=1.0,
+        callbacks={"trace": dn.Recorder(("v", "t"))},
+        backend="eager",
+    )
+
+state, auxiliary = dn.func.run(program)
+voltage = auxiliary["callbacks"]["trace"]["v"]
+print(voltage.shape)  # torch.Size([41, 1, 5])
+
+# Continue from the final state instead of restarting the initial snapshot.
+state, auxiliary = dn.func.run(program, auxiliary["continuation"])
+```
+
+The program returns its simulation state and callback results without advancing
+the source axon. Calls without a continuation restart the captured initial
+snapshot; passing the returned continuation advances the same trajectory.
+
+These short examples use `backend="eager"` to keep setup lightweight. Omit that
+argument to use Dendra's default optimizing compiler. For training, set
+`inference=False` and select parameters with `trainable=`; exact names, glob
+patterns and regular expressions are supported. `dn.func.inspect_sources(program)`
+shows the selected sources and shared parameters.
+
+### Connected networks
+
+Construct connectivity and event sources with the ordinary Network API, then
+compile the Network. This example delivers NetStim events to an
+exponential synapse on a library axon:
+
+```python
+import dendra as dn
+from dendra.models.mod import expsyn
+from dendra_models.models import Rattay1993
+
+DT = 0.025
+with dn.ctx(DTYPE="float64", DEVICE="cpu", JIT=0):
+    axon = Rattay1993(diameters=[1.0], L=40.0, dx=10.0)
+    axon[:, :1].insert(expsyn.rename("exc"), tau=2.0, e=0.0)
+    stimulus = dn.NetStim(N=1, start=0.1, interval=1.0, noise=0.0, seed=17)
+    network = dn.Network({"axon": axon}, netstim=stimulus)
+    network.connect_one_to_one(
+        stimulus[:], axon[:, :1], axon.mech.exc,
+        weight=0.001, delay=DT,
+    )
+    network.eval()
+    network.initialize(DT)
+    program = dn.compile(
+        network, dt=DT, duration=1.0,
+        callbacks={"trace": dn.Recorder(("axon.v", "t"))},
+        backend="eager",
+    )
+
+state, auxiliary = dn.func.run(program)
+print(auxiliary["callbacks"]["trace"]["axon.v"].shape)
+```
+
+Recorder fields use the Network's Population names. Connections, synapse
+receivers, NetStim schedules and RNG state are lowered together; callers do not
+need to advance separate projection or source plans. Return the continuation to
+`dn.func.run` to preserve pending events, callback state and random streams.
+
+See Dendra's [functional execution guide](https://wmglab-duke.github.io/dendra/advanced/functional_execution.html)
+for runtime inputs, gradients and portable checkpoints. The model-specific
+network builders retain their published connectivity and protocol choices;
+see the [Kumaravelu network guide](src/dendra_models/models/networks/kumaravelu_2016/README.md)
+and the Zhang data notes below.
+
+The default fused `Kumaravelu2016` implementation supports functional execution.
+Whole-Network lowering of its experimental modular builder is currently
+unsupported because its live current and spike-bus references require a
+different binding contract. That builder supports native execution.
+
+The optional `CHECK_PURITY=True` diagnostic is currently unsupported for
+generated fused Kumar configurations and Yu connection-delay modules.
 
 ## Examples
 
@@ -155,6 +262,11 @@ modifications, and file scope.
 |6|`L4_NBC_dNAC`|35|Layer 4 nest basket interneuron, delayed non-accommodating e-type|
 |7|`L4_SBC_bNAC`|35|Layer 4 small basket interneuron, burst non-accommodating e-type|
 |8|`L4_SBC_cACint`|35|Layer 4 small basket interneuron, continuous accommodating e-type|
+
+
+Call `L23_PC_cADpyr.valid_ids()` or `L5_TTPC2_cADpyr.valid_ids()` to discover
+the packaged morphology IDs before constructing a cell, for example
+`L23_PC_cADpyr(ID=1)`.
 
 
 ### Networks
