@@ -60,3 +60,6 @@ must preserve their attribution and license, identify the modifications made,
 and be distributable under the same Creative Commons terms. Only submit data or
 other third-party material when you have the right to redistribute it and have
 documented its source and license.
+
+Maintainers preparing a versioned publication should follow
+[the release workflow](RELEASING.md).
