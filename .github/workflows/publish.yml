@@ -93,6 +93,18 @@ jobs:
             echo "Release tags must point to a commit on main"
             exit 1
           fi
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          from scripts.github_release import changelog_notes
+
+          changelog_notes(
+              Path("CHANGELOG.md").read_text(encoding="utf-8"),
+              os.environ["GITHUB_REF_NAME"],
+              os.environ["GITHUB_REPOSITORY"],
+          )
+          PY
 
       - name: Build wheel and source distribution
         run: python -m build
@@ -289,22 +301,22 @@ jobs:
         include:
           - os: ubuntu-24.04
             python: "3.11"
-            torch: "torch==2.12.0"
+            torch: "torch==2.14.0"
             distribution: wheel
             run-nested-tests: true
           - os: ubuntu-24.04
             python: "3.14"
-            torch: "torch>=2.12,<3"
+            torch: "torch>=2.14,<3"
             distribution: wheel
             run-nested-tests: false
-          - os: macos-14
+          - os: macos-15
             python: "3.12"
-            torch: "torch==2.12.0"
+            torch: "torch==2.14.0"
             distribution: wheel
             run-nested-tests: false
           - os: ubuntu-24.04
             python: "3.12"
-            torch: "torch==2.12.0"
+            torch: "torch==2.14.0"
             distribution: sdist
             run-nested-tests: false
     env:
@@ -344,7 +356,9 @@ jobs:
           else
             artifacts=(dist/*.tar.gz)
           fi
-          python -m pip install --only-binary=dendra-solvers "${artifacts[0]}"
+          constraint="$RUNNER_TEMP/models-torch-constraint.txt"
+          python -c 'from importlib.metadata import version; print("torch==" + version("torch"))' > "$constraint"
+          python -m pip install --constraint "$constraint" --only-binary=dendra-solvers "${artifacts[0]}"
           python -m pip check
 
       - name: Check the installed package outside the checkout
@@ -563,3 +577,4 @@ jobs:
           --tag "$GITHUB_REF_NAME"
           --commit "$(git rev-parse HEAD)"
           --dist-dir dist
+          --changelog CHANGELOG.md

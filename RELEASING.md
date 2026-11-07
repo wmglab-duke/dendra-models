@@ -1,8 +1,9 @@
 # Releasing Dendra Models
 
-Update `src/dendra_models/__init__.py` on `main` before tagging a release. The
-GitHub tag must be exactly `v` followed by that package version, and its commit
-must belong to `main`.
+Update `src/dendra_models/__init__.py` and add a matching `## <version>` section
+to `CHANGELOG.md` on `main` before tagging a release. The GitHub tag must be
+exactly `v` followed by that package version, and its commit must belong to
+`main`.
 
 The **Build and Publish Distributions** workflow builds one universal wheel and
 one source distribution, checks their metadata and packaged resources, and tests
@@ -11,7 +12,7 @@ installed copies on Linux and macOS. Only those tested files become the
 
 A version tag pushed to `wmglab-duke/dendra-models` publishes `checked-dists` to
 production PyPI through the `pypi` environment. After that upload succeeds, the
-workflow creates a GitHub Release for the same tag with generated release notes
+workflow creates a GitHub Release for the same tag with notes from `CHANGELOG.md`
 and attaches those same distribution files. The release job alone receives
 `contents: write`; publishing uses the existing PyPI trusted publisher.
 
