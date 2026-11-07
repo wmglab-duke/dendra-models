@@ -26,6 +26,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 env:
+  DENDRA_MIN_VERSION: "0.28.1"
   MPLBACKEND: Agg
   OMP_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
@@ -209,9 +210,10 @@ jobs:
                   f"Expected one Dendra dependency, found {dendra_requirements}"
               )
           dendra_requirement = dendra_requirements[0]
+          dendra_min_version = os.environ["DENDRA_MIN_VERSION"]
           if (
               dendra_requirement.extras != {"solvers"}
-              or str(dendra_requirement.specifier) != ">=0.28.0"
+              or str(dendra_requirement.specifier) != f">={dendra_min_version}"
               or dendra_requirement.marker is not None
           ):
               raise SystemExit(
@@ -356,8 +358,9 @@ jobs:
           else
             artifacts=(dist/*.tar.gz)
           fi
-          constraint="$RUNNER_TEMP/models-torch-constraint.txt"
+          constraint="$RUNNER_TEMP/models-runtime-constraints.txt"
           python -c 'from importlib.metadata import version; print("torch==" + version("torch"))' > "$constraint"
+          printf 'dendra==%s\n' "$DENDRA_MIN_VERSION" >> "$constraint"
           python -m pip install --constraint "$constraint" --only-binary=dendra-solvers "${artifacts[0]}"
           python -m pip check
 
@@ -379,6 +382,9 @@ jobs:
           expected_version = os.environ["EXPECTED_VERSION"]
           if version("dendra-models") != expected_version:
               raise SystemExit("Installed distribution has the wrong version")
+          dendra_version = version("dendra")
+          if dendra_version != os.environ["DENDRA_MIN_VERSION"]:
+              raise SystemExit(f"Installed Dendra has the wrong version: {dendra_version}")
 
           package_path = Path(dendra_models.__file__).resolve()
           workspace = Path(os.environ["GITHUB_WORKSPACE"]).resolve()
@@ -397,6 +403,7 @@ jobs:
               model.eval()
               model.initialize()
           print("Installed package:", package_path)
+          print("Installed Dendra version:", dendra_version)
           print("Installed solver extension:", Path(extension.__file__).resolve())
           print("Initialized exactMRG shape:", tuple(model.shape))
           PY

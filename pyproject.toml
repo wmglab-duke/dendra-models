@@ -17,7 +17,7 @@ license-files = [
 ]
 authors = [{ name = "Minhaj Hussain", email = "minhaj.hussain@duke.edu" }]
 dependencies = [
-  "dendra[solvers]>=0.28.0",
+  "dendra[solvers]>=0.28.1",
 ]
 
 keywords = ["neuroscience", "models", "dendra"]

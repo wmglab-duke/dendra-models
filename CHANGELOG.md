@@ -2,8 +2,9 @@
 
 ## 0.3.0
 
-- This release requires `dendra[solvers]>=0.28.0`. Upgrade Dendra alongside
-  Dendra Models to use the supported native and functional execution APIs.
+- This release requires `dendra[solvers]>=0.28.1`. Dendra 0.28.1 fixes
+  functional lowering on Python 3.13 and 3.14 and compatible state extraction
+  with purity diagnostics on Python 3.11.
 - The [quick start](README.md#quick-start) shows native and compiled execution,
   voltage recording, continuation, and a connected Network driven by NetStim.
   The [thresholding examples](examples/thresholding/README.md) cover native and

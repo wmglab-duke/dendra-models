@@ -13,7 +13,7 @@ Reference neuronal cell and network models implemented with
 [PyPI](https://pypi.org/project/dendra-models/)
 
 > [!IMPORTANT]
-> dendra-models requires Dendra 0.28 or later. Its standard installation
+> dendra-models requires Dendra 0.28.1 or later. Its standard installation
 > includes the native CPU solvers used by tree and extracellular models.
 
 ## Installation
