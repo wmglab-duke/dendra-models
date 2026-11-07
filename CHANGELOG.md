@@ -9,7 +9,7 @@
   The [thresholding examples](examples/thresholding/README.md) cover native and
   compiled Populations.
 - Functional execution supports Yu 2024 cortical current bindings, the fused
-  Kumaravelu 2016 Network, and Zhang 2014 dynamic synapses. Zhang synapses
+  Kumaravelu 2016 Population, and Zhang 2014 dynamic synapses. Zhang synapses
   preserve short-term plasticity across multiple deliveries in a timestep and
   support checkpoint continuation.
 - `valid_ids()` lists the 44 packaged L2/3 and 37 packaged L5 pyramidal
