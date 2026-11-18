@@ -4,13 +4,14 @@ import torch
 
 from dendra.models.mechanisms._mechanism import Mechanism as M
 from dendra.models.mechanisms._state import State as S
-from dendra.models.mechanisms.ops import exp
+from dendra.models.mechanisms.ops import expit, exprelr
 
 
-def Exp(x):
-    return torch.where(
-        x < -100.0, torch.tensor(0.0, dtype=x.dtype, device=x.device), torch.exp(x)
-    )
+def _vtrap(displacement, scale):
+    # AXNODE_myel.mod uses a constant inside this window. exprelr also keeps
+    # the discarded branch finite at zero so it cannot poison gradients.
+    near_zero = torch.abs(displacement / scale) < 1e-6
+    return torch.where(near_zero, scale, exprelr(displacement, scale))
 
 
 class m(S):
@@ -34,16 +35,16 @@ class m(S):
         return {"q10": self.aq10_1 ** ((self.celsius - self.bq10) / self.cq10)}
 
     def vtrap6(self, v):
-        cond = (v + self.amB) / self.amC
-        out = (self.amA * (v + self.amB)) / (1.0 - exp(-cond))
-        # out = torch.where(torch.abs(cond) < 1e-6, self.amA * self.amC, out)
-        return out
+        limited = v < -150.0
+        voltage = torch.where(limited, -150.0, v)
+        rate = self.amA * _vtrap(-(voltage + self.amB), self.amC)
+        return torch.where(limited, 0.15733, rate)
 
     def vtrap7(self, v):
-        cond = (v + self.bmB) / self.bmC
-        out = (self.bmA * -(v + self.bmB)) / (1.0 - exp(cond))
-        # out = torch.where(torch.abs(cond) < 1e-6, self.bmA * self.bmC, out)
-        return out
+        limited = v > 150.0
+        voltage = torch.where(limited, 150.0, v)
+        rate = self.bmA * _vtrap(voltage + self.bmB, self.bmC)
+        return torch.where(limited, 0.0057268, rate)
 
     def alpha(self, v):
         return self.q10 * self.vtrap6(v)
@@ -83,16 +84,16 @@ class p(S):
         return {"q10": self.pq10_1 ** ((self.celsius - self.bq10) / self.cq10)}
 
     def vtrap1(self, v):
-        cond = (v + self.ampB) / self.ampC
-        out = (self.ampA * (v + self.ampB)) / (1.0 - exp(-cond))
-        #out = torch.where(torch.abs(cond) < 1e-6, self.ampA * self.ampC, out)
-        return out
+        limited = v < -150.0
+        voltage = torch.where(limited, -150.0, v)
+        rate = self.ampA * _vtrap(-(voltage + self.ampB), self.ampC)
+        return torch.where(limited, 0.00086725, rate)
 
     def vtrap2(self, v):
-        cond = (v + self.bmpB) / self.bmpC
-        out = (self.bmpA * -(v + self.bmpB)) / (1.0 - exp(cond))
-        # out = torch.where(torch.abs(cond) < 1e-6, self.bmpA * self.bmpC, out)
-        return out
+        limited = v > 150.0
+        voltage = torch.where(limited, 150.0, v)
+        rate = self.bmpA * _vtrap(voltage + self.bmpB, self.bmpC)
+        return torch.where(limited, 1.5855e-05, rate)
 
     def alpha(self, v):
         return self.q10 * self.vtrap1(v)
@@ -132,14 +133,14 @@ class h(S):
         return {"q10": self.aq10_2 ** ((self.celsius - self.bq10) / self.cq10)}
 
     def vtrap8(self, v):
-        cond = (v + self.ahB) / self.ahC
-        out = (self.ahA * -(v + self.ahB)) / (1.0 - exp(cond))
-        # out = torch.where(torch.abs(cond) < 1e-6, self.ahA * self.ahC, out)
-        return out
+        limited = v > 150.0
+        voltage = torch.where(limited, 150.0, v)
+        rate = self.ahA * _vtrap(voltage + self.ahB, self.ahC)
+        return torch.where(limited, 0.0032594, rate)
 
     def vtrap9(self, v):
-        out = self.bhA / (1.0 + exp(-(v + self.bhB) / self.bhC))
-        return out
+        rate = self.bhA * expit((v + self.bhB) / self.bhC)
+        return torch.where(v < -150.0, 0.0014054, rate)
 
     def alpha(self, v):
         return self.q10 * self.vtrap8(v)
@@ -180,12 +181,12 @@ class s(S):
         return {"q10": self.aq10_3 ** ((self.celsius - self.bq10) / self.cq10)}
 
     def vtrap10(self, v):
-        out = self.asA / (1.0 + exp((v - self.vtraub + self.asB) / self.asC))
-        return out
+        rate = self.asA * expit((self.vtraub - v - self.asB) / self.asC)
+        return torch.where(v < -150.0, 3.3484e-05, rate)
 
     def vtrap11(self, v):
-        out = self.bsA / (1.0 + exp((v - self.vtraub + self.bsB) / self.bsC))
-        return out
+        rate = self.bsA * expit((self.vtraub - v - self.bsB) / self.bsC)
+        return torch.where(v < -150.0, 3.3484e-06, rate)
 
     def alpha(self, v):
         return self.q10 * self.vtrap10(v)

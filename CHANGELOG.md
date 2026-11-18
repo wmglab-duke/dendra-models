@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1
+
+- Match the MRG nodal channel rates to the NEURON reference at removable
+  singularities and extreme voltages. This prevents non-finite states in
+  strongly driven fibers and keeps gradients finite at the rate limits.
+- Match the Na/Ca exchanger and Na/K pump kinetics to their NMODL mechanisms.
+
 ## 0.3.0
 
 - This release requires `dendra[solvers]>=0.28.1`. Dendra 0.28.1 fixes
